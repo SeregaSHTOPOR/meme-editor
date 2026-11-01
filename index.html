@@ -414,7 +414,6 @@
     const tagElements = document.querySelectorAll(".tag");
 
     let currentImage = new Image();
-    currentImage.crossOrigin = "anonymous";
 
     const urlParams = new URLSearchParams(window.location.search);
     const passedImg = urlParams.get("img");
@@ -501,7 +500,6 @@
 
     function loadImage(url) {
       currentImage = new Image();
-      currentImage.crossOrigin = "anonymous";
       currentImage.onload = () => {
         canvas.width = currentImage.naturalWidth || 600;
         canvas.height = currentImage.naturalHeight || 400;
@@ -510,7 +508,11 @@
         render();
       };
       currentImage.onerror = () => {
-        alert("Не удалось загрузить эту картинку (возможно ограничение сайта). Попробуй другую!");
+        if (!url.startsWith("https://images.weserv.nl/")) {
+          currentImage.src = "https://images.weserv.nl/?url=" + encodeURIComponent(url);
+        } else {
+          console.warn("Image load failed:", url);
+        }
       };
       currentImage.src = url;
     }
