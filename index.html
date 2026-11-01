@@ -252,6 +252,27 @@
     .main-btn:active {
       transform: scale(0.98);
     }
+    .extra-btns-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .secondary-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--tg-theme-text-color, #ffffff);
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+    }
+    .secondary-btn:active {
+      transform: scale(0.97);
+    }
   </style>
 </head>
 <body>
@@ -329,6 +350,10 @@
       </div>
 
       <button class="main-btn" id="btnSubmit">🚀 Отправить готовый мем</button>
+      <div class="extra-btns-row">
+        <button class="secondary-btn" id="btnCopy">📋 Скопировать</button>
+        <button class="secondary-btn" id="btnDownload">💾 Скачать</button>
+      </div>
     </div>
   </div>
 
@@ -742,6 +767,40 @@
         tg.sendData(JSON.stringify(payload));
       } else {
         alert("Вне Telegram: мем успешно сгенерирован!");
+      }
+    });
+
+    const btnDownload = document.getElementById("btnDownload");
+    const btnCopy = document.getElementById("btnCopy");
+
+    btnDownload.addEventListener("click", () => {
+      try {
+        const link = document.createElement("a");
+        link.download = "meme_" + Date.now() + ".jpg";
+        link.href = canvas.toDataURL("image/jpeg", 0.95);
+        link.click();
+      } catch (e) {
+        alert("Используй зеленую кнопку «🚀 Отправить готовый мем», чтобы бот прислал его в чат!");
+      }
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try {
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ "image/png": blob })
+            ]);
+            const oldText = btnCopy.textContent;
+            btnCopy.textContent = "✅ Скопировано!";
+            setTimeout(() => { btnCopy.textContent = oldText; }, 2000);
+          } catch (err) {
+            btnDownload.click();
+          }
+        });
+      } catch (e) {
+        btnDownload.click();
       }
     });
   </script>
