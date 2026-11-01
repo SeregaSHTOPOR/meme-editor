@@ -16,10 +16,10 @@
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      background-color: var(--tg-theme-bg-color, #181818);
+      background-color: var(--tg-theme-bg-color, #141414);
       color: var(--tg-theme-text-color, #ffffff);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 12px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -40,23 +40,51 @@
     }
     .search-input {
       flex: 1;
-      padding: 8px 12px;
+      padding: 9px 12px;
       font-size: 14px;
       border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: var(--tg-theme-secondary-bg-color, #242424);
+      border: 1px solid rgba(255,255,255,0.18);
+      background: var(--tg-theme-secondary-bg-color, #222222);
       color: var(--tg-theme-text-color, #fff);
       outline: none;
     }
+    .search-input:focus {
+      border-color: var(--tg-theme-button-color, #2481cc);
+    }
     .upload-btn {
-      padding: 8px 12px;
+      padding: 9px 12px;
       font-size: 13px;
+      font-weight: 600;
       border-radius: 8px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
       color: #fff;
       cursor: pointer;
       white-space: nowrap;
+    }
+    .tags-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .tags-bar::-webkit-scrollbar {
+      display: none;
+    }
+    .tag {
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      color: #bbb;
+      user-select: none;
+    }
+    .tag.active {
+      background: var(--tg-theme-button-color, #2481cc);
+      color: #fff;
     }
     .templates-bar {
       display: flex;
@@ -64,40 +92,46 @@
       overflow-x: auto;
       padding-bottom: 4px;
       scrollbar-width: none;
+      min-height: 64px;
     }
     .templates-bar::-webkit-scrollbar {
       display: none;
     }
     .thumb {
-      width: 58px;
-      height: 58px;
+      width: 62px;
+      height: 62px;
       border-radius: 8px;
       object-fit: cover;
       cursor: pointer;
       border: 2px solid transparent;
       flex-shrink: 0;
-      background: #333;
+      background: #2a2a2a;
       transition: transform 0.15s, border-color 0.15s;
     }
     .thumb.active {
       border-color: var(--tg-theme-button-color, #2481cc);
-      transform: scale(1.05);
+      transform: scale(1.06);
+    }
+    .no-results {
+      font-size: 12px;
+      color: #888;
+      padding: 10px 4px;
     }
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      background: #0a0a0a;
+      background: #000;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 220px;
+      min-height: 200px;
     }
     canvas {
       max-width: 100%;
-      max-height: 50vh;
+      max-height: 48vh;
       display: block;
       touch-action: none;
       cursor: move;
@@ -111,15 +145,15 @@
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      background: var(--tg-theme-secondary-bg-color, #242424);
+      gap: 9px;
+      background: var(--tg-theme-secondary-bg-color, #202020);
       padding: 12px 14px;
       border-radius: 12px;
     }
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
     label {
       font-size: 11px;
@@ -130,11 +164,11 @@
     }
     input[type="text"] {
       width: 100%;
-      padding: 10px 12px;
-      font-size: 16px;
+      padding: 9px 12px;
+      font-size: 15px;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.15);
-      background: var(--tg-theme-bg-color, #181818);
+      background: var(--tg-theme-bg-color, #141414);
       color: var(--tg-theme-text-color, #fff);
       outline: none;
     }
@@ -147,18 +181,18 @@
       align-items: center;
     }
     select {
-      flex: 1;
-      padding: 9px;
+      flex: 1.2;
+      padding: 8px;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.15);
-      background: var(--tg-theme-bg-color, #181818);
+      background: var(--tg-theme-bg-color, #141414);
       color: var(--tg-theme-text-color, #fff);
-      font-size: 14px;
+      font-size: 13px;
       outline: none;
     }
     .color-picker {
       display: flex;
-      gap: 8px;
+      gap: 7px;
       overflow-x: auto;
       padding: 2px 0;
     }
@@ -187,7 +221,7 @@
     .toggle-btn {
       flex: 1;
       padding: 7px 4px;
-      background: var(--tg-theme-bg-color, #181818);
+      background: var(--tg-theme-bg-color, #141414);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 8px;
       color: #ccc;
@@ -222,14 +256,25 @@
 </head>
 <body>
   <div class="container">
-    <!-- Верхняя панель: выбор шаблона или загрузка фото -->
+    <!-- Поиск и загрузка фото -->
     <div class="header-bar">
-      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Поиск мемов...">
+      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи: кот, собака, дрейк, работа...">
       <label class="upload-btn" for="fileInput">📁 Своё фото</label>
       <input type="file" id="fileInput" accept="image/*" style="display: none;">
     </div>
 
-    <!-- Горизонтальная лента картинок -->
+    <!-- Быстрые теги тем -->
+    <div class="tags-bar">
+      <div class="tag active" data-tag="all">🔥 Все популярные</div>
+      <div class="tag" data-tag="cat">🐱 Коты</div>
+      <div class="tag" data-tag="dog">🐶 Доге</div>
+      <div class="tag" data-tag="choice">🎭 Выбор / Дрейк</div>
+      <div class="tag" data-tag="think">🧠 Мысли / Сверхразум</div>
+      <div class="tag" data-tag="work">💼 Работа / IT</div>
+      <div class="tag" data-tag="sad">😭 Боль / Грусть</div>
+    </div>
+
+    <!-- Лента миниатюр мемов -->
     <div class="templates-bar" id="templatesBar"></div>
 
     <!-- Холст редактора -->
@@ -241,7 +286,7 @@
     <!-- Пульт настроек текста -->
     <div class="controls">
       <div class="input-group">
-        <label>Текст на картинке (поддерживает смайлики 😂🔥)</label>
+        <label>Текст на меме (со смайликами 😂🔥)</label>
         <input type="text" id="memeText" placeholder="Введи текст мема..." value="КОГДА ВСЁ РАБОТАЕТ ИДЕАЛЬНО 🔥">
       </div>
 
@@ -252,15 +297,15 @@
             <option value="Impact" selected>Impact (Мемы)</option>
             <option value="Montserrat">Montserrat (Жирный)</option>
             <option value="Comic Neue">Comic Sans (Юмор)</option>
-            <option value="Lobster">Lobster (Рукописный)</option>
+            <option value="Lobster">Lobster (Красивый)</option>
             <option value="Pacifico">Pacifico (Элегантный)</option>
             <option value="Times New Roman">Times (Классика)</option>
             <option value="Roboto">Roboto (Чистый)</option>
           </select>
         </div>
         <div class="input-group" style="flex: 1;">
-          <label>Размер: <span id="sizeVal">40px</span></label>
-          <input type="range" id="fontSize" min="18" max="95" value="40">
+          <label>Размер: <span id="sizeVal">38px</span></label>
+          <input type="range" id="fontSize" min="18" max="95" value="38">
         </div>
       </div>
 
@@ -294,16 +339,62 @@
       tg.expand();
     }
 
-    // Базовые шаблоны популярных мемов
-    const defaultTemplates = [
-      { id: "cat1", title: "Рыбов", url: "https://i.imgflip.com/1g8my4.jpg" },
-      { id: "doge", title: "Доге", url: "https://i.imgflip.com/4t0m5.jpg" },
-      { id: "drake", title: "Дрейк", url: "https://i.imgflip.com/30b1gx.jpg" },
-      { id: "rollsafe", title: "Думающий парень", url: "https://i.imgflip.com/1h7in3.jpg" },
-      { id: "cat_table", title: "Кот за столом", url: "https://i.imgflip.com/345v97.jpg" },
-      { id: "disaster", title: "Девочка-пожар", url: "https://i.imgflip.com/23ls.jpg" },
-      { id: "button", title: "Две кнопки", url: "https://i.imgflip.com/1g8my4.jpg" }
+    // Богатая встроенная база шаблонов с русскими поисковыми тегами
+    let allTemplates = [
+      // Коты и животные
+      { id: "cat_rybov", title: "Вы продаете рыбов", tags: "рыбов кот коты котик рыба продаете кошка", cat: "cat", url: "https://i.imgflip.com/1g8my4.jpg" },
+      { id: "cat_woman", title: "Женщина кричит на кота за столом", tags: "кот кошка стол женщина кричит белая салат орет", cat: "cat", url: "https://i.imgflip.com/345v97.jpg" },
+      { id: "cat_sad", title: "Грустный плачущий котик", tags: "кот котик плачет слезы грусть печаль", cat: "cat", url: "https://i.imgflip.com/46hhvr.jpg" },
+      { id: "doge", title: "Доге (Doge)", tags: "доге собака пес пёс сиба ину мем классика", cat: "dog", url: "https://i.imgflip.com/4t0m5.jpg" },
+      { id: "buff_doge", title: "Качок Доге и Чимс", tags: "доге чимс собака качок раньше сейчас сравнение слабый сильный", cat: "dog", url: "https://i.imgflip.com/43a45p.jpg" },
+      { id: "this_is_fine", title: "Собака в огне (This is fine)", tags: "собака огонь пожар все нормально пёс чай кофе", cat: "dog", url: "https://i.imgflip.com/wxica.jpg" },
+
+      // Выбор и реакции
+      { id: "drake", title: "Дрейк (Drake)", tags: "дрейк выбор нет да одобряет отвергает рэпер", cat: "choice", url: "https://i.imgflip.com/30b1gx.jpg" },
+      { id: "two_buttons", title: "Две кнопки (Сложный выбор)", tags: "две кнопки выбор паника пот человек мужик красная", cat: "choice", url: "https://i.imgflip.com/1g8my4.jpg" },
+      { id: "distracted_bf", title: "Парень оглянулся на девушку", tags: "парень девушка измена оглянулся платье свидание", cat: "choice", url: "https://i.imgflip.com/1ur9b0.jpg" },
+      { id: "monkey_puppet", title: "Обезьяна отвернулась", tags: "обезьяна отвернулся стыдно неловко глаза взгляд в сторону", cat: "choice", url: "https://i.imgflip.com/2gnnjh.jpg" },
+
+      // Мысли, ум, работа
+      { id: "rollsafe", title: "Думающий парень (Roll Safe)", tags: "думает умный мысль палец у виска голова соображает гений", cat: "think", url: "https://i.imgflip.com/1h7in3.jpg" },
+      { id: "expanding_brain", title: "Сверхразум (Расширение мозга)", tags: "мозг мысли сверхразум уровни космос идея", cat: "think", url: "https://i.imgflip.com/1jwhww.jpg" },
+      { id: "change_my_mind", title: "Измени мое мнение (Change My Mind)", tags: "стол кофе кружка парк докажи мнение спор", cat: "think", url: "https://i.imgflip.com/24y43o.jpg" },
+      { id: "office_same", title: "Найди отличия (The Office)", tags: "офис найди отличия они одинаковые одно и то же девушка", cat: "work", url: "https://i.imgflip.com/2ybua0.jpg" },
+      { id: "computer_angry", title: "Злой за компом / Программист", tags: "программист код комп компьютер злой клавиатура работа офис", cat: "work", url: "https://i.imgflip.com/261o3j.jpg" },
+
+      // Эмоции
+      { id: "dicaprio", title: "Леонардо Ди Каприо с бокалом", tags: "ди каприо тост бокал вино гэтсби ухмылка праздник", cat: "all", url: "https://i.imgflip.com/39t1o.jpg" },
+      { id: "disaster_girl", title: "Девочка на фоне пожара", tags: "девочка пожар улыбка огонь злодейка дом горит", cat: "all", url: "https://i.imgflip.com/23ls.jpg" },
+      { id: "pablo_escobar", title: "Ожидающий Пабло Эскобар", tags: "пабло эскобар ждет скучно ожидание тоска один сидит", cat: "sad", url: "https://i.imgflip.com/1c1uej.jpg" },
+      { id: "clown", title: "Клоун красится", tags: "клоун макияж цирк дебил дурак позор", cat: "all", url: "https://i.imgflip.com/38el31.jpg" },
+      { id: "gigachad", title: "Гигачад (Gigachad)", tags: "гигачад сигма скуф мужик челюсть красивый сила", cat: "all", url: "https://i.imgflip.com/65x7uh.jpg" },
+      { id: "batman_slap", title: "Бэтмен бьет Робина", tags: "бэтмен робин пощечина заткнись удар комикс", cat: "all", url: "https://i.imgflip.com/9ehk.jpg" },
+      { id: "grumpy_cat", title: "Сердитый кот (Grumpy Cat)", tags: "сердитый кот злой недовольный морда", cat: "cat", url: "https://i.imgflip.com/8p0a.jpg" },
+      { id: "success_kid", title: "Успешный ребенок (Success Kid)", tags: "успех ребенок кулак пляж песок победа", cat: "all", url: "https://i.imgflip.com/1bhk.jpg" }
     ];
+
+    // Фоновая подгрузка еще 100 мировых мемов из Imgflip API
+    fetch("https://api.imgflip.com/get_memes")
+      .then(res => res.json())
+      .then(data => {
+        if (data?.data?.memes) {
+          const apiMemes = data.data.memes.map(m => ({
+            id: "if_" + m.id,
+            title: m.name,
+            tags: m.name.toLowerCase(),
+            cat: "all",
+            url: m.url
+          }));
+          // Объединяем, исключая дубликаты
+          const existingUrls = new Set(allTemplates.map(t => t.url));
+          apiMemes.forEach(m => {
+            if (!existingUrls.has(m.url)) {
+              allTemplates.push(m);
+            }
+          });
+        }
+      })
+      .catch(() => {});
 
     const canvas = document.getElementById("memeCanvas");
     const ctx = canvas.getContext("2d");
@@ -320,35 +411,41 @@
     const templatesBar = document.getElementById("templatesBar");
     const fileInput = document.getElementById("fileInput");
     const searchBar = document.getElementById("searchBar");
+    const tagElements = document.querySelectorAll(".tag");
 
     let currentImage = new Image();
     currentImage.crossOrigin = "anonymous";
 
-    // Извлечение параметров из адресной строки ?img=...
     const urlParams = new URLSearchParams(window.location.search);
     const passedImg = urlParams.get("img");
     const passedText = urlParams.get("text");
+    const passedQuery = urlParams.get("q");
+
     if (passedText) textInput.value = passedText;
+    if (passedQuery) searchBar.value = passedQuery;
 
     let state = {
       text: textInput.value,
       font: "Impact",
-      size: 40,
+      size: 38,
       color: "#ffffff",
       stroke: true,
       plate: false,
       uppercase: true,
       posX: null,
       posY: null,
-      imgUrl: passedImg || defaultTemplates[0].url,
+      imgUrl: passedImg || allTemplates[0].url,
     };
 
     let isDragging = false;
 
-    // Рендеринг ленты шаблонов
     function renderTemplates(list) {
       templatesBar.innerHTML = "";
-      list.forEach((item, idx) => {
+      if (!list.length) {
+        templatesBar.innerHTML = `<div class="no-results">Ничего не найдено 😢 Попробуй другое слово (например: кот, собака, дрейк, мозг, работа)</div>`;
+        return;
+      }
+      list.forEach((item) => {
         const img = document.createElement("img");
         img.className = "thumb" + (item.url === state.imgUrl ? " active" : "");
         img.src = item.url;
@@ -363,7 +460,44 @@
       });
     }
 
-    renderTemplates(defaultTemplates);
+    renderTemplates(allTemplates);
+
+    function filterMemes() {
+      const q = searchBar.value.toLowerCase().trim();
+      const activeTag = document.querySelector(".tag.active")?.dataset.tag || "all";
+
+      let filtered = allTemplates;
+
+      if (activeTag !== "all") {
+        filtered = filtered.filter(t => t.cat === activeTag);
+      }
+
+      if (q) {
+        // Если пользователь вставил прямую ссылку на картинку
+        if (q.startsWith("http://") || q.startsWith("https://")) {
+          loadImage(q);
+          return;
+        }
+
+        const words = q.split(" ").filter(Boolean);
+        filtered = filtered.filter(t => {
+          const hay = (t.title + " " + (t.tags || "")).toLowerCase();
+          return words.some(w => hay.includes(w));
+        });
+      }
+
+      renderTemplates(filtered);
+    }
+
+    searchBar.addEventListener("input", filterMemes);
+
+    tagElements.forEach(tag => {
+      tag.addEventListener("click", () => {
+        tagElements.forEach(t => t.classList.remove("active"));
+        tag.classList.add("active");
+        filterMemes();
+      });
+    });
 
     function loadImage(url) {
       currentImage = new Image();
@@ -374,6 +508,9 @@
         state.posX = canvas.width / 2;
         state.posY = canvas.height - 45;
         render();
+      };
+      currentImage.onerror = () => {
+        alert("Не удалось загрузить эту картинку (возможно ограничение сайта). Попробуй другую!");
       };
       currentImage.src = url;
     }
@@ -389,13 +526,6 @@
         loadImage(evt.target.result);
       };
       reader.readAsDataURL(file);
-    });
-
-    // Поиск по шаблонам
-    searchBar.addEventListener("input", (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      const filtered = defaultTemplates.filter(t => t.title.toLowerCase().includes(q));
-      renderTemplates(filtered.length ? filtered : defaultTemplates);
     });
 
     function wrapText(context, text, maxWidth) {
@@ -548,7 +678,6 @@
     window.addEventListener("touchmove", onDragMove, { passive: false });
     window.addEventListener("touchend", onDragEnd);
 
-    // Отправка в Telegram
     btnSubmit.addEventListener("click", () => {
       const payload = {
         action: "send_meme",
@@ -567,7 +696,7 @@
       if (tg) {
         tg.sendData(JSON.stringify(payload));
       } else {
-        alert("Вне Telegram: готовый мем отрисован на холсте!");
+        alert("Вне Telegram: мем успешно сгенерирован!");
       }
     });
   </script>
