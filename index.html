@@ -562,8 +562,19 @@
       });
     });
 
+    function getSafeImageUrl(url) {
+      if (!url) return "";
+      if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+      if (url.startsWith("https://images.weserv.nl/")) return url;
+      return "https://images.weserv.nl/?url=" + encodeURIComponent(url);
+    }
+
     function loadImage(url) {
+      const safeUrl = getSafeImageUrl(url);
       currentImage = new Image();
+      if (!url.startsWith("data:") && !url.startsWith("blob:")) {
+        currentImage.crossOrigin = "anonymous";
+      }
       currentImage.onload = () => {
         canvas.width = currentImage.naturalWidth || 600;
         canvas.height = currentImage.naturalHeight || 400;
@@ -572,17 +583,20 @@
         render();
       };
       currentImage.onerror = () => {
-        if (!url.startsWith("https://images.weserv.nl/")) {
-          currentImage.src = "https://images.weserv.nl/?url=" + encodeURIComponent(url);
-        } else {
-          console.warn("Image load failed:", url);
+        if (currentImage.src !== url) {
+          const directImg = new Image();
+          directImg.onload = () => {
+            currentImage = directImg;
+            canvas.width = currentImage.naturalWidth || 600;
+            canvas.height = currentImage.naturalHeight || 400;
+            state.posX = canvas.width / 2;
+            state.posY = canvas.height - 45;
+            render();
+          };
+          directImg.src = url;
         }
       };
-      if (url.includes("pikabu.ru") || url.includes("vk.com") || url.includes("rutube.ru") || url.includes("faceit-cdn")) {
-        currentImage.src = "https://images.weserv.nl/?url=" + encodeURIComponent(url);
-      } else {
-        currentImage.src = url;
-      }
+      currentImage.src = safeUrl;
     }
 
     loadImage(state.imgUrl);
@@ -770,38 +784,96 @@
       }
     });
 
+    function downloadBlob(blob) {
+      try {
+        const link = document.createElement("a");
+        link.download = "meme_" + Date.now() + ".png";
+        link.href = URL.createObjectURL(blob);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+      } catch (err) {
+        console.warn("Download failed:", err);
+      }
+    }
+
     const btnDownload = document.getElementById("btnDownload");
     const btnCopy = document.getElementById("btnCopy");
 
     btnDownload.addEventListener("click", () => {
-      try {
-        const link = document.createElement("a");
-        link.download = "meme_" + Date.now() + ".jpg";
-        link.href = canvas.toDataURL("image/jpeg", 0.95);
-        link.click();
-      } catch (e) {
-        alert("Используй зеленую кнопку «🚀 Отправить готовый мем», чтобы бот прислал его в чат!");
-      }
+      canvas.toBlob((blob) => {
+        if (blob) {
+          downloadBlob(blob);
+        } else {
+          try {
+            const link = document.createElement("a");
+            link.download = "meme_" + Date.now() + ".png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+          } catch (e) {}
+        }
+      }, "image/png");
     });
 
     btnCopy.addEventListener("click", async () => {
+      const origText = btnCopy.textContent;
+
+      let blob = null;
       try {
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ "image/png": blob })
-            ]);
-            const oldText = btnCopy.textContent;
-            btnCopy.textContent = "✅ Скопировано!";
-            setTimeout(() => { btnCopy.textContent = oldText; }, 2000);
-          } catch (err) {
-            btnDownload.click();
-          }
+        blob = await new Promise((resolve) => {
+          canvas.toBlob((b) => resolve(b), "image/png");
         });
       } catch (e) {
-        btnDownload.click();
+        console.warn("toBlob error:", e);
       }
+
+      if (!blob) {
+        btnDownload.click();
+        return;
+      }
+
+      // 1. Попытка скопировать в буфер обмена (ПК, Mac, Android Chrome)
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          const item = new ClipboardItem({ "image/png": blob });
+          await navigator.clipboard.write([item]);
+          btnCopy.textContent = "✅ Скопировано!";
+          btnCopy.style.background = "#34c759";
+          btnCopy.style.color = "#ffffff";
+          setTimeout(() => {
+            btnCopy.textContent = origText;
+            btnCopy.style.background = "";
+            btnCopy.style.color = "";
+          }, 2500);
+          return;
+        } catch (err) {
+          console.warn("Clipboard write failed, trying share:", err);
+        }
+      }
+
+      // 2. Если буфер заблокирован WebView: нативный шеринг (Android / iPhone)
+      if (navigator.share) {
+        try {
+          const file = new File([blob], "meme.png", { type: "image/png" });
+          if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: "Мем",
+            });
+            btnCopy.textContent = "✅ Отправлено!";
+            setTimeout(() => { btnCopy.textContent = origText; }, 2000);
+            return;
+          }
+        } catch (err) {
+          if (err.name === "AbortError") return;
+        }
+      }
+
+      // 3. Фолбэк на прямое скачивание файла без алертов
+      downloadBlob(blob);
+      btnCopy.textContent = "💾 Скачано!";
+      setTimeout(() => { btnCopy.textContent = origText; }, 2000);
     });
   </script>
 </body>
