@@ -419,9 +419,36 @@
     const passedImg = urlParams.get("img");
     const passedText = urlParams.get("text");
     const passedQuery = urlParams.get("q");
+    const passedPics = urlParams.get("pics");
 
     if (passedText) textInput.value = passedText;
     if (passedQuery) searchBar.value = passedQuery;
+
+    let initialUrl = passedImg;
+
+    // Распаковка найденных картинок из Telegram бота (Яндекс + Bing)
+    if (passedPics) {
+      try {
+        const jsonStr = atob(passedPics.replace(/-/g, "+").replace(/_/g, "/"));
+        const decoded = JSON.parse(jsonStr);
+        if (Array.isArray(decoded) && decoded.length > 0) {
+          const liveMemes = decoded.map((u, i) => ({
+            id: "live_" + i,
+            title: passedQuery ? `${passedQuery} #${i + 1}` : `Найдено #${i + 1}`,
+            tags: (passedQuery || "") + " яндекс bing поиск",
+            cat: "all",
+            url: u,
+          }));
+          // Ставим найденные картинки на САМОЕ ПЕРВОЕ МЕСТО!
+          allTemplates = liveMemes.concat(allTemplates);
+          if (!initialUrl) initialUrl = liveMemes[0].url;
+        }
+      } catch (err) {
+        console.warn("Could not unpack pics:", err);
+      }
+    }
+
+    if (!initialUrl) initialUrl = allTemplates[0].url;
 
     let state = {
       text: textInput.value,
@@ -433,7 +460,7 @@
       uppercase: true,
       posX: null,
       posY: null,
-      imgUrl: passedImg || allTemplates[0].url,
+      imgUrl: initialUrl,
     };
 
     let isDragging = false;
@@ -447,7 +474,19 @@
       list.forEach((item) => {
         const img = document.createElement("img");
         img.className = "thumb" + (item.url === state.imgUrl ? " active" : "");
-        img.src = item.url;
+        
+        // Надежная загрузка миниатюры
+        let thumbUrl = item.url;
+        if (thumbUrl.includes("pikabu.ru") || thumbUrl.includes("vk.com") || thumbUrl.includes("rutube.ru") || thumbUrl.includes("faceit-cdn")) {
+          thumbUrl = "https://images.weserv.nl/?url=" + encodeURIComponent(thumbUrl) + "&w=130&h=130&fit=cover";
+        }
+        img.src = thumbUrl;
+        img.onerror = () => {
+          if (!img.src.includes("weserv.nl")) {
+            img.src = "https://images.weserv.nl/?url=" + encodeURIComponent(item.url) + "&w=130&h=130&fit=cover";
+          }
+        };
+
         img.title = item.title;
         img.addEventListener("click", () => {
           document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
@@ -514,7 +553,11 @@
           console.warn("Image load failed:", url);
         }
       };
-      currentImage.src = url;
+      if (url.includes("pikabu.ru") || url.includes("vk.com") || url.includes("rutube.ru") || url.includes("faceit-cdn")) {
+        currentImage.src = "https://images.weserv.nl/?url=" + encodeURIComponent(url);
+      } else {
+        currentImage.src = url;
+      }
     }
 
     loadImage(state.imgUrl);
