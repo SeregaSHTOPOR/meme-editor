@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Редактор мемов</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Lobster&family=Montserrat:wght@800&family=Pacifico&family=Roboto:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: var(--tg-theme-bg-color, #181818);
+      color: var(--tg-theme-text-color, #ffffff);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .header-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+    .search-input {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: var(--tg-theme-secondary-bg-color, #242424);
+      color: var(--tg-theme-text-color, #fff);
+      outline: none;
+    }
+    .upload-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .templates-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .templates-bar::-webkit-scrollbar {
+      display: none;
+    }
+    .thumb {
+      width: 58px;
+      height: 58px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+      background: #333;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .thumb.active {
+      border-color: var(--tg-theme-button-color, #2481cc);
+      transform: scale(1.05);
+    }
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: #0a0a0a;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 220px;
+    }
+    canvas {
+      max-width: 100%;
+      max-height: 50vh;
+      display: block;
+      touch-action: none;
+      cursor: move;
+    }
+    .drag-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--tg-theme-hint-color, #888);
+      margin-top: -4px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--tg-theme-secondary-bg-color, #242424);
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--tg-theme-hint-color, #999);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: var(--tg-theme-bg-color, #181818);
+      color: var(--tg-theme-text-color, #fff);
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: var(--tg-theme-button-color, #2481cc);
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    select {
+      flex: 1;
+      padding: 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: var(--tg-theme-bg-color, #181818);
+      color: var(--tg-theme-text-color, #fff);
+      font-size: 14px;
+      outline: none;
+    }
+    .color-picker {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0;
+    }
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .color-dot.active {
+      border-color: #fff;
+      transform: scale(1.18);
+      box-shadow: 0 0 8px rgba(255,255,255,0.6);
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--tg-theme-button-color, #2481cc);
+    }
+    .toggles-row {
+      display: flex;
+      gap: 6px;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 7px 4px;
+      background: var(--tg-theme-bg-color, #181818);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #ccc;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-btn.active {
+      background: var(--tg-theme-button-color, #2481cc);
+      border-color: var(--tg-theme-button-color, #2481cc);
+      color: #fff;
+    }
+    .main-btn {
+      width: 100%;
+      padding: 13px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(36, 129, 204, 0.4);
+      margin-top: 2px;
+    }
+    .main-btn:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Верхняя панель: выбор шаблона или загрузка фото -->
+    <div class="header-bar">
+      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Поиск мемов...">
+      <label class="upload-btn" for="fileInput">📁 Своё фото</label>
+      <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    </div>
+
+    <!-- Горизонтальная лента картинок -->
+    <div class="templates-bar" id="templatesBar"></div>
+
+    <!-- Холст редактора -->
+    <div class="canvas-wrapper">
+      <canvas id="memeCanvas"></canvas>
+    </div>
+    <div class="drag-hint">👆 Перетаскивай надпись пальцем или мышкой прямо по картинке!</div>
+
+    <!-- Пульт настроек текста -->
+    <div class="controls">
+      <div class="input-group">
+        <label>Текст на картинке (поддерживает смайлики 😂🔥)</label>
+        <input type="text" id="memeText" placeholder="Введи текст мема..." value="КОГДА ВСЁ РАБОТАЕТ ИДЕАЛЬНО 🔥">
+      </div>
+
+      <div class="row">
+        <div class="input-group" style="flex: 1.2;">
+          <label>Шрифт</label>
+          <select id="fontSelect">
+            <option value="Impact" selected>Impact (Мемы)</option>
+            <option value="Montserrat">Montserrat (Жирный)</option>
+            <option value="Comic Neue">Comic Sans (Юмор)</option>
+            <option value="Lobster">Lobster (Рукописный)</option>
+            <option value="Pacifico">Pacifico (Элегантный)</option>
+            <option value="Times New Roman">Times (Классика)</option>
+            <option value="Roboto">Roboto (Чистый)</option>
+          </select>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>Размер: <span id="sizeVal">40px</span></label>
+          <input type="range" id="fontSize" min="18" max="95" value="40">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Цвет текста</label>
+        <div class="color-picker" id="colorPicker">
+          <div class="color-dot active" style="background: #ffffff;" data-color="#ffffff"></div>
+          <div class="color-dot" style="background: #ffeb00;" data-color="#ffeb00"></div>
+          <div class="color-dot" style="background: #ff3b30;" data-color="#ff3b30"></div>
+          <div class="color-dot" style="background: #34c759;" data-color="#34c759"></div>
+          <div class="color-dot" style="background: #00c7be;" data-color="#00c7be"></div>
+          <div class="color-dot" style="background: #af52de;" data-color="#af52de"></div>
+          <div class="color-dot" style="background: #111111; border: 1px solid #666;" data-color="#111111"></div>
+        </div>
+      </div>
+
+      <div class="toggles-row">
+        <div class="toggle-btn active" id="btnStroke">🔲 Контур</div>
+        <div class="toggle-btn" id="btnPlate">🏷 Плашка</div>
+        <div class="toggle-btn active" id="btnUpper">🔠 КАПС</div>
+      </div>
+
+      <button class="main-btn" id="btnSubmit">🚀 Отправить готовый мем</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // Базовые шаблоны популярных мемов
+    const defaultTemplates = [
+      { id: "cat1", title: "Рыбов", url: "https://i.imgflip.com/1g8my4.jpg" },
+      { id: "doge", title: "Доге", url: "https://i.imgflip.com/4t0m5.jpg" },
+      { id: "drake", title: "Дрейк", url: "https://i.imgflip.com/30b1gx.jpg" },
+      { id: "rollsafe", title: "Думающий парень", url: "https://i.imgflip.com/1h7in3.jpg" },
+      { id: "cat_table", title: "Кот за столом", url: "https://i.imgflip.com/345v97.jpg" },
+      { id: "disaster", title: "Девочка-пожар", url: "https://i.imgflip.com/23ls.jpg" },
+      { id: "button", title: "Две кнопки", url: "https://i.imgflip.com/1g8my4.jpg" }
+    ];
+
+    const canvas = document.getElementById("memeCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const textInput = document.getElementById("memeText");
+    const fontSelect = document.getElementById("fontSelect");
+    const fontSizeSlider = document.getElementById("fontSize");
+    const sizeVal = document.getElementById("sizeVal");
+    const colorPicker = document.getElementById("colorPicker");
+    const btnStroke = document.getElementById("btnStroke");
+    const btnPlate = document.getElementById("btnPlate");
+    const btnUpper = document.getElementById("btnUpper");
+    const btnSubmit = document.getElementById("btnSubmit");
+    const templatesBar = document.getElementById("templatesBar");
+    const fileInput = document.getElementById("fileInput");
+    const searchBar = document.getElementById("searchBar");
+
+    let currentImage = new Image();
+    currentImage.crossOrigin = "anonymous";
+
+    // Извлечение параметров из адресной строки ?img=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const passedImg = urlParams.get("img");
+    const passedText = urlParams.get("text");
+    if (passedText) textInput.value = passedText;
+
+    let state = {
+      text: textInput.value,
+      font: "Impact",
+      size: 40,
+      color: "#ffffff",
+      stroke: true,
+      plate: false,
+      uppercase: true,
+      posX: null,
+      posY: null,
+      imgUrl: passedImg || defaultTemplates[0].url,
+    };
+
+    let isDragging = false;
+
+    // Рендеринг ленты шаблонов
+    function renderTemplates(list) {
+      templatesBar.innerHTML = "";
+      list.forEach((item, idx) => {
+        const img = document.createElement("img");
+        img.className = "thumb" + (item.url === state.imgUrl ? " active" : "");
+        img.src = item.url;
+        img.title = item.title;
+        img.addEventListener("click", () => {
+          document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
+          img.classList.add("active");
+          state.imgUrl = item.url;
+          loadImage(item.url);
+        });
+        templatesBar.appendChild(img);
+      });
+    }
+
+    renderTemplates(defaultTemplates);
+
+    function loadImage(url) {
+      currentImage = new Image();
+      currentImage.crossOrigin = "anonymous";
+      currentImage.onload = () => {
+        canvas.width = currentImage.naturalWidth || 600;
+        canvas.height = currentImage.naturalHeight || 400;
+        state.posX = canvas.width / 2;
+        state.posY = canvas.height - 45;
+        render();
+      };
+      currentImage.src = url;
+    }
+
+    loadImage(state.imgUrl);
+
+    // Загрузка собственного фото с устройства
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        loadImage(evt.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Поиск по шаблонам
+    searchBar.addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = defaultTemplates.filter(t => t.title.toLowerCase().includes(q));
+      renderTemplates(filtered.length ? filtered : defaultTemplates);
+    });
+
+    function wrapText(context, text, maxWidth) {
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = words[0] || "";
+
+      for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = context.measureText(currentLine + " " + word).width;
+        if (width < maxWidth) {
+          currentLine += " " + word;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      lines.push(currentLine);
+      return lines;
+    }
+
+    function render() {
+      if (!currentImage.complete) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+
+      let textToDraw = state.uppercase ? state.text.toUpperCase() : state.text;
+      if (!textToDraw.trim()) return;
+
+      const fontStr = `bold ${state.size}px "${state.font}", Impact, Arial, sans-serif`;
+      ctx.font = fontStr;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const maxTextWidth = canvas.width * 0.9;
+      const lines = wrapText(ctx, textToDraw, maxTextWidth);
+      const lineHeight = state.size * 1.18;
+      const totalBlockHeight = lines.length * lineHeight;
+
+      if (state.plate) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+        const padY = 12;
+        const plateY = state.posY - totalBlockHeight / 2 - padY;
+        ctx.beginPath();
+        ctx.roundRect(canvas.width * 0.05, plateY, canvas.width * 0.9, totalBlockHeight + padY * 2, 10);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      const startY = state.posY - ((lines.length - 1) * lineHeight) / 2;
+
+      lines.forEach((line, index) => {
+        const y = startY + index * lineHeight;
+
+        if (state.stroke) {
+          ctx.strokeStyle = state.color === "#111111" ? "#ffffff" : "#000000";
+          ctx.lineWidth = Math.max(3, state.size / 10);
+          ctx.lineJoin = "round";
+          ctx.strokeText(line, state.posX, y);
+        }
+
+        ctx.fillStyle = state.color;
+        ctx.fillText(line, state.posX, y);
+      });
+    }
+
+    textInput.addEventListener("input", (e) => {
+      state.text = e.target.value;
+      render();
+    });
+
+    fontSelect.addEventListener("change", (e) => {
+      state.font = e.target.value;
+      render();
+    });
+
+    fontSizeSlider.addEventListener("input", (e) => {
+      state.size = parseInt(e.target.value);
+      sizeVal.textContent = state.size + "px";
+      render();
+    });
+
+    colorPicker.addEventListener("click", (e) => {
+      const dot = e.target.closest(".color-dot");
+      if (!dot) return;
+      document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
+      dot.classList.add("active");
+      state.color = dot.dataset.color;
+      render();
+    });
+
+    btnStroke.addEventListener("click", () => {
+      state.stroke = !state.stroke;
+      btnStroke.classList.toggle("active", state.stroke);
+      render();
+    });
+
+    btnPlate.addEventListener("click", () => {
+      state.plate = !state.plate;
+      btnPlate.classList.toggle("active", state.plate);
+      render();
+    });
+
+    btnUpper.addEventListener("click", () => {
+      state.uppercase = !state.uppercase;
+      btnUpper.classList.toggle("active", state.uppercase);
+      render();
+    });
+
+    function getCanvasCoords(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY,
+      };
+    }
+
+    function onDragStart(e) {
+      isDragging = true;
+      const coords = getCanvasCoords(e);
+      state.posX = coords.x;
+      state.posY = coords.y;
+      render();
+    }
+
+    function onDragMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      const coords = getCanvasCoords(e);
+      state.posX = coords.x;
+      state.posY = coords.y;
+      render();
+    }
+
+    function onDragEnd() {
+      isDragging = false;
+    }
+
+    canvas.addEventListener("mousedown", onDragStart);
+    window.addEventListener("mousemove", onDragMove);
+    window.addEventListener("mouseup", onDragEnd);
+
+    canvas.addEventListener("touchstart", onDragStart, { passive: false });
+    window.addEventListener("touchmove", onDragMove, { passive: false });
+    window.addEventListener("touchend", onDragEnd);
+
+    // Отправка в Telegram
+    btnSubmit.addEventListener("click", () => {
+      const payload = {
+        action: "send_meme",
+        text: state.text,
+        font: state.font,
+        size: state.size,
+        color: state.color,
+        stroke: state.stroke,
+        plate: state.plate,
+        uppercase: state.uppercase,
+        posX_rel: state.posX / canvas.width,
+        posY_rel: state.posY / canvas.height,
+        img_url: state.imgUrl,
+      };
+
+      if (tg) {
+        tg.sendData(JSON.stringify(payload));
+      } else {
+        alert("Вне Telegram: готовый мем отрисован на холсте!");
+      }
+    });
+  </script>
+</body>
+</html>
