@@ -349,10 +349,9 @@
         <div class="toggle-btn active" id="btnUpper">🔠 КАПС</div>
       </div>
 
-      <button class="main-btn" id="btnSubmit">🚀 Отправить готовый мем</button>
+      <button class="main-btn" id="btnSubmit">📤 Отправить мем</button>
       <div class="extra-btns-row">
-        <button class="secondary-btn" id="btnCopy">📋 Скопировать</button>
-        <button class="secondary-btn" id="btnDownload">💾 Скачать</button>
+        <button class="secondary-btn" id="btnDownload">💾 Скачать файл</button>
       </div>
     </div>
   </div>
@@ -368,7 +367,7 @@
     // ПОИСК КАРТИНОК — Pixabay API (бесплатно, 20 картинок/запрос)
     // Получи бесплатный ключ на https://pixabay.com/api/docs/
     // и вставь сюда:
-    const PIXABAY_KEY = "";
+    const PIXABAY_KEY = "20959380-453098365bf81429a0e9a1a10";
     // ============================================================
 
     let searchTimer = null;
@@ -861,33 +860,32 @@
       btnSubmit.textContent = "⏳ Подготовка...";
 
       try {
-        // Получаем картинку с холста как PNG blob
         const blob = await new Promise((resolve) =>
           canvas.toBlob((b) => resolve(b), "image/png")
         );
-
         if (!blob) throw new Error("canvas export failed");
 
         const memeFile = new File([blob], "meme.png", { type: "image/png" });
 
-        // ═══ СПОСОБ 1: нативный шеринг (Android / iPhone / Mac)
-        // Открывает то самое меню «Поделиться» как в приложении!
-        if (navigator.share && (navigator.canShare?.({ files: [memeFile] }) ?? true)) {
-          try {
-            await navigator.share({ files: [memeFile], title: "Мем" });
-            // После успешного шеринга закрываем WebApp — черновик очищается
-            setTimeout(() => tg?.close?.(), 400);
-            return;
-          } catch (err) {
-            // AbortError = пользователь закрыл меню «Поделиться» сам
-            if (err.name === "AbortError") return;
-            // Другая ошибка → идём в фолбэк
-            console.warn("Share failed, fallback to bot:", err);
+        // ══ ПРИОРИТЕТ 1: нативное меню «Поделиться» (Android / iPhone / Mac)
+        // Открывает точно такое меню — Telegram, WhatsApp, VK и т.д.
+        // Пользователь сам выбирает чат — мем летит туда напрямую!
+        if (navigator.share) {
+          const canShare = navigator.canShare ? navigator.canShare({ files: [memeFile] }) : true;
+          if (canShare) {
+            try {
+              await navigator.share({ files: [memeFile], title: "Мем" });
+              setTimeout(() => tg?.close?.(), 300);
+              return;
+            } catch (err) {
+              if (err.name === "AbortError") return; // пользователь закрыл меню
+              console.warn("Share API error, fallback to bot:", err);
+            }
           }
         }
 
-        // ═══ СПОСОБ 2: отправка через бот (если share не поддерживается, напр. ПК Windows)
-        // Бот получит картинку и даст кнопку «📤 Отправить в чат»
+        // ══ ПРИОРИТЕТ 2: через бот (ПК / Telegram Desktop / где нет Share API)
+        // Бот генерирует мем и даёт кнопку «📤 Отправить в чат» для выбора чата
         const payload = {
           action: "send_meme",
           text: state.text,
@@ -897,15 +895,15 @@
           stroke: state.stroke,
           plate: state.plate,
           uppercase: state.uppercase,
-          posX_rel: state.posX / canvas.width,
-          posY_rel: state.posY / canvas.height,
+          posX_rel: state.posX != null ? state.posX / canvas.width : 0.5,
+          posY_rel: state.posY != null ? state.posY / canvas.height : 0.85,
           img_url: state.imgUrl,
         };
-        if (tg) {
+        if (tg && tg.sendData) {
           tg.sendData(JSON.stringify(payload));
-          // sendData() сам закроет WebApp (и черновик очистится)
         } else {
-          alert("Вне Telegram: мем готов! Используй кнопку «💾 Скачать».");
+          // Вне Telegram — просто скачиваем файл
+          btnDownload.click();
         }
       } catch (e) {
         console.error("Submit error:", e);
@@ -915,29 +913,13 @@
     });
 
     const btnDownload = document.getElementById("btnDownload");
-    const btnCopy = document.getElementById("btnCopy");
-
-    async function getCanvasBlob() {
-      return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-    }
-
-    function flashBtn(btn, label, color = "#34c759") {
-      const orig = btn.textContent;
-      const origBg = btn.style.background;
-      const origColor = btn.style.color;
-      btn.textContent = label;
-      btn.style.background = color;
-      btn.style.color = "#fff";
-      setTimeout(() => {
-        btn.textContent = orig;
-        btn.style.background = origBg;
-        btn.style.color = origColor;
-      }, 2200);
-    }
 
     btnDownload.addEventListener("click", async () => {
-      const blob = await getCanvasBlob();
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png")
+      );
       if (!blob) return;
+      const origText = btnDownload.textContent;
       try {
         const link = document.createElement("a");
         link.download = "meme_" + Date.now() + ".png";
@@ -946,48 +928,11 @@
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(link.href), 5000);
-        flashBtn(btnDownload, "✅ Скачано!", "#2481cc");
+        btnDownload.textContent = "✅ Скачано!";
+        setTimeout(() => { btnDownload.textContent = origText; }, 2000);
       } catch (e) {
         console.warn("Download failed:", e);
       }
-    });
-
-    btnCopy.addEventListener("click", async () => {
-      const blob = await getCanvasBlob();
-      if (!blob) return;
-
-      const memeFile = new File([blob], "meme.png", { type: "image/png" });
-
-      // На Android/iPhone — открываем нативный шеринг (самый надёжный способ!)
-      // Это та же кнопка «Поделиться» как в любом приложении
-      if (navigator.share && (navigator.canShare?.({ files: [memeFile] }) ?? true)) {
-        try {
-          await navigator.share({ files: [memeFile], title: "Мем" });
-          return;
-        } catch (err) {
-          if (err.name === "AbortError") return; // пользователь закрыл меню
-        }
-      }
-
-      // На ПК — копируем в буфер обмена (Ctrl+V потом работает)
-      if (navigator.clipboard && window.ClipboardItem) {
-        try {
-          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-          flashBtn(btnCopy, "✅ Скопировано!");
-          return;
-        } catch (err) {
-          console.warn("Clipboard failed:", err);
-        }
-      }
-
-      // Последний фолбэк — скачивание
-      const link = document.createElement("a");
-      link.download = "meme_" + Date.now() + ".png";
-      link.href = URL.createObjectURL(blob);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      flashBtn(btnCopy, "💾 Скачано!");
     });
   </script>
 </body>
