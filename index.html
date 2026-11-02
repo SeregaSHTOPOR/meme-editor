@@ -445,6 +445,88 @@
       transform: scale(0.92);
     }
 
+        .share-status {
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(42, 171, 238, 0.15);
+      border: 1px solid rgba(42, 171, 238, 0.35);
+      color: #70c7ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .share-status.ready {
+      background: rgba(46, 204, 113, 0.15);
+      border-color: rgba(46, 204, 113, 0.4);
+      color: #2ecc71;
+    }
+    .share-status.warn {
+      background: rgba(241, 196, 15, 0.15);
+      border-color: rgba(241, 196, 15, 0.4);
+      color: #f1c40f;
+    }
+    .share-key-box {
+      background: #252528;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .share-key-row {
+      display: flex;
+      gap: 6px;
+    }
+    .share-key-input {
+      flex: 1;
+      background: #18181a;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: #fff;
+      padding: 7px 10px;
+      font-size: 12px;
+      outline: none;
+    }
+    .share-key-input:focus {
+      border-color: #2AABEE;
+    }
+    .share-key-save {
+      background: #2481cc;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .share-key-save:active {
+      transform: scale(0.96);
+    }
+    .share-key-hint {
+      font-size: 11px;
+      color: #bbb;
+      line-height: 1.4;
+    }
+    .share-key-hint a {
+      color: #2AABEE;
+      text-decoration: underline;
+    }
+    .share-key-toggle {
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+      cursor: pointer;
+      padding: 2px;
+      text-decoration: underline;
+    }
+
     .share-toast {
       background: rgba(46, 204, 113, 0.22);
       border: 1px solid #2ecc71;
@@ -628,6 +710,18 @@
         </button>
       </div>
 
+      <!-- Настройка ключа ImgBB -->
+      <div class="share-key-toggle" id="toggleKeyLink">⚙️ Настроить API-ключ ImgBB</div>
+      <div class="share-key-box" id="shareKeyBox" style="display: none;">
+        <div class="share-key-hint">
+          🔑 Чтобы Telegram, WhatsApp и VK отправляли <b>сам готовый мем с текстом</b>, введи бесплатный API-ключ ImgBB (получить за 5 сек на <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a>):
+        </div>
+        <div class="share-key-row">
+          <input type="text" id="imgbbKeyInput" class="share-key-input" placeholder="Вставь API-ключ ImgBB...">
+          <button id="saveKeyBtn" class="share-key-save">Сохранить</button>
+        </div>
+      </div>
+
       <!-- Всплывающее уведомление -->
       <div class="share-toast" id="shareToast"></div>
 
@@ -806,6 +900,8 @@
         img.onerror = () => {
           if (!img.src.includes("weserv.nl")) {
             img.src = "https://images.weserv.nl/?url=" + encodeURIComponent(item.url) + "&w=130&h=130&fit=cover";
+          } else {
+            img.style.display = "none";
           }
         };
 
@@ -868,6 +964,7 @@
     function getSafeImageUrl(url) {
       if (!url) return "";
       if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+      if (url.includes("i.ibb.co") || url.includes("imgbb.com") || url.includes("imgflip.com")) return url;
       if (url.startsWith("https://images.weserv.nl/")) return url;
       return "https://images.weserv.nl/?url=" + encodeURIComponent(url);
     }
@@ -1138,14 +1235,23 @@
       return (state.uppercase ? state.text.toUpperCase() : state.text).trim();
     }
 
-    // Управление окном «Поделиться»
+    // Управление окном «Поделиться» и загрузкой на ImgBB
+    const DEFAULT_IMGBB_KEY = "9df5e3d3de12cac76b9bcbd6960d020c"; // Можно жестко вписать сюда или сохранить в интерфейсе
+    let uploadedMemeUrl = null;
+    let isUploadingMeme = false;
+
     const shareModal = document.getElementById("shareModal");
     const shareCloseBtn = document.getElementById("shareCloseBtn");
     const shareLinkInput = document.getElementById("shareLinkInput");
     const shareCopyLinkBtn = document.getElementById("shareCopyLinkBtn");
     const shareToast = document.getElementById("shareToast");
-    let toastTimeout = null;
+    const shareStatus = document.getElementById("shareStatus");
+    const shareKeyBox = document.getElementById("shareKeyBox");
+    const toggleKeyLink = document.getElementById("toggleKeyLink");
+    const imgbbKeyInput = document.getElementById("imgbbKeyInput");
+    const saveKeyBtn = document.getElementById("saveKeyBtn");
 
+    let toastTimeout = null;
     function showToast(msg) {
       if (!shareToast) return;
       shareToast.textContent = msg;
@@ -1156,22 +1262,100 @@
       }, 3000);
     }
 
+    if (imgbbKeyInput) {
+      imgbbKeyInput.value = localStorage.getItem("imgbb_key") || DEFAULT_IMGBB_KEY || "";
+    }
+
+    if (toggleKeyLink && shareKeyBox) {
+      toggleKeyLink.addEventListener("click", () => {
+        const isHidden = shareKeyBox.style.display === "none";
+        shareKeyBox.style.display = isHidden ? "flex" : "none";
+      });
+    }
+
+    if (saveKeyBtn && imgbbKeyInput) {
+      saveKeyBtn.addEventListener("click", () => {
+        const val = imgbbKeyInput.value.trim();
+        if (val) {
+          localStorage.setItem("imgbb_key", val);
+          showToast("✅ Ключ ImgBB сохранен!");
+          if (shareKeyBox) shareKeyBox.style.display = "none";
+          uploadMemeToImgBB();
+        } else {
+          localStorage.removeItem("imgbb_key");
+          showToast("🗑 Ключ очищен");
+        }
+      });
+    }
+
+    async function uploadMemeToImgBB() {
+      const key = localStorage.getItem("imgbb_key") || DEFAULT_IMGBB_KEY || "";
+      uploadedMemeUrl = null;
+
+      if (!key) {
+        if (shareStatus) {
+          shareStatus.className = "share-status warn";
+          shareStatus.innerHTML = `<span>🔑</span> Введи ключ ImgBB ниже или скачай файл`;
+        }
+        if (shareKeyBox) shareKeyBox.style.display = "flex";
+        if (shareLinkInput) shareLinkInput.value = getShareUrl();
+        return;
+      }
+
+      if (shareStatus) {
+        shareStatus.className = "share-status";
+        shareStatus.innerHTML = `<span>⏳</span> Загрузка готового мема на ImgBB...`;
+      }
+      isUploadingMeme = true;
+
+      try {
+        const blob = currentMemeBlob || await getCanvasBlob();
+        if (!blob) throw new Error("Холст пуст");
+
+        const formData = new FormData();
+        formData.append("image", blob, "meme.png");
+
+        const res = await fetch("https://api.imgbb.com/1/upload?key=" + encodeURIComponent(key), {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data && data.success && data.data) {
+          uploadedMemeUrl = data.data.url || data.data.display_url;
+          if (shareLinkInput) shareLinkInput.value = uploadedMemeUrl;
+          if (shareStatus) {
+            shareStatus.className = "share-status ready";
+            shareStatus.innerHTML = `<span>✅</span> Мем загружен! Выбери куда отправить:`;
+          }
+        } else {
+          throw new Error(data?.error?.message || "Неверный ответ ImgBB");
+        }
+      } catch (err) {
+        console.warn("ImgBB upload error:", err);
+        if (shareStatus) {
+          shareStatus.className = "share-status warn";
+          shareStatus.innerHTML = `⚠️ Ошибка: ${err.message || "проверь ключ"}`;
+        }
+        if (shareKeyBox) shareKeyBox.style.display = "flex";
+        if (shareLinkInput) shareLinkInput.value = getShareUrl();
+      } finally {
+        isUploadingMeme = false;
+      }
+    }
+
     function openShareModal() {
       updateCanvasBlob();
-      const currentUrl = getShareUrl();
-      if (shareLinkInput) {
-        shareLinkInput.value = currentUrl;
-      }
+      if (shareLinkInput) shareLinkInput.value = uploadedMemeUrl || getShareUrl();
       if (shareModal) shareModal.classList.add("active");
+      uploadMemeToImgBB();
     }
 
     function closeShareModal() {
       if (shareModal) shareModal.classList.remove("active");
     }
 
-    if (shareCloseBtn) {
-      shareCloseBtn.addEventListener("click", closeShareModal);
-    }
+    if (shareCloseBtn) shareCloseBtn.addEventListener("click", closeShareModal);
     if (shareModal) {
       shareModal.addEventListener("click", (e) => {
         if (e.target === shareModal) closeShareModal();
@@ -1182,20 +1366,41 @@
       openShareModal();
     });
 
+    function getEffectiveShareUrl() {
+      return uploadedMemeUrl || getShareUrl();
+    }
+
     function copyShareLink() {
-      const url = getShareUrl();
+      const url = getEffectiveShareUrl();
       copyTextToClipboard(url);
       showToast("✅ Ссылка скопирована!");
     }
     if (shareCopyLinkBtn) shareCopyLinkBtn.addEventListener("click", copyShareLink);
     if (shareLinkInput) shareLinkInput.addEventListener("click", copyShareLink);
 
-    // 1. Иконка Telegram: открывает список чатов мгновенно без зависаний!
+    // 1. Иконка Telegram: открывает список чатов мгновенно!
     document.getElementById("shareTgBtn").addEventListener("click", () => {
+      if (isUploadingMeme) {
+        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
+        return;
+      }
+      if (uploadedMemeUrl) {
+        const tgShareUrl = "https://t.me/share/url?url=" + encodeURIComponent(uploadedMemeUrl);
+        if (tg && tg.openTelegramLink) {
+          tg.openTelegramLink(tgShareUrl);
+        } else {
+          window.open(tgShareUrl, "_blank");
+        }
+        return;
+      }
+      // Если загрузка на ImgBB не удалась, на мобильном используем прямую отправку файла мема:
+      if (navigator.share && currentMemeFile) {
+        navigator.share({ files: [currentMemeFile], title: "Мем" }).catch(() => {});
+        return;
+      }
       const url = getShareUrl();
       const text = getShareText();
       const tgShareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url) + (text ? "&text=" + encodeURIComponent(text) : "");
-      
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(tgShareUrl);
       } else {
@@ -1205,8 +1410,12 @@
 
     // 2. Иконка WhatsApp: мгновенный переход
     document.getElementById("shareWaBtn").addEventListener("click", () => {
-      const url = getShareUrl();
-      const text = getShareText();
+      if (isUploadingMeme) {
+        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
+        return;
+      }
+      const url = getEffectiveShareUrl();
+      const text = uploadedMemeUrl ? "" : getShareText();
       const msg = (text ? text + "\n" : "") + url;
       const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg);
       
@@ -1219,7 +1428,11 @@
 
     // 3. Иконка VK: мгновенный диалог VK
     document.getElementById("shareVkBtn").addEventListener("click", () => {
-      const url = getShareUrl();
+      if (isUploadingMeme) {
+        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
+        return;
+      }
+      const url = getEffectiveShareUrl();
       const text = getShareText();
       const vkUrl = "https://vk.com/share.php?url=" + encodeURIComponent(url) + (text ? "&title=" + encodeURIComponent(text) : "");
       
@@ -1232,7 +1445,11 @@
 
     // 4. Иконка Viber
     document.getElementById("shareViberBtn").addEventListener("click", () => {
-      const url = getShareUrl();
+      if (isUploadingMeme) {
+        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
+        return;
+      }
+      const url = getEffectiveShareUrl();
       const text = getShareText();
       const msg = (text ? text + " " : "") + url;
       const viberUrl = "viber://forward?text=" + encodeURIComponent(msg);
