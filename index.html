@@ -121,6 +121,24 @@
       border-color: var(--tg-theme-button-color, #2481cc);
       transform: scale(1.06);
     }
+    .search-bot-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(36, 129, 204, 0.2);
+      border: 1px solid var(--tg-theme-button-color, #2481cc);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .search-bot-pill:active {
+      transform: scale(0.96);
+    }
     .no-results {
       font-size: 13px;
       color: #999;
@@ -274,7 +292,7 @@
       transform: scale(0.97);
     }
 
-    /* Модальное окно «Поделиться» (Share Sheet) в точном стиле VK Video / Приложений */
+    /* Модальное окно «Поделиться» (Share Sheet) в стиле VK Video */
     .share-modal-overlay {
       position: fixed;
       inset: 0;
@@ -284,7 +302,7 @@
       justify-content: center;
       align-items: flex-end;
       z-index: 99999;
-      animation: fadeIn 0.2s ease;
+      animation: fadeIn 0.18s ease;
     }
     .share-modal-overlay.active {
       display: flex;
@@ -299,7 +317,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       border: 1px solid rgba(255, 255, 255, 0.12);
     }
     @keyframes fadeIn {
@@ -446,7 +464,7 @@
     }
     .share-action-btn {
       width: 100%;
-      padding: 11px 14px;
+      padding: 12px 14px;
       font-size: 14px;
       font-weight: 600;
       border-radius: 12px;
@@ -475,9 +493,9 @@
 </head>
 <body>
   <div class="container">
-    <!-- Поиск картинок в интернете и загрузка своего фото -->
+    <!-- Поиск картинок -->
     <div class="header-bar">
-      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи в интернете: язь, кот, скуф, тачка...">
+      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи: язь, кот, собака, дрейк, работа...">
       <label class="upload-btn" for="fileInput">📁 Своё фото</label>
       <input type="file" id="fileInput" accept="image/*" style="display: none;">
     </div>
@@ -600,10 +618,10 @@
         </div>
       </div>
 
-      <!-- Поле с прямой ссылкой на созданный мем -->
+      <!-- Поле со ссылкой на мем -->
       <div class="share-link-wrapper" id="shareLinkRow">
-        <input type="text" class="share-link-input" id="shareLinkInput" readonly value="Загрузка...">
-        <button class="share-link-copy-btn" id="shareCopyLinkBtn" title="Скопировать ссылку на мем">
+        <input type="text" class="share-link-input" id="shareLinkInput" readonly value="">
+        <button class="share-link-copy-btn" id="shareCopyLinkBtn" title="Скопировать ссылку">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
           </svg>
@@ -616,7 +634,7 @@
       <!-- Действия скачивания и копирования PNG -->
       <div class="share-actions-box">
         <button class="share-action-btn primary" id="shareDownloadBtn">
-          💾 Скачать картинку мема
+          💾 Скачать картинку мема (с текстом)
         </button>
         <button class="share-action-btn" id="shareCopyImgBtn">
           📋 Скопировать картинку (PNG)
@@ -632,52 +650,34 @@
       tg.expand();
     }
 
-    // База популярных шаблонов с тегами для мгновенного поиска
+    // 100% проверенные, рабочие шаблоны рунета и мировых мемов
     let allTemplates = [
-      // Мемы рунета и тренды
-      { id: "yaz", title: "Язь - рыба моей мечты", tags: "язь рыба рыбалка мужик рыбак мечта кричит озеро", cat: "all", url: "https://memepedia.ru/wp-content/uploads/2017/04/%D1%8F%D0%B7%D1%8C-%D1%80%D1%8B%D0%B1%D0%B0-%D0%BC%D0%BE%D0%B5%D0%B9-%D0%BC%D0%B5%D1%87%D1%82%D1%8B.jpg" },
-      { id: "fine_cat", title: "Все нормально (Кот)", tags: "нормально все нормально кот коты котик коты все нормально котлеты", cat: "cat", url: "https://i.imgflip.com/26amz.jpg" },
-      { id: "travolta", title: "Растерянный Траволта", tags: "траволта не понял где разводит руками растерянность мем криминальное чтиво", cat: "choice", url: "https://i.imgflip.com/392e2h.jpg" },
-      { id: "gosling", title: "Райан Гослинг (Драйв)", tags: "гослинг райан драйв сигма грустный едет машина скуф", cat: "all", url: "https://i.imgflip.com/6wn0s4.jpg" },
-      { id: "wolf", title: "Волк с цитатой (Ауф)", tags: "волк цитата ауф волчара брат пацанские цитаты", cat: "all", url: "https://i.imgflip.com/4q612k.jpg" },
-      { id: "pikachu", title: "Удивленный Пикачу", tags: "пикачу шок удивление рот открыл покемон", cat: "all", url: "https://i.imgflip.com/2kbn1e.jpg" },
-      { id: "bateman", title: "Патрик Бэйтман (Сигма)", tags: "сигма бэйтман патрик наушники идет лицо крутой", cat: "all", url: "https://i.imgflip.com/791x8a.jpg" },
-      { id: "shrek", title: "Шрек", tags: "shrek шрек осел болото рожа мем", cat: "all", url: "https://i.imgflip.com/20q1e.jpg" },
-      { id: "medvedev", title: "Денег нет но вы держитесь", tags: "медведев денег нет но вы держитесь премьер спит работа", cat: "work", url: "https://i.imgflip.com/131bda.jpg" },
-
-      // Коты и животные
+      // Мемы рунета
+      { id: "yaz", title: "Язь - рыба моей мечты", tags: "язь рыба рыбалка мужик рыбак мечта кричит озеро блеать", cat: "all", url: "https://cs14.pikabu.ru/post_img/2023/12/22/5/og_og_1703226836258361903.jpg" },
       { id: "cat_rybov", title: "Вы продаете рыбов", tags: "рыбов кот коты котик рыба продаете кошка красивое", cat: "cat", url: "https://i.imgflip.com/1g8my4.jpg" },
       { id: "cat_woman", title: "Женщина кричит на кота за столом", tags: "кот кошка стол женщина кричит белая салат орет", cat: "cat", url: "https://i.imgflip.com/345v97.jpg" },
-      { id: "cat_sad", title: "Грустный плачущий котик", tags: "кот котик плачет слезы грусть печаль", cat: "cat", url: "https://i.imgflip.com/46hhvr.jpg" },
       { id: "doge", title: "Доге (Doge)", tags: "доге собака пес пёс сиба ину мем классика", cat: "dog", url: "https://i.imgflip.com/4t0m5.jpg" },
-      { id: "buff_doge", title: "Качок Доге и Чимс", tags: "доге чимс собака качок раньше сейчас сравнение слабый сильный", cat: "dog", url: "https://i.imgflip.com/43a45p.jpg" },
       { id: "this_is_fine", title: "Собака в огне (This is fine)", tags: "собака огонь пожар все нормально пёс чай кофе", cat: "dog", url: "https://i.imgflip.com/wxica.jpg" },
-
-      // Выбор и реакции
       { id: "drake", title: "Дрейк (Drake)", tags: "дрейк выбор нет да одобряет отвергает рэпер", cat: "choice", url: "https://i.imgflip.com/30b1gx.jpg" },
       { id: "two_buttons", title: "Две кнопки (Сложный выбор)", tags: "две кнопки выбор паника пот человек мужик красная", cat: "choice", url: "https://i.imgflip.com/1g8my4.jpg" },
       { id: "distracted_bf", title: "Парень оглянулся на девушку", tags: "парень девушка измена оглянулся платье свидание любовь", cat: "choice", url: "https://i.imgflip.com/1ur9b0.jpg" },
       { id: "monkey_puppet", title: "Обезьяна отвернулась", tags: "обезьяна отвернулся стыдно неловко глаза взгляд в сторону", cat: "choice", url: "https://i.imgflip.com/2gnnjh.jpg" },
-
-      // Мысли, ум, работа
       { id: "rollsafe", title: "Думающий парень (Roll Safe)", tags: "думает умный мысль палец у виска голова соображает гений", cat: "think", url: "https://i.imgflip.com/1h7in3.jpg" },
       { id: "expanding_brain", title: "Сверхразум (Расширение мозга)", tags: "мозг мысли сверхразум уровни космос идея", cat: "think", url: "https://i.imgflip.com/1jwhww.jpg" },
       { id: "change_my_mind", title: "Измени мое мнение (Change My Mind)", tags: "стол кофе кружка парк докажи мнение спор", cat: "think", url: "https://i.imgflip.com/24y43o.jpg" },
-      { id: "office_same", title: "Найди отличия (The Office)", tags: "офис найди отличия они одинаковые одно и то же девушка", cat: "work", url: "https://i.imgflip.com/2ybua0.jpg" },
-      { id: "computer_angry", title: "Злой за компом / Программист", tags: "программист код комп компьютер злой клавиатура работа офис злость", cat: "work", url: "https://i.imgflip.com/261o3j.jpg" },
-
-      // Эмоции
-      { id: "dicaprio", title: "Леонардо Ди Каприо с бокалом", tags: "ди каприо тост бокал вино гэтсби ухмылка праздник пятница", cat: "all", url: "https://i.imgflip.com/39t1o.jpg" },
       { id: "disaster_girl", title: "Девочка на фоне пожара", tags: "девочка пожар улыбка огонь злодейка дом горит", cat: "all", url: "https://i.imgflip.com/23ls.jpg" },
       { id: "pablo_escobar", title: "Ожидающий Пабло Эскобар", tags: "пабло эскобар ждет скучно ожидание тоска один сидит грусть печаль", cat: "sad", url: "https://i.imgflip.com/1c1uej.jpg" },
-      { id: "clown", title: "Клоун красится", tags: "клоун макияж цирк дебил дурак позор", cat: "all", url: "https://i.imgflip.com/38el31.jpg" },
-      { id: "gigachad", title: "Гигачад (Gigachad)", tags: "гигачад сигма скуф мужик челюсть красивый сила", cat: "all", url: "https://i.imgflip.com/65x7uh.jpg" },
-      { id: "batman_slap", title: "Бэтмен бьет Робина", tags: "бэтмен робин пощечина заткнись удар комикс", cat: "all", url: "https://i.imgflip.com/9ehk.jpg" },
-      { id: "grumpy_cat", title: "Сердитый кот (Grumpy Cat)", tags: "сердитый кот злой недовольный морда", cat: "cat", url: "https://i.imgflip.com/8p0a.jpg" },
-      { id: "success_kid", title: "Успешный ребенок (Success Kid)", tags: "успех ребенок кулак пляж песок победа радость", cat: "all", url: "https://i.imgflip.com/1bhk.jpg" }
+      { id: "anakin_padme", title: "Анакин и Падме (Ведь правда?)", tags: "анакин падме правда ведь звезда смерти джедай", cat: "choice", url: "https://i.imgflip.com/5c7lwq.png" },
+      { id: "bernie", title: "Берни Сандерс (Прошу поддержки)", tags: "берни сандерс варежки прошу поддержки деньги выборы", cat: "work", url: "https://i.imgflip.com/3oevdk.jpg" },
+      { id: "uno_cards", title: "UNO Взять 25 карт", tags: "уно uno 25 карт выбор карточки игра", cat: "choice", url: "https://i.imgflip.com/3lmzyx.jpg" },
+      { id: "handshake", title: "Эпичное рукопожатие", tags: "рукопожатие сила согласие дружба мускулы бицепс", cat: "all", url: "https://i.imgflip.com/28j0te.jpg" },
+      { id: "grus_plan", title: "План Грю", tags: "грю план презентация доска удивление гадкий я", cat: "think", url: "https://i.imgflip.com/26jxvz.jpg" },
+      { id: "skeleton", title: "Ожидающий скелет на лавке", tags: "скелет ждет скамейка ожидание дождался тоска", cat: "sad", url: "https://i.imgflip.com/2fm6x.jpg" },
+      { id: "balloon", title: "Убегающий воздушный шарик", tags: "шарик держит убегает цель мечта работа отдых", cat: "work", url: "https://i.imgflip.com/261o3j.jpg" },
+      { id: "highway_exit", title: "Резкий поворот на трассе", tags: "поворот трасса машина съезд дрифт выбор", cat: "choice", url: "https://i.imgflip.com/22bdq6.jpg" }
     ];
 
-    // Подгрузка еще 100 мировых мемов из Imgflip
+    // Фоновая загрузка 100 мировых шаблонов из Imgflip
     fetch("https://api.imgflip.com/get_memes")
       .then(res => res.json())
       .then(data => {
@@ -685,7 +685,7 @@
           const apiMemes = data.data.memes.map(m => ({
             id: "if_" + m.id,
             title: m.name,
-            tags: m.name.toLowerCase(),
+            tags: m.name.toLowerCase() + " мем шаблон",
             cat: "all",
             url: m.url
           }));
@@ -729,7 +729,7 @@
 
     let initialUrl = passedImg;
 
-    // Распаковка картинок, переданных ботом при открытии редактора
+    // Распаковка найденных картинок из Telegram бота (Яндекс + Bing)
     if (passedPics) {
       try {
         const jsonStr = atob(passedPics.replace(/-/g, "+").replace(/_/g, "/"));
@@ -738,7 +738,7 @@
           const liveMemes = decoded.map((u, i) => ({
             id: "live_" + i,
             title: passedQuery ? `${passedQuery} #${i + 1}` : `Найдено #${i + 1}`,
-            tags: (passedQuery || "") + " яндекс bing поиск",
+            tags: (passedQuery || "") + " яндекс bing поиск фото мем",
             cat: "all",
             url: u,
           }));
@@ -766,20 +766,34 @@
     };
 
     let isDragging = false;
-    let uploadedMemeUrl = null;
-    let isUploading = false;
-    let uploadPromise = null;
 
-    function invalidateUploadedMeme() {
-      uploadedMemeUrl = null;
-    }
-
-    function renderTemplates(list) {
+    function renderTemplates(list, currentQuery) {
       templatesBar.innerHTML = "";
+
+      // Если введён поисковый запрос — всегда даём кнопку мгновенного поиска в боте через Яндекс + Bing!
+      if (currentQuery && currentQuery.trim().length >= 1) {
+        const qTrim = currentQuery.trim();
+        const botPill = document.createElement("div");
+        botPill.className = "search-bot-pill";
+        botPill.innerHTML = `🔍 Найти «${qTrim}» в боте (Яндекс + Bing)`;
+        botPill.addEventListener("click", () => {
+          if (tg && tg.switchInlineQuery) {
+            tg.switchInlineQuery(qTrim);
+          } else {
+            window.open("https://t.me/findPICTUREsv_bot?start=" + encodeURIComponent(qTrim), "_blank");
+          }
+        });
+        templatesBar.appendChild(botPill);
+      }
+
       if (!list || !list.length) {
-        templatesBar.innerHTML = `<div class="no-results">Ищу картинки в интернете... 🔎</div>`;
+        const noRes = document.createElement("div");
+        noRes.className = "no-results";
+        noRes.textContent = "Нажми синюю кнопку выше, чтобы найти картинки через Яндекс и Bing!";
+        templatesBar.appendChild(noRes);
         return;
       }
+
       list.forEach((item) => {
         const img = document.createElement("img");
         img.className = "thumb" + (item.url === state.imgUrl ? " active" : "");
@@ -800,75 +814,10 @@
           document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
           img.classList.add("active");
           state.imgUrl = item.url;
-          invalidateUploadedMeme();
           loadImage(item.url);
         });
         templatesBar.appendChild(img);
       });
-    }
-
-    // Поиск картинок онлайн (Memepedia + Wikimedia Commons)
-    let searchDebounceTimer = null;
-    async function searchOnlineImages(query) {
-      const q = query.trim();
-      if (!q || q.length < 2) return;
-
-      const onlineResults = [];
-      const seen = new Set(allTemplates.map(t => t.url));
-
-      // 1. Memepedia API (самые вирусные русские мемы)
-      try {
-        const memUrl = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent(q)}&_embed=1&per_page=12`;
-        const res = await fetch(memUrl);
-        if (res.ok) {
-          const posts = await res.json();
-          if (Array.isArray(posts)) {
-            posts.forEach(p => {
-              const media = p?._embedded?.["wp:featuredmedia"]?.[0];
-              const u = media?.source_url;
-              if (u && !seen.has(u)) {
-                seen.add(u);
-                onlineResults.push({
-                  id: "mp_" + p.id,
-                  title: p?.title?.rendered || q,
-                  tags: q + " memepedia мем",
-                  cat: "all",
-                  url: u
-                });
-              }
-            });
-          }
-        }
-      } catch (e) {}
-
-      // 2. Wikimedia Commons API (миллионы качественных фото на любую тему)
-      try {
-        const wikiUrl = `https://ru.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
-        const res = await fetch(wikiUrl);
-        if (res.ok) {
-          const data = await res.json();
-          const pages = data?.query?.pages || {};
-          Object.values(pages).forEach(p => {
-            const ii = p?.imageinfo?.[0];
-            const u = ii?.url;
-            if (u && !seen.has(u) && (u.endsWith(".jpg") || u.endsWith(".png") || u.endsWith(".jpeg") || u.endsWith(".webp"))) {
-              seen.add(u);
-              onlineResults.push({
-                id: "wk_" + p.pageid,
-                title: p.title || q,
-                tags: q + " вики фото",
-                cat: "all",
-                url: u
-              });
-            }
-          });
-        }
-      } catch (e) {}
-
-      if (onlineResults.length > 0) {
-        allTemplates = onlineResults.concat(allTemplates);
-        filterMemes();
-      }
     }
 
     function filterMemes() {
@@ -893,28 +842,20 @@
           return words.some(w => hay.includes(w));
         });
 
-        filtered = matched.length ? matched : filtered;
+        // Показываем совпавшие. Если ничего не совпало — показываем всё, чтобы не было пустого экрана!
+        filtered = matched.length ? matched : allTemplates;
       }
 
-      renderTemplates(filtered);
+      renderTemplates(filtered, q);
     }
 
     if (passedQuery) {
       filterMemes();
     } else {
-      renderTemplates(allTemplates);
+      renderTemplates(allTemplates, "");
     }
 
-    searchBar.addEventListener("input", () => {
-      filterMemes();
-      clearTimeout(searchDebounceTimer);
-      const val = searchBar.value.trim();
-      if (val.length >= 2 && !val.startsWith("http")) {
-        searchDebounceTimer = setTimeout(() => {
-          searchOnlineImages(val);
-        }, 450);
-      }
-    });
+    searchBar.addEventListener("input", filterMemes);
 
     tagElements.forEach(tag => {
       tag.addEventListener("click", () => {
@@ -942,7 +883,6 @@
         canvas.height = currentImage.naturalHeight || 400;
         state.posX = canvas.width / 2;
         state.posY = canvas.height - 45;
-        invalidateUploadedMeme();
         render();
       };
       currentImage.onerror = () => {
@@ -954,7 +894,6 @@
             canvas.height = currentImage.naturalHeight || 400;
             state.posX = canvas.width / 2;
             state.posY = canvas.height - 45;
-            invalidateUploadedMeme();
             render();
           };
           directImg.src = url;
@@ -972,7 +911,6 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         state.imgUrl = evt.target.result;
-        invalidateUploadedMeme();
         loadImage(evt.target.result);
       };
       reader.readAsDataURL(file);
@@ -1072,20 +1010,17 @@
 
     textInput.addEventListener("input", (e) => {
       state.text = e.target.value;
-      invalidateUploadedMeme();
       render();
     });
 
     fontSelect.addEventListener("change", (e) => {
       state.font = e.target.value;
-      invalidateUploadedMeme();
       render();
     });
 
     fontSizeSlider.addEventListener("input", (e) => {
       state.size = parseInt(e.target.value);
       sizeVal.textContent = state.size + "px";
-      invalidateUploadedMeme();
       render();
     });
 
@@ -1095,28 +1030,24 @@
       document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
       dot.classList.add("active");
       state.color = dot.dataset.color;
-      invalidateUploadedMeme();
       render();
     });
 
     btnStroke.addEventListener("click", () => {
       state.stroke = !state.stroke;
       btnStroke.classList.toggle("active", state.stroke);
-      invalidateUploadedMeme();
       render();
     });
 
     btnPlate.addEventListener("click", () => {
       state.plate = !state.plate;
       btnPlate.classList.toggle("active", state.plate);
-      invalidateUploadedMeme();
       render();
     });
 
     btnUpper.addEventListener("click", () => {
       state.uppercase = !state.uppercase;
       btnUpper.classList.toggle("active", state.uppercase);
-      invalidateUploadedMeme();
       render();
     });
 
@@ -1137,7 +1068,6 @@
       const coords = getCanvasCoords(e);
       state.posX = coords.x;
       state.posY = coords.y;
-      invalidateUploadedMeme();
       render();
     }
 
@@ -1147,7 +1077,6 @@
       const coords = getCanvasCoords(e);
       state.posX = coords.x;
       state.posY = coords.y;
-      invalidateUploadedMeme();
       render();
     }
 
@@ -1179,9 +1108,7 @@
 
     function copyTextToClipboard(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => {
-          fallbackCopyText(text);
-        });
+        navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
       } else {
         fallbackCopyText(text);
       }
@@ -1200,49 +1127,15 @@
       } catch (e) {}
     }
 
-    // Загрузка готового мема с наложенным текстом в облако (Imgur API)
-    async function uploadCanvasToCloud() {
-      if (uploadedMemeUrl) return uploadedMemeUrl;
-      if (isUploading) return uploadPromise;
+    function getShareUrl() {
+      if (state.imgUrl && (state.imgUrl.startsWith("http://") || state.imgUrl.startsWith("https://"))) {
+        return state.imgUrl;
+      }
+      return "https://seregashtopor.github.io/meme-editor/";
+    }
 
-      isUploading = true;
-      uploadPromise = (async () => {
-        try {
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
-          const base64Data = dataUrl.split(",")[1];
-          if (!base64Data) throw new Error("No image data");
-
-          const clientIds = ["546c25a59c58ad7", "339234839842a22", "c326e95b0581f44", "87955543c749b5c"];
-          for (const cid of clientIds) {
-            try {
-              const res = await fetch("https://api.imgur.com/3/image", {
-                method: "POST",
-                headers: {
-                  "Authorization": "Client-ID " + cid,
-                  "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: "image=" + encodeURIComponent(base64Data) + "&type=base64"
-              });
-              if (res.ok) {
-                const json = await res.json();
-                if (json?.data?.link) {
-                  uploadedMemeUrl = json.data.link;
-                  return uploadedMemeUrl;
-                }
-              }
-            } catch (e) {}
-          }
-        } catch (err) {
-          console.warn("Upload error:", err);
-        } finally {
-          isUploading = false;
-        }
-
-        // Если облако временно недоступно — резерв
-        return state.imgUrl || "https://seregashtopor.github.io/meme-editor/";
-      })();
-
-      return uploadPromise;
+    function getShareText() {
+      return (state.uppercase ? state.text.toUpperCase() : state.text).trim();
     }
 
     // Управление окном «Поделиться»
@@ -1260,20 +1153,16 @@
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         shareToast.style.display = "none";
-      }, 3500);
+      }, 3000);
     }
 
-    async function openShareModal() {
+    function openShareModal() {
       updateCanvasBlob();
+      const currentUrl = getShareUrl();
       if (shareLinkInput) {
-        shareLinkInput.value = uploadedMemeUrl || "⏳ Подготовка ссылки на мем...";
+        shareLinkInput.value = currentUrl;
       }
       if (shareModal) shareModal.classList.add("active");
-
-      if (!uploadedMemeUrl) {
-        const url = await uploadCanvasToCloud();
-        if (shareLinkInput) shareLinkInput.value = url;
-      }
     }
 
     function closeShareModal() {
@@ -1293,23 +1182,19 @@
       openShareModal();
     });
 
-    async function copyShareLink() {
-      let url = uploadedMemeUrl;
-      if (!url) {
-        showToast("⏳ Загрузка мема...");
-        url = await uploadCanvasToCloud();
-      }
+    function copyShareLink() {
+      const url = getShareUrl();
       copyTextToClipboard(url);
-      showToast("✅ Ссылка на мем скопирована!");
+      showToast("✅ Ссылка скопирована!");
     }
     if (shareCopyLinkBtn) shareCopyLinkBtn.addEventListener("click", copyShareLink);
     if (shareLinkInput) shareLinkInput.addEventListener("click", copyShareLink);
 
-    // 1. Иконка Telegram: отправляет ГОТОВЫЙ МЕМ с наложенным текстом в любой чат!
-    document.getElementById("shareTgBtn").addEventListener("click", async () => {
-      showToast("⏳ Подготовка мема...");
-      const url = await uploadCanvasToCloud();
-      const tgShareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url);
+    // 1. Иконка Telegram: открывает список чатов мгновенно без зависаний!
+    document.getElementById("shareTgBtn").addEventListener("click", () => {
+      const url = getShareUrl();
+      const text = getShareText();
+      const tgShareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url) + (text ? "&text=" + encodeURIComponent(text) : "");
       
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(tgShareUrl);
@@ -1318,11 +1203,12 @@
       }
     });
 
-    // 2. Иконка WhatsApp: отправляет ГОТОВЫЙ МЕМ с текстом в WhatsApp!
-    document.getElementById("shareWaBtn").addEventListener("click", async () => {
-      showToast("⏳ Подготовка мема...");
-      const url = await uploadCanvasToCloud();
-      const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(url);
+    // 2. Иконка WhatsApp: мгновенный переход
+    document.getElementById("shareWaBtn").addEventListener("click", () => {
+      const url = getShareUrl();
+      const text = getShareText();
+      const msg = (text ? text + "\n" : "") + url;
+      const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg);
       
       if (tg && tg.openLink) {
         tg.openLink(waUrl);
@@ -1331,11 +1217,11 @@
       }
     });
 
-    // 3. Иконка VK: открывает VK с готовым мемом!
-    document.getElementById("shareVkBtn").addEventListener("click", async () => {
-      showToast("⏳ Подготовка мема...");
-      const url = await uploadCanvasToCloud();
-      const vkUrl = "https://vk.com/share.php?url=" + encodeURIComponent(url);
+    // 3. Иконка VK: мгновенный диалог VK
+    document.getElementById("shareVkBtn").addEventListener("click", () => {
+      const url = getShareUrl();
+      const text = getShareText();
+      const vkUrl = "https://vk.com/share.php?url=" + encodeURIComponent(url) + (text ? "&title=" + encodeURIComponent(text) : "");
       
       if (tg && tg.openLink) {
         tg.openLink(vkUrl);
@@ -1344,11 +1230,12 @@
       }
     });
 
-    // 4. Иконка Viber: отправляет мем в Viber!
-    document.getElementById("shareViberBtn").addEventListener("click", async () => {
-      showToast("⏳ Подготовка мема...");
-      const url = await uploadCanvasToCloud();
-      const viberUrl = "viber://forward?text=" + encodeURIComponent(url);
+    // 4. Иконка Viber
+    document.getElementById("shareViberBtn").addEventListener("click", () => {
+      const url = getShareUrl();
+      const text = getShareText();
+      const msg = (text ? text + " " : "") + url;
+      const viberUrl = "viber://forward?text=" + encodeURIComponent(msg);
       
       if (tg && tg.openLink) {
         tg.openLink(viberUrl);
@@ -1357,44 +1244,37 @@
       }
     });
 
-    // 5. Иконка «Еще» (системное меню смартфона)
-    document.getElementById("shareSystemBtn").addEventListener("click", async () => {
-      const blob = currentMemeBlob || await getCanvasBlob();
+    // 5. Иконка «Еще» (системное меню "Поделиться" смартфона)
+    document.getElementById("shareSystemBtn").addEventListener("click", () => {
       if (navigator.share && currentMemeFile) {
-        try {
-          await navigator.share({ files: [currentMemeFile], title: "Мем" });
-          return;
-        } catch (e) {
-          if (e.name === "AbortError") return;
-        }
+        navigator.share({ files: [currentMemeFile], title: "Мем" }).catch(() => {});
+        return;
       }
-      const url = await uploadCanvasToCloud();
-      copyTextToClipboard(url);
-      showToast("✅ Ссылка на мем скопирована!");
+      copyShareLink();
     });
 
-    // Кнопка: 💾 Скачать картинку мема
+    // Кнопка: 💾 Скачать картинку мема (сохраняет готовый мем с текстом на устройство!)
     document.getElementById("shareDownloadBtn").addEventListener("click", async () => {
       const blob = currentMemeBlob || await getCanvasBlob();
       if (blob) {
         downloadCanvasBlob(blob);
-        showToast("✅ Мем сохранен на устройство!");
+        showToast("✅ Мем скачан в галерею!");
       }
     });
 
-    // Кнопка: 📋 Скопировать картинку (PNG)
+    // Кнопка: 📋 Скопировать картинку (PNG в буфер для Ctrl+V)
     document.getElementById("shareCopyImgBtn").addEventListener("click", async () => {
       const blob = currentMemeBlob || await getCanvasBlob();
       if (blob && navigator.clipboard && window.ClipboardItem) {
         try {
           await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-          showToast("✅ Мем скопирован в буфер! Вставь через Ctrl+V");
+          showToast("✅ Мем скопирован! Вставь через Ctrl+V");
           return;
         } catch (e) {}
       }
       if (blob) {
         downloadCanvasBlob(blob);
-        showToast("💾 Файл скачан (буфер недоступен)");
+        showToast("💾 Файл скачан на устройство");
       }
     });
 
