@@ -364,6 +364,64 @@
       tg.expand();
     }
 
+    // ============================================================
+    // ПОИСК КАРТИНОК — Pixabay API (бесплатно, 20 картинок/запрос)
+    // Получи бесплатный ключ на https://pixabay.com/api/docs/
+    // и вставь сюда:
+    const PIXABAY_KEY = "";
+    // ============================================================
+
+    let searchTimer = null;
+    let currentSearchQuery = "";
+
+    async function fetchPixabay(query) {
+      if (!PIXABAY_KEY || !query) return [];
+      try {
+        const lang = /[а-яёА-ЯЁ]/.test(query) ? "ru" : "en";
+        const url = `https://pixabay.com/api/?key=${PIXABAY_KEY}` +
+          `&q=${encodeURIComponent(query)}&image_type=photo&per_page=20` +
+          `&lang=${lang}&safesearch=false&order=popular`;
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        const data = await res.json();
+        if (!data.hits) return [];
+        return data.hits.map((h, i) => ({
+          id: "px_" + h.id,
+          title: query + " " + (i + 1),
+          tags: query,
+          cat: "all",
+          url: h.largeImageURL || h.webformatURL,
+          thumb: h.webformatURL,
+        }));
+      } catch (e) {
+        console.warn("Pixabay error:", e);
+        return [];
+      }
+    }
+
+    // Резервный поиск через DuckDuckGo image API (без ключа, но ограниченно)
+    async function fetchDuckDuck(query) {
+      try {
+        // Используем Unsplash source — возвращает список через их search
+        const res = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=20&client_id=sNpqNRg3P7VaXdRvNmUm0VCuEJxzxX2J_MQc7b3Gf9s`
+        );
+        if (!res.ok) return [];
+        const data = await res.json();
+        if (!data.results) return [];
+        return data.results.map((p, i) => ({
+          id: "us_" + p.id,
+          title: query + " " + (i + 1),
+          tags: query,
+          cat: "all",
+          url: p.urls.regular,
+          thumb: p.urls.thumb,
+        }));
+      } catch (e) {
+        return [];
+      }
+    }
+
     // Богатая встроенная база шаблонов с русскими поисковыми тегами
     let allTemplates = [
       // Коты и животные
@@ -525,31 +583,66 @@
 
     renderTemplates(allTemplates);
 
-    function filterMemes() {
+    // Индикатор загрузки поиска
+    function showSearchLoading() {
+      templatesBar.innerHTML = `<div class="no-results">🔎 Ищу картинки...</div>`;
+    }
+
+    async function filterMemes() {
       const q = searchBar.value.toLowerCase().trim();
       const activeTag = document.querySelector(".tag.active")?.dataset.tag || "all";
 
-      let filtered = allTemplates;
+      // Если пользователь вставил прямую ссылку
+      if (q.startsWith("http://") || q.startsWith("https://")) {
+        loadImage(q);
+        return;
+      }
 
+      // Локальная фильтрация — мгновенно
+      let filtered = allTemplates;
       if (activeTag !== "all") {
         filtered = filtered.filter(t => t.cat === activeTag);
       }
-
       if (q) {
-        // Если пользователь вставил прямую ссылку на картинку
-        if (q.startsWith("http://") || q.startsWith("https://")) {
-          loadImage(q);
-          return;
-        }
-
         const words = q.split(" ").filter(Boolean);
         filtered = filtered.filter(t => {
           const hay = (t.title + " " + (t.tags || "")).toLowerCase();
           return words.some(w => hay.includes(w));
         });
       }
-
       renderTemplates(filtered);
+
+      // Онлайн-поиск через Pixabay (если есть ключ и запрос ≥ 2 символа)
+      if (q && q.length >= 2) {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(async () => {
+          currentSearchQuery = q;
+          showSearchLoading();
+
+          let onlineResults = [];
+          if (PIXABAY_KEY) {
+            onlineResults = await fetchPixabay(q);
+          }
+          // Если Pixabay без ключа — пробуем Unsplash demo
+          if (!onlineResults.length) {
+            onlineResults = await fetchDuckDuck(q);
+          }
+
+          // Не показываем устаревший результат, если пользователь уже ввёл что-то другое
+          if (currentSearchQuery !== q) return;
+
+          if (onlineResults.length) {
+            // Добавляем к локальным найденным, убирая дубликаты
+            const existingUrls = new Set(filtered.map(t => t.url));
+            const fresh = onlineResults.filter(t => !existingUrls.has(t.url));
+            renderTemplates([...fresh, ...filtered]);
+          } else if (!filtered.length) {
+            renderTemplates([]);
+          } else {
+            renderTemplates(filtered);
+          }
+        }, 500); // задержка 500 мс после последнего нажатия
+      }
     }
 
     searchBar.addEventListener("input", filterMemes);
@@ -762,29 +855,89 @@
     window.addEventListener("touchmove", onDragMove, { passive: false });
     window.addEventListener("touchend", onDragEnd);
 
-    btnSubmit.addEventListener("click", () => {
-      const payload = {
-        action: "send_meme",
-        text: state.text,
-        font: state.font,
-        size: state.size,
-        color: state.color,
-        stroke: state.stroke,
-        plate: state.plate,
-        uppercase: state.uppercase,
-        posX_rel: state.posX / canvas.width,
-        posY_rel: state.posY / canvas.height,
-        img_url: state.imgUrl,
-      };
+    btnSubmit.addEventListener("click", async () => {
+      const origLabel = btnSubmit.textContent;
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "⏳ Подготовка...";
 
-      if (tg) {
-        tg.sendData(JSON.stringify(payload));
-      } else {
-        alert("Вне Telegram: мем успешно сгенерирован!");
+      try {
+        // Получаем картинку с холста как PNG blob
+        const blob = await new Promise((resolve) =>
+          canvas.toBlob((b) => resolve(b), "image/png")
+        );
+
+        if (!blob) throw new Error("canvas export failed");
+
+        const memeFile = new File([blob], "meme.png", { type: "image/png" });
+
+        // ═══ СПОСОБ 1: нативный шеринг (Android / iPhone / Mac)
+        // Открывает то самое меню «Поделиться» как в приложении!
+        if (navigator.share && (navigator.canShare?.({ files: [memeFile] }) ?? true)) {
+          try {
+            await navigator.share({ files: [memeFile], title: "Мем" });
+            // После успешного шеринга закрываем WebApp — черновик очищается
+            setTimeout(() => tg?.close?.(), 400);
+            return;
+          } catch (err) {
+            // AbortError = пользователь закрыл меню «Поделиться» сам
+            if (err.name === "AbortError") return;
+            // Другая ошибка → идём в фолбэк
+            console.warn("Share failed, fallback to bot:", err);
+          }
+        }
+
+        // ═══ СПОСОБ 2: отправка через бот (если share не поддерживается, напр. ПК Windows)
+        // Бот получит картинку и даст кнопку «📤 Отправить в чат»
+        const payload = {
+          action: "send_meme",
+          text: state.text,
+          font: state.font,
+          size: state.size,
+          color: state.color,
+          stroke: state.stroke,
+          plate: state.plate,
+          uppercase: state.uppercase,
+          posX_rel: state.posX / canvas.width,
+          posY_rel: state.posY / canvas.height,
+          img_url: state.imgUrl,
+        };
+        if (tg) {
+          tg.sendData(JSON.stringify(payload));
+          // sendData() сам закроет WebApp (и черновик очистится)
+        } else {
+          alert("Вне Telegram: мем готов! Используй кнопку «💾 Скачать».");
+        }
+      } catch (e) {
+        console.error("Submit error:", e);
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = origLabel;
       }
     });
 
-    function downloadBlob(blob) {
+    const btnDownload = document.getElementById("btnDownload");
+    const btnCopy = document.getElementById("btnCopy");
+
+    async function getCanvasBlob() {
+      return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+    }
+
+    function flashBtn(btn, label, color = "#34c759") {
+      const orig = btn.textContent;
+      const origBg = btn.style.background;
+      const origColor = btn.style.color;
+      btn.textContent = label;
+      btn.style.background = color;
+      btn.style.color = "#fff";
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = origBg;
+        btn.style.color = origColor;
+      }, 2200);
+    }
+
+    btnDownload.addEventListener("click", async () => {
+      const blob = await getCanvasBlob();
+      if (!blob) return;
       try {
         const link = document.createElement("a");
         link.download = "meme_" + Date.now() + ".png";
@@ -793,87 +946,48 @@
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(link.href), 5000);
-      } catch (err) {
-        console.warn("Download failed:", err);
+        flashBtn(btnDownload, "✅ Скачано!", "#2481cc");
+      } catch (e) {
+        console.warn("Download failed:", e);
       }
-    }
-
-    const btnDownload = document.getElementById("btnDownload");
-    const btnCopy = document.getElementById("btnCopy");
-
-    btnDownload.addEventListener("click", () => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          downloadBlob(blob);
-        } else {
-          try {
-            const link = document.createElement("a");
-            link.download = "meme_" + Date.now() + ".png";
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-          } catch (e) {}
-        }
-      }, "image/png");
     });
 
     btnCopy.addEventListener("click", async () => {
-      const origText = btnCopy.textContent;
+      const blob = await getCanvasBlob();
+      if (!blob) return;
 
-      let blob = null;
-      try {
-        blob = await new Promise((resolve) => {
-          canvas.toBlob((b) => resolve(b), "image/png");
-        });
-      } catch (e) {
-        console.warn("toBlob error:", e);
-      }
+      const memeFile = new File([blob], "meme.png", { type: "image/png" });
 
-      if (!blob) {
-        btnDownload.click();
-        return;
-      }
-
-      // 1. Попытка скопировать в буфер обмена (ПК, Mac, Android Chrome)
-      if (navigator.clipboard && window.ClipboardItem) {
+      // На Android/iPhone — открываем нативный шеринг (самый надёжный способ!)
+      // Это та же кнопка «Поделиться» как в любом приложении
+      if (navigator.share && (navigator.canShare?.({ files: [memeFile] }) ?? true)) {
         try {
-          const item = new ClipboardItem({ "image/png": blob });
-          await navigator.clipboard.write([item]);
-          btnCopy.textContent = "✅ Скопировано!";
-          btnCopy.style.background = "#34c759";
-          btnCopy.style.color = "#ffffff";
-          setTimeout(() => {
-            btnCopy.textContent = origText;
-            btnCopy.style.background = "";
-            btnCopy.style.color = "";
-          }, 2500);
+          await navigator.share({ files: [memeFile], title: "Мем" });
           return;
         } catch (err) {
-          console.warn("Clipboard write failed, trying share:", err);
+          if (err.name === "AbortError") return; // пользователь закрыл меню
         }
       }
 
-      // 2. Если буфер заблокирован WebView: нативный шеринг (Android / iPhone)
-      if (navigator.share) {
+      // На ПК — копируем в буфер обмена (Ctrl+V потом работает)
+      if (navigator.clipboard && window.ClipboardItem) {
         try {
-          const file = new File([blob], "meme.png", { type: "image/png" });
-          if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: "Мем",
-            });
-            btnCopy.textContent = "✅ Отправлено!";
-            setTimeout(() => { btnCopy.textContent = origText; }, 2000);
-            return;
-          }
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+          flashBtn(btnCopy, "✅ Скопировано!");
+          return;
         } catch (err) {
-          if (err.name === "AbortError") return;
+          console.warn("Clipboard failed:", err);
         }
       }
 
-      // 3. Фолбэк на прямое скачивание файла без алертов
-      downloadBlob(blob);
-      btnCopy.textContent = "💾 Скачано!";
-      setTimeout(() => { btnCopy.textContent = origText; }, 2000);
+      // Последний фолбэк — скачивание
+      const link = document.createElement("a");
+      link.download = "meme_" + Date.now() + ".png";
+      link.href = URL.createObjectURL(blob);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      flashBtn(btnCopy, "💾 Скачано!");
     });
   </script>
 </body>
