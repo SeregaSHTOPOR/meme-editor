@@ -856,6 +856,9 @@
         <button class="share-modal-close" id="shareCloseBtn">✕</button>
       </div>
 
+      <!-- Статус загрузки на ImgBB -->
+      <div class="share-status" id="shareStatus">⚡ Подготовка мема...</div>
+
       <!-- Иконки соцсетей и мессенджеров -->
       <div class="share-icons-grid">
         <div class="share-item" id="shareTgBtn">
@@ -1685,7 +1688,7 @@
         state.twitterText = e.target.value;
         render();
       });
-    });
+    }
 
     function getCanvasCoords(evt) {
       const rect = canvas.getBoundingClientRect();
