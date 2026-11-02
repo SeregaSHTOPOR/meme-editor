@@ -111,6 +111,41 @@
     .search-submit-btn:active {
       transform: scale(0.96);
     }
+    .search-status-pill {
+      display: none;
+      font-size: 11px;
+      color: #00ffff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(0, 255, 255, 0.12);
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      margin: 4px 0 2px;
+      text-align: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .header-reset-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ddd;
+      border-radius: 10px;
+      padding: 9px 11px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .header-reset-btn:hover {
+      background: rgba(255, 59, 48, 0.2);
+      border-color: #ff3b30;
+      color: #ff3b30;
+    }
+    .header-reset-btn:active {
+      transform: scale(0.95);
+    }
     .search-submit-btn:hover {
       filter: brightness(1.1);
     }
@@ -546,48 +581,84 @@
       color: #fff;
       background: rgba(255, 255, 255, 0.22);
     }
+    .share-modal {
+      width: 100%;
+      max-width: 480px;
+      background: #1c1c1e;
+      border-radius: 22px 22px 0 0;
+      padding: 16px 14px 20px;
+      box-shadow: 0 -6px 32px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      max-height: 92vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
     .share-icons-grid {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      padding: 6px 0 2px;
-      gap: 4px;
+      padding: 8px 0 4px;
+      gap: 6px;
+      width: 100%;
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
     .share-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       cursor: pointer;
       user-select: none;
       transition: transform 0.15s;
-      flex: 1;
+      flex: 1 1 0;
+      min-width: 0;
+      flex-shrink: 0;
+      text-align: center;
     }
     .share-item:active {
-      transform: scale(0.9);
+      transform: scale(0.92);
     }
     .share-icon {
-      width: 54px;
-      height: 54px;
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+      flex-shrink: 0;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       transition: transform 0.15s;
+      background-color: #333336;
+    }
+    .share-icon svg {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      flex-shrink: 0;
+      display: block;
+      fill: #ffffff;
     }
     .share-item:hover .share-icon {
       transform: translateY(-2px);
     }
-    .tg-icon { background: #2AABEE; }
-    .wa-icon { background: #25D366; }
-    .vk-icon { background: #0077FF; }
-    .viber-icon { background: #7360F2; }
-    .more-icon { background: #3a3a3c; }
+    .tg-icon { background-color: #2AABEE !important; }
+    .wa-icon { background-color: #25D366 !important; }
+    .vk-icon { background-color: #0077FF !important; }
+    .viber-icon { background-color: #7360F2 !important; }
+    .more-icon { background-color: #3a3a3c !important; }
     .share-item span {
-      font-size: 12px;
+      font-size: 11px;
       color: #ddd;
       font-weight: 500;
+      white-space: nowrap;
     }
 
     /* Строка со ссылкой в стиле VK Video */
@@ -767,11 +838,13 @@
   <div class="container">
     <!-- Поиск картинок -->
     <div class="header-bar">
-      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи: язь, кот, арнольд, собака...">
+      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи: язь, кот, арнольд, бумер...">
       <button class="search-submit-btn" id="btnSearchSubmit" type="button">Найти</button>
       <label class="upload-btn" for="fileInput">📁 Своё фото</label>
       <input type="file" id="fileInput" accept="image/*" style="display: none;">
+      <button class="header-reset-btn" id="btnResetAll" type="button" title="Очистить всё и начать заново">🧹 Сброс</button>
     </div>
+    <div class="search-status-pill" id="searchStatusPill"></div>
 
     <!-- Быстрые теги тем -->
     <div class="tags-bar">
@@ -811,7 +884,7 @@
       <div class="format-panel" id="classicControls">
         <div class="input-group">
           <label>Текст на меме (со смайликами 😂🔥)</label>
-          <input type="text" id="memeText" placeholder="Введи текст мема..." value="КОГДА ВСЁ РАБОТАЕТ ИДЕАЛЬНО 🔥">
+          <input type="text" id="memeText" placeholder="Введи текст мема..." value="">
         </div>
 
         <div class="row">
@@ -880,7 +953,7 @@
         <div class="toggles-row">
           <div class="toggle-btn active" id="btnStroke">🔲 Контур</div>
           <div class="toggle-btn" id="btnPlate">🏷 Плашка</div>
-          <div class="toggle-btn active" id="btnUpper">🔠 КАПС</div>
+          <div class="toggle-btn" id="btnGlow">✨ Свечение</div>
         </div>
 
         <!-- Панель настройки плашки (появляется при активной плашке) -->
@@ -903,6 +976,36 @@
                 <div class="color-dot" style="background: #007aff;" data-color="#007aff"></div>
                 <label class="color-spectrum-dot" id="spectrumPlateColorBtn" title="Спектр цвета плашки">
                   <input type="color" id="spectrumPlateColor" value="#000000" style="opacity: 0; position: absolute; width:0; height:0;">
+                  <span>🎨</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Панель настройки неонового свечения (появляется при активном свечении) -->
+        <div class="plate-settings-panel" id="glowSettingsPanel" style="display: none;">
+          <div class="plate-panel-header">
+            <span>✨ Неоновое свечение текста</span>
+            <span id="glowRadiusVal" style="color: #00ffff; font-weight: 700;">25px</span>
+          </div>
+          <div class="row">
+            <div class="input-group" style="flex: 1;">
+              <label>Радиус свечения</label>
+              <input type="range" id="glowRadiusSlider" min="5" max="60" value="25">
+            </div>
+            <div class="input-group" style="flex: 1;">
+              <label>Цвет неона</label>
+              <div class="color-picker" id="glowColorPicker">
+                <div class="color-dot active" style="background: #00ffff; box-shadow: 0 0 8px #00ffff;" data-color="#00ffff" title="Бирюзовый неон"></div>
+                <div class="color-dot" style="background: #ff007f; box-shadow: 0 0 8px #ff007f;" data-color="#ff007f" title="Розовый неон"></div>
+                <div class="color-dot" style="background: #39ff14; box-shadow: 0 0 8px #39ff14;" data-color="#39ff14" title="Лайм неон"></div>
+                <div class="color-dot" style="background: #ffff00; box-shadow: 0 0 8px #ffff00;" data-color="#ffff00" title="Желтый"></div>
+                <div class="color-dot" style="background: #b026ff; box-shadow: 0 0 8px #b026ff;" data-color="#b026ff" title="Фиолетовый"></div>
+                <div class="color-dot" style="background: #ffffff; box-shadow: 0 0 8px #ffffff;" data-color="#ffffff" title="Белый"></div>
+                <div class="color-dot" style="background: #ff3b30; box-shadow: 0 0 8px #ff3b30;" data-color="#ff3b30" title="Красный"></div>
+                <label class="color-spectrum-dot" id="spectrumGlowColorBtn" title="Спектр любого цвета свечения">
+                  <input type="color" id="spectrumGlowColor" value="#00ffff" style="opacity: 0; position: absolute; width:0; height:0;">
                   <span>🎨</span>
                 </label>
               </div>
@@ -1090,7 +1193,9 @@
     const colorPicker = document.getElementById("colorPicker");
     const btnStroke = document.getElementById("btnStroke");
     const btnPlate = document.getElementById("btnPlate");
-    const btnUpper = document.getElementById("btnUpper");
+    const btnGlow = document.getElementById("btnGlow");
+    const btnResetAll = document.getElementById("btnResetAll");
+    const glowSettingsPanel = document.getElementById("glowSettingsPanel");
     const btnSubmit = document.getElementById("btnSubmit");
     const templatesBar = document.getElementById("templatesBar");
     const fileInput = document.getElementById("fileInput");
@@ -1134,7 +1239,7 @@
     if (!initialUrl) initialUrl = allTemplates[0].url;
 
     let state = {
-      text: textInput.value || "КОГДА ВСЁ РАБОТАЕТ ИДЕАЛЬНО 🔥",
+      text: passedText || "",
       font: "Impact",
       size: 48,
       color: "#ffffff",
@@ -1142,7 +1247,9 @@
       plate: false,
       plateColor: "#000000",
       plateOpacity: 0.85,
-      uppercase: true,
+      glow: false,
+      glowColor: "#00ffff",
+      glowRadius: 25,
       rotation: 0,
       curve: 0,
       layout: "classic",
@@ -1233,14 +1340,13 @@
           return words.some(w => hay.includes(w));
         });
 
-        // Показываем совпавшие. Если ничего не совпало — показываем всё, чтобы не было пустого экрана!
-        filtered = matched.length ? matched : allTemplates;
+        filtered = matched;
       }
 
       renderTemplates(filtered, q);
     }
 
-    // Управление поиском: локальный + онлайн через Memepedia API
+    // Управление поиском: онлайн через Wikimedia Commons + Memepedia (CORS-friendly)
     let searchDebounceTimer = null;
     let onlineSearchAbort = null;
     let isSearchingOnline = false;
@@ -1257,46 +1363,99 @@
       isSearchingOnline = true;
       const qLower = qTrim.toLowerCase();
 
-      try {
-        const url = "https://memepedia.ru/wp-json/wp/v2/posts?search=" + encodeURIComponent(qTrim) + "&_embed=1&per_page=20";
-        const res = await fetch(url, {
-          signal: onlineSearchAbort.signal,
-          headers: { "Accept": "application/json" }
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const posts = await res.json();
+      const statusPill = document.getElementById("searchStatusPill");
+      if (statusPill) {
+        statusPill.style.display = "block";
+        statusPill.textContent = `⏳ Ищу картинки «${qTrim}» в сети...`;
+      }
 
-        if (Array.isArray(posts) && posts.length > 0) {
-          const liveMemes = [];
-          posts.forEach((p, idx) => {
-            const media = p._embedded?.["wp:featuredmedia"]?.[0];
-            const src = media?.source_url;
-            if (src && !allTemplates.some(t => t.url === src)) {
-              const rawTitle = p.title?.rendered || (qTrim + " #" + (idx + 1));
-              const cleanTitle = rawTitle.replace(/<[^>]+>/g, "").trim();
-              liveMemes.push({
-                id: "mp_online_" + (p.id || idx),
-                title: cleanTitle,
-                tags: qLower + " мем memepedia поиск",
-                cat: "all",
-                url: src
+      try {
+        const liveMemes = [];
+        const seenUrls = new Set(allTemplates.map(t => t.url));
+
+        // 1. Wikimedia Commons API — миллионы фотографий, мемов, людей, без CORS-проблем
+        const wikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(qTrim)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url|thumburl&iiurlwidth=720&format=json&origin=*`;
+        
+        // 2. Memepedia API — русские вирусные мемы и шаблоны
+        const mpUrl = "https://memepedia.ru/wp-json/wp/v2/posts?search=" + encodeURIComponent(qTrim) + "&_embed=1&per_page=15";
+
+        const [wikiRes, mpRes] = await Promise.allSettled([
+          fetch(wikiUrl, { signal: onlineSearchAbort.signal }),
+          fetch(mpUrl, { signal: onlineSearchAbort.signal, headers: { Accept: "application/json" } })
+        ]);
+
+        // Обработка Memepedia
+        if (mpRes.status === "fulfilled" && mpRes.value.ok) {
+          try {
+            const posts = await mpRes.value.json();
+            if (Array.isArray(posts)) {
+              posts.forEach((p, idx) => {
+                const media = p._embedded?.["wp:featuredmedia"]?.[0];
+                const src = media?.source_url;
+                if (src && !seenUrls.has(src)) {
+                  seenUrls.add(src);
+                  const rawTitle = p.title?.rendered || (qTrim + " #" + (idx + 1));
+                  const cleanTitle = rawTitle.replace(/<[^>]+>/g, "").trim();
+                  liveMemes.push({
+                    id: "mp_" + (p.id || idx),
+                    title: cleanTitle,
+                    tags: qLower + " мем memepedia",
+                    cat: "all",
+                    url: src
+                  });
+                }
               });
             }
-          });
+          } catch (e) {}
+        }
 
-          if (liveMemes.length > 0) {
-            allTemplates = liveMemes.concat(allTemplates);
-            filterMemes();
-            // Если поиск был принудительно вызван по кнопке «Найти» — сразу загружаем первый найденный мем на холст!
-            if (force && liveMemes[0]) {
-              state.imgUrl = liveMemes[0].url;
-              loadImage(liveMemes[0].url);
+        // Обработка Wikimedia Commons
+        if (wikiRes.status === "fulfilled" && wikiRes.value.ok) {
+          try {
+            const data = await wikiRes.value.json();
+            const pages = data?.query?.pages || {};
+            let wIdx = 0;
+            for (const pid in pages) {
+              const p = pages[pid];
+              const info = p.imageinfo?.[0];
+              const u = info?.thumburl || info?.url;
+              if (u && !seenUrls.has(u)) {
+                if (u.endsWith(".svg") || u.endsWith(".pdf") || u.endsWith(".djvu")) continue;
+                seenUrls.add(u);
+                const title = (p.title || (qTrim + " #" + (wIdx + 1))).replace(/^File:/i, "").trim();
+                liveMemes.push({
+                  id: "wiki_" + pid,
+                  title: title,
+                  tags: qLower + " фото сеть картинка",
+                  cat: "all",
+                  url: u
+                });
+                wIdx++;
+              }
             }
+          } catch (e) {}
+        }
+
+        if (liveMemes.length > 0) {
+          allTemplates = liveMemes.concat(allTemplates);
+          filterMemes();
+          if (statusPill) {
+            statusPill.textContent = `✅ Найдено ${liveMemes.length} картинок по запросу «${qTrim}»`;
+            setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
+          }
+          if (force && liveMemes[0]) {
+            state.imgUrl = liveMemes[0].url;
+            loadImage(liveMemes[0].url);
+          }
+        } else {
+          if (statusPill) {
+            statusPill.textContent = `🔍 Картинки не найдены — нажми кнопку поиска в боте`;
+            setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 4000);
           }
         }
       } catch (err) {
         if (err.name !== "AbortError") {
-          console.warn("Memepedia search note:", err);
+          console.warn("Online search note:", err);
         }
       } finally {
         isSearchingOnline = false;
@@ -1556,6 +1715,16 @@
           ctx.translate(0, radius);
         }
 
+        if (st.glow) {
+          ctx.shadowColor = st.glowColor || "#00ffff";
+          ctx.shadowBlur = st.glowRadius || 25;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+        } else {
+          ctx.shadowColor = "transparent";
+          ctx.shadowBlur = 0;
+        }
+
         if (st.stroke) {
           ctx.strokeStyle = st.color === "#111111" ? "#ffffff" : "#000000";
           ctx.lineWidth = Math.max(3, st.size / 9);
@@ -1565,6 +1734,8 @@
         ctx.fillStyle = st.color;
         ctx.fillText(char, 0, 0);
 
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
         ctx.restore();
       });
     }
@@ -1662,7 +1833,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
 
-      let textToDraw = state.uppercase ? state.text.toUpperCase() : state.text;
+      let textToDraw = state.text;
       if (!textToDraw.trim()) {
         updateCanvasBlob();
         return;
@@ -1724,6 +1895,16 @@
         lines.forEach((line, index) => {
           const y = startY + index * lineHeight;
 
+          if (state.glow) {
+            ctx.shadowColor = state.glowColor || "#00ffff";
+            ctx.shadowBlur = state.glowRadius || 25;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+          } else {
+            ctx.shadowColor = "transparent";
+            ctx.shadowBlur = 0;
+          }
+
           if (state.stroke) {
             ctx.strokeStyle = state.color === "#111111" ? "#ffffff" : "#000000";
             ctx.lineWidth = Math.max(3, state.size / 9);
@@ -1733,6 +1914,9 @@
 
           ctx.fillStyle = state.color;
           ctx.fillText(line, 0, y);
+
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = "transparent";
         });
       }
 
@@ -1872,11 +2056,51 @@
       });
     }
 
-    btnUpper.addEventListener("click", () => {
-      state.uppercase = !state.uppercase;
-      btnUpper.classList.toggle("active", state.uppercase);
-      render();
-    });
+    // Тумблер и настройки неонового свечения
+    if (btnGlow) {
+      btnGlow.addEventListener("click", () => {
+        state.glow = !state.glow;
+        btnGlow.classList.toggle("active", state.glow);
+        if (glowSettingsPanel) {
+          glowSettingsPanel.style.display = state.glow ? "flex" : "none";
+        }
+        render();
+      });
+    }
+
+    const glowRadiusSlider = document.getElementById("glowRadiusSlider");
+    const glowRadiusVal = document.getElementById("glowRadiusVal");
+    if (glowRadiusSlider) {
+      glowRadiusSlider.addEventListener("input", (e) => {
+        state.glowRadius = parseInt(e.target.value);
+        if (glowRadiusVal) glowRadiusVal.textContent = state.glowRadius + "px";
+        render();
+      });
+    }
+
+    const glowColorPicker = document.getElementById("glowColorPicker");
+    if (glowColorPicker) {
+      glowColorPicker.addEventListener("click", (e) => {
+        const dot = e.target.closest(".color-dot");
+        if (!dot) return;
+        document.querySelectorAll("#glowColorPicker .color-dot").forEach(d => d.classList.remove("active"));
+        document.getElementById("spectrumGlowColorBtn")?.classList.remove("active");
+        dot.classList.add("active");
+        state.glowColor = dot.dataset.color;
+        render();
+      });
+    }
+
+    const spectrumGlowColor = document.getElementById("spectrumGlowColor");
+    const spectrumGlowColorBtn = document.getElementById("spectrumGlowColorBtn");
+    if (spectrumGlowColor) {
+      spectrumGlowColor.addEventListener("input", (e) => {
+        state.glowColor = e.target.value;
+        document.querySelectorAll("#glowColorPicker .color-dot").forEach(d => d.classList.remove("active"));
+        if (spectrumGlowColorBtn) spectrumGlowColorBtn.classList.add("active");
+        render();
+      });
+    }
 
     // Вкладки форматов мемов
     const formatTabs = document.querySelectorAll(".format-tab");
@@ -2004,7 +2228,7 @@
     }
 
     function getShareText() {
-      return (state.uppercase ? state.text.toUpperCase() : state.text).trim();
+      return (state.text || "").trim();
     }
 
     // Управление окном «Поделиться» и загрузкой на ImgBB
@@ -2138,6 +2362,50 @@
       openShareModal();
     });
 
+    // Полная очистка состояния страницы после успешной отправки или по кнопке сброса
+    function cleanStateAfterShare() {
+      // 1. Очищаем текст мема
+      textInput.value = "";
+      state.text = "";
+      if (demotTitle) { demotTitle.value = ""; state.demotTitle = ""; }
+      if (demotSubtitle) { demotSubtitle.value = ""; state.demotSubtitle = ""; }
+      if (twitterText) { twitterText.value = ""; state.twitterText = ""; }
+
+      // 2. Очищаем строку поиска
+      if (searchBar) searchBar.value = "";
+
+      // 3. Сбрасываем поворот и изгиб
+      state.rotation = 0;
+      const rotSl = document.getElementById("textRotate");
+      const rVal = document.getElementById("rotVal");
+      if (rotSl) rotSl.value = 0;
+      if (rVal) rVal.textContent = "0°";
+
+      state.curve = 0;
+      const crvSl = document.getElementById("textCurve");
+      const cVal = document.getElementById("curveVal");
+      if (crvSl) crvSl.value = 0;
+      if (cVal) cVal.textContent = "0%";
+
+      // 4. Очищаем URL от старых параметров (?q= и ?text=), чтобы Telegram не восстанавливал старое
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {}
+
+      // 5. Очищаем кэш загруженного мема
+      uploadedMemeUrl = null;
+
+      // 6. Перерисовываем
+      render();
+    }
+
+    if (btnResetAll) {
+      btnResetAll.addEventListener("click", () => {
+        cleanStateAfterShare();
+        showToast("🧹 Всё очищено! Введи новый текст");
+      });
+    }
+
     function getEffectiveShareUrl() {
       return uploadedMemeUrl || getShareUrl();
     }
@@ -2163,6 +2431,7 @@
         } else {
           window.open(tgShareUrl, "_blank");
         }
+        cleanStateAfterShare();
         return;
       }
       // Если загрузка на ImgBB не удалась, на мобильном используем прямую отправку файла мема:
@@ -2178,6 +2447,7 @@
       } else {
         window.open(tgShareUrl, "_blank");
       }
+      cleanStateAfterShare();
     });
 
     // 2. Иконка WhatsApp: мгновенный переход
@@ -2196,6 +2466,7 @@
       } else {
         window.open(waUrl, "_blank");
       }
+      cleanStateAfterShare();
     });
 
     // 3. Иконка VK: мгновенный диалог VK
@@ -2213,6 +2484,7 @@
       } else {
         window.open(vkUrl, "_blank");
       }
+      cleanStateAfterShare();
     });
 
     // 4. Иконка Viber
@@ -2231,6 +2503,7 @@
       } else {
         window.location.href = viberUrl;
       }
+      cleanStateAfterShare();
     });
 
     // 5. Иконка «Еще» (системное меню "Поделиться" смартфона)
