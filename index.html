@@ -94,18 +94,103 @@
       color: #fff;
       font-weight: 600;
     }
+        .search-submit-btn {
+      padding: 9px 15px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 10px;
+      background: var(--tg-theme-button-color, #2481cc);
+      border: 1px solid var(--tg-theme-button-color, #2481cc);
+      color: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    .search-submit-btn:active {
+      transform: scale(0.96);
+    }
+    .search-submit-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    /* Обертка карусели со стрелками прокрутки для ПК */
+    .templates-bar-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      margin: 2px 0;
+    }
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(20, 20, 22, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      font-size: 20px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.15s ease;
+      user-select: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .carousel-arrow:hover {
+      background: var(--tg-theme-button-color, #2481cc);
+      border-color: var(--tg-theme-button-color, #2481cc);
+      transform: translateY(-50%) scale(1.1);
+    }
+    .carousel-arrow:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+    .carousel-arrow.prev { left: -8px; }
+    .carousel-arrow.next { right: -8px; }
+
+    /* Полноценный ползунок ленты картинок для ПК */
     .templates-bar {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: none;
-      min-height: 62px;
+      padding: 4px 6px 8px;
+      min-height: 72px;
       align-items: center;
+      width: 100%;
+      cursor: grab;
+      user-select: none;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05);
+      scroll-behavior: smooth;
+    }
+    .templates-bar.grabbing {
+      cursor: grabbing;
+      scroll-behavior: auto;
     }
     .templates-bar::-webkit-scrollbar {
-      display: none;
+      height: 7px;
+      display: block !important;
     }
+    .templates-bar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+    }
+    .templates-bar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .templates-bar::-webkit-scrollbar-thumb:hover {
+      background: var(--tg-theme-button-color, #2481cc);
+    }
+
     .thumb {
       width: 58px;
       height: 58px;
@@ -682,7 +767,8 @@
   <div class="container">
     <!-- Поиск картинок -->
     <div class="header-bar">
-      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи: язь, кот, собака, дрейк, работа...">
+      <input type="text" class="search-input" id="searchBar" placeholder="🔎 Ищи: язь, кот, арнольд, собака...">
+      <button class="search-submit-btn" id="btnSearchSubmit" type="button">Найти</button>
       <label class="upload-btn" for="fileInput">📁 Своё фото</label>
       <input type="file" id="fileInput" accept="image/*" style="display: none;">
     </div>
@@ -698,8 +784,12 @@
       <div class="tag" data-tag="sad">😭 Боль</div>
     </div>
 
-    <!-- Лента миниатюр мемов (скролл) -->
-    <div class="templates-bar" id="templatesBar"></div>
+    <!-- Лента миниатюр мемов (скролл со стрелками и ползунком для ПК) -->
+    <div class="templates-bar-wrapper">
+      <button class="carousel-arrow prev" id="arrowPrev" title="Листать назад" type="button">‹</button>
+      <div class="templates-bar" id="templatesBar"></div>
+      <button class="carousel-arrow next" id="arrowNext" title="Листать вперед" type="button">›</button>
+    </div>
 
     <!-- Холст редактора -->
     <div class="canvas-wrapper">
@@ -1150,13 +1240,153 @@
       renderTemplates(filtered, q);
     }
 
+    // Управление поиском: локальный + онлайн через Memepedia API
+    let searchDebounceTimer = null;
+    let onlineSearchAbort = null;
+    let isSearchingOnline = false;
+
+    async function searchOnlineMemes(query, force = false) {
+      const qTrim = (query || "").trim();
+      if (!qTrim || qTrim.length < 2) return;
+
+      if (onlineSearchAbort) {
+        onlineSearchAbort.abort();
+      }
+      onlineSearchAbort = new AbortController();
+
+      isSearchingOnline = true;
+      const qLower = qTrim.toLowerCase();
+
+      try {
+        const url = "https://memepedia.ru/wp-json/wp/v2/posts?search=" + encodeURIComponent(qTrim) + "&_embed=1&per_page=20";
+        const res = await fetch(url, {
+          signal: onlineSearchAbort.signal,
+          headers: { "Accept": "application/json" }
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const posts = await res.json();
+
+        if (Array.isArray(posts) && posts.length > 0) {
+          const liveMemes = [];
+          posts.forEach((p, idx) => {
+            const media = p._embedded?.["wp:featuredmedia"]?.[0];
+            const src = media?.source_url;
+            if (src && !allTemplates.some(t => t.url === src)) {
+              const rawTitle = p.title?.rendered || (qTrim + " #" + (idx + 1));
+              const cleanTitle = rawTitle.replace(/<[^>]+>/g, "").trim();
+              liveMemes.push({
+                id: "mp_online_" + (p.id || idx),
+                title: cleanTitle,
+                tags: qLower + " мем memepedia поиск",
+                cat: "all",
+                url: src
+              });
+            }
+          });
+
+          if (liveMemes.length > 0) {
+            allTemplates = liveMemes.concat(allTemplates);
+            filterMemes();
+            // Если поиск был принудительно вызван по кнопке «Найти» — сразу загружаем первый найденный мем на холст!
+            if (force && liveMemes[0]) {
+              state.imgUrl = liveMemes[0].url;
+              loadImage(liveMemes[0].url);
+            }
+          }
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.warn("Memepedia search note:", err);
+        }
+      } finally {
+        isSearchingOnline = false;
+      }
+    }
+
     if (passedQuery) {
       filterMemes();
+      searchOnlineMemes(passedQuery, false);
     } else {
       renderTemplates(allTemplates, "");
     }
 
-    searchBar.addEventListener("input", filterMemes);
+    // Живой поиск при вводе
+    searchBar.addEventListener("input", () => {
+      filterMemes();
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        searchOnlineMemes(searchBar.value, false);
+      }, 400);
+    });
+
+    // Нажатие клавиши Enter в строке поиска
+    searchBar.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        filterMemes();
+        searchOnlineMemes(searchBar.value, true);
+      }
+    });
+
+    // Кнопка «Найти»
+    const btnSearchSubmit = document.getElementById("btnSearchSubmit");
+    if (btnSearchSubmit) {
+      btnSearchSubmit.addEventListener("click", () => {
+        filterMemes();
+        searchOnlineMemes(searchBar.value, true);
+      });
+    }
+
+    // Стрелки прокрутки ленты на ПК
+    const arrowPrev = document.getElementById("arrowPrev");
+    const arrowNext = document.getElementById("arrowNext");
+    if (arrowPrev) {
+      arrowPrev.addEventListener("click", () => {
+        templatesBar.scrollBy({ left: -220, behavior: "smooth" });
+      });
+    }
+    if (arrowNext) {
+      arrowNext.addEventListener("click", () => {
+        templatesBar.scrollBy({ left: 220, behavior: "smooth" });
+      });
+    }
+
+    // Прокрутка колесиком мыши (вертикальное колесо -> горизонтальный скролл)
+    templatesBar.addEventListener("wheel", (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        templatesBar.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    // Перетаскивание ленты мышкой (Drag-to-scroll для ПК)
+    let isMouseDraggingBar = false;
+    let startMouseX = 0;
+    let scrollStartPos = 0;
+    let hasMovedMouse = false;
+
+    templatesBar.addEventListener("mousedown", (e) => {
+      isMouseDraggingBar = true;
+      hasMovedMouse = false;
+      templatesBar.classList.add("grabbing");
+      startMouseX = e.pageX - templatesBar.offsetLeft;
+      scrollStartPos = templatesBar.scrollLeft;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isMouseDraggingBar) return;
+      const x = e.pageX - templatesBar.offsetLeft;
+      const walk = (x - startMouseX) * 1.4;
+      if (Math.abs(walk) > 4) hasMovedMouse = true;
+      templatesBar.scrollLeft = scrollStartPos - walk;
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (isMouseDraggingBar) {
+        isMouseDraggingBar = false;
+        templatesBar.classList.remove("grabbing");
+      }
+    });
 
     tagElements.forEach(tag => {
       tag.addEventListener("click", () => {
