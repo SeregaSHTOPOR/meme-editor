@@ -16,10 +16,10 @@
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      background-color: var(--tg-theme-bg-color, #141414);
+      background-color: var(--tg-theme-bg-color, #181818);
       color: var(--tg-theme-text-color, #ffffff);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 10px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -42,9 +42,9 @@
       flex: 1;
       padding: 9px 12px;
       font-size: 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: var(--tg-theme-secondary-bg-color, #222222);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: var(--tg-theme-secondary-bg-color, #242424);
       color: var(--tg-theme-text-color, #fff);
       outline: none;
     }
@@ -54,37 +54,45 @@
     .upload-btn {
       padding: 9px 12px;
       font-size: 13px;
-      font-weight: 600;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
       color: #fff;
       cursor: pointer;
       white-space: nowrap;
+      user-select: none;
+    }
+    .upload-btn:active {
+      transform: scale(0.96);
     }
     .tags-bar {
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      scrollbar-width: none;
       padding-bottom: 2px;
+      scrollbar-width: none;
     }
     .tags-bar::-webkit-scrollbar {
       display: none;
     }
     .tag {
-      padding: 4px 10px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 14px;
       background: rgba(255,255,255,0.08);
-      border-radius: 12px;
-      font-size: 11px;
-      white-space: nowrap;
-      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.12);
       color: #bbb;
+      cursor: pointer;
+      white-space: nowrap;
       user-select: none;
+      transition: background 0.15s, color 0.15s;
     }
     .tag.active {
       background: var(--tg-theme-button-color, #2481cc);
+      border-color: var(--tg-theme-button-color, #2481cc);
       color: #fff;
+      font-weight: 600;
     }
     .templates-bar {
       display: flex;
@@ -92,20 +100,21 @@
       overflow-x: auto;
       padding-bottom: 4px;
       scrollbar-width: none;
-      min-height: 64px;
+      min-height: 62px;
+      align-items: center;
     }
     .templates-bar::-webkit-scrollbar {
       display: none;
     }
     .thumb {
-      width: 62px;
-      height: 62px;
+      width: 58px;
+      height: 58px;
       border-radius: 8px;
       object-fit: cover;
       cursor: pointer;
       border: 2px solid transparent;
       flex-shrink: 0;
-      background: #2a2a2a;
+      background: #282828;
       transition: transform 0.15s, border-color 0.15s;
     }
     .thumb.active {
@@ -113,88 +122,79 @@
       transform: scale(1.06);
     }
     .no-results {
-      font-size: 12px;
-      color: #888;
+      font-size: 13px;
+      color: #999;
       padding: 10px 4px;
+      width: 100%;
+      text-align: center;
     }
     .canvas-wrapper {
       position: relative;
       width: 100%;
-      background: #000;
+      background: #0a0a0a;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 200px;
+      min-height: 220px;
+      touch-action: none;
     }
     canvas {
       max-width: 100%;
       max-height: 48vh;
       display: block;
-      touch-action: none;
-      cursor: move;
+      object-fit: contain;
     }
     .drag-hint {
-      text-align: center;
       font-size: 11px;
-      color: var(--tg-theme-hint-color, #888);
+      color: #888;
+      text-align: center;
       margin-top: -4px;
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 10px;
       background: var(--tg-theme-secondary-bg-color, #202020);
-      padding: 12px 14px;
-      border-radius: 12px;
+      padding: 14px;
+      border-radius: 14px;
     }
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 5px;
     }
     label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--tg-theme-hint-color, #999);
+      font-size: 12px;
+      color: #aaa;
+      font-weight: 500;
     }
-    input[type="text"] {
+    input[type="text"]#memeText, select {
       width: 100%;
       padding: 9px 12px;
-      font-size: 15px;
+      font-size: 14px;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.15);
       background: var(--tg-theme-bg-color, #141414);
       color: var(--tg-theme-text-color, #fff);
       outline: none;
     }
-    input[type="text"]:focus {
+    input[type="text"]#memeText:focus, select:focus {
       border-color: var(--tg-theme-button-color, #2481cc);
     }
     .row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
-    }
-    select {
-      flex: 1.2;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: var(--tg-theme-bg-color, #141414);
-      color: var(--tg-theme-text-color, #fff);
-      font-size: 13px;
-      outline: none;
     }
     .color-picker {
       display: flex;
-      gap: 7px;
+      gap: 10px;
+      align-items: center;
       overflow-x: auto;
-      padding: 2px 0;
+      padding: 4px 0;
     }
     .color-dot {
       width: 28px;
@@ -255,7 +255,7 @@
     .extra-btns-row {
       display: flex;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
     .secondary-btn {
       flex: 1;
@@ -274,7 +274,7 @@
       transform: scale(0.97);
     }
 
-    /* Окно «Поделиться» (Share Modal) в стиле скриншота */
+    /* Модальное окно «Поделиться» (Share Sheet) в точном стиле VK Video / Приложений */
     .share-modal-overlay {
       position: fixed;
       inset: 0;
@@ -294,7 +294,7 @@
       max-width: 480px;
       background: #1c1c1e;
       border-radius: 22px 22px 0 0;
-      padding: 20px 18px 26px;
+      padding: 20px 18px 24px;
       box-shadow: 0 -6px 32px rgba(0, 0, 0, 0.8);
       display: flex;
       flex-direction: column;
@@ -342,7 +342,7 @@
       display: flex;
       justify-content: space-around;
       align-items: center;
-      padding: 6px 0 4px;
+      padding: 6px 0 2px;
       gap: 4px;
     }
     .share-item {
@@ -375,12 +375,58 @@
     .wa-icon { background: #25D366; }
     .vk-icon { background: #0077FF; }
     .viber-icon { background: #7360F2; }
-    .more-icon { background: #444446; }
+    .more-icon { background: #3a3a3c; }
     .share-item span {
       font-size: 12px;
       color: #ddd;
       font-weight: 500;
     }
+
+    /* Строка со ссылкой в стиле VK Video */
+    .share-link-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: #2a2a2c;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 4px 8px 4px 12px;
+      gap: 8px;
+    }
+    .share-link-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e0e0e0;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      user-select: all;
+    }
+    .share-link-copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .share-link-copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .share-link-copy-btn:active {
+      transform: scale(0.92);
+    }
+
     .share-toast {
       background: rgba(46, 204, 113, 0.22);
       border: 1px solid #2ecc71;
@@ -395,12 +441,12 @@
     .share-actions-box {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 8px;
       margin-top: 2px;
     }
     .share-action-btn {
       width: 100%;
-      padding: 12px 14px;
+      padding: 11px 14px;
       font-size: 14px;
       font-weight: 600;
       border-radius: 12px;
@@ -438,13 +484,13 @@
 
     <!-- Быстрые теги тем -->
     <div class="tags-bar">
-      <div class="tag active" data-tag="all">🔥 Все популярные</div>
+      <div class="tag active" data-tag="all">🔥 Все</div>
       <div class="tag" data-tag="cat">🐱 Коты</div>
       <div class="tag" data-tag="dog">🐶 Доге</div>
-      <div class="tag" data-tag="choice">🎭 Выбор / Дрейк</div>
-      <div class="tag" data-tag="think">🧠 Мысли / Сверхразум</div>
-      <div class="tag" data-tag="work">💼 Работа / IT</div>
-      <div class="tag" data-tag="sad">😭 Боль / Грусть</div>
+      <div class="tag" data-tag="choice">🎭 Выбор</div>
+      <div class="tag" data-tag="think">🧠 Мысли</div>
+      <div class="tag" data-tag="work">💼 Работа</div>
+      <div class="tag" data-tag="sad">😭 Боль</div>
     </div>
 
     <!-- Лента миниатюр мемов -->
@@ -554,19 +600,26 @@
         </div>
       </div>
 
-      <!-- Всплывающая подсказка -->
+      <!-- Поле со ссылкой (в стиле VK Video) с кнопкой копирования -->
+      <div class="share-link-wrapper" id="shareLinkRow">
+        <input type="text" class="share-link-input" id="shareLinkInput" readonly value="">
+        <button class="share-link-copy-btn" id="shareCopyLinkBtn" title="Скопировать ссылку">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Всплывающее уведомление -->
       <div class="share-toast" id="shareToast"></div>
 
-      <!-- Действия под иконками -->
+      <!-- Дополнительные действия -->
       <div class="share-actions-box">
-        <button class="share-action-btn primary" id="shareCopyImgBtn">
-          📋 Скопировать картинку (Ctrl+V в чат)
+        <button class="share-action-btn primary" id="shareDownloadBtn">
+          💾 Скачать картинку мема
         </button>
-        <button class="share-action-btn" id="shareDownloadBtn">
-          💾 Скачать мем на устройство
-        </button>
-        <button class="share-action-btn" id="shareBotBtn">
-          🤖 Отправить через бота в чат
+        <button class="share-action-btn" id="shareCopyImgBtn">
+          📋 Скопировать картинку (PNG)
         </button>
       </div>
     </div>
@@ -579,7 +632,7 @@
       tg.expand();
     }
 
-    // Богатая встроенная база шаблонов с русскими поисковыми тегами
+    // База популярных шаблонов с тегами для мгновенного поиска
     let allTemplates = [
       // Мемы рунета и тренды
       { id: "yaz", title: "Язь - рыба моей мечты", tags: "язь рыба рыбалка мужик рыбак мечта кричит озеро", cat: "all", url: "https://memepedia.ru/wp-content/uploads/2017/04/%D1%8F%D0%B7%D1%8C-%D1%80%D1%8B%D0%B1%D0%B0-%D0%BC%D0%BE%D0%B5%D0%B9-%D0%BC%D0%B5%D1%87%D1%82%D1%8B.jpg" },
@@ -636,7 +689,6 @@
             cat: "all",
             url: m.url
           }));
-          // Объединяем, исключая дубликаты
           const existingUrls = new Set(allTemplates.map(t => t.url));
           apiMemes.forEach(m => {
             if (!existingUrls.has(m.url)) {
@@ -718,7 +770,7 @@
 
     function renderTemplates(list) {
       templatesBar.innerHTML = "";
-      if (!list.length) {
+      if (!list || !list.length) {
         templatesBar.innerHTML = `<div class="no-results">Ничего не найдено 😢 Попробуй другое слово (например: кот, собака, дрейк, мозг, работа)</div>`;
         return;
       }
@@ -726,7 +778,6 @@
         const img = document.createElement("img");
         img.className = "thumb" + (item.url === state.imgUrl ? " active" : "");
         
-        // Надежная загрузка миниатюры
         let thumbUrl = item.url;
         if (thumbUrl.includes("pikabu.ru") || thumbUrl.includes("vk.com") || thumbUrl.includes("rutube.ru") || thumbUrl.includes("faceit-cdn")) {
           thumbUrl = "https://images.weserv.nl/?url=" + encodeURIComponent(thumbUrl) + "&w=130&h=130&fit=cover";
@@ -760,17 +811,19 @@
       }
 
       if (q) {
-        // Если пользователь вставил прямую ссылку на картинку
         if (q.startsWith("http://") || q.startsWith("https://")) {
           loadImage(q);
           return;
         }
 
         const words = q.split(" ").filter(Boolean);
-        filtered = filtered.filter(t => {
+        const matched = filtered.filter(t => {
           const hay = (t.title + " " + (t.tags || "")).toLowerCase();
           return words.some(w => hay.includes(w));
         });
+
+        // Если нашли совпадения — показываем их! Если нет — показываем все шаблоны, чтобы не было пустоты
+        filtered = matched.length ? matched : filtered;
       }
 
       renderTemplates(filtered);
@@ -837,6 +890,7 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (evt) => {
+        state.imgUrl = evt.target.result;
         loadImage(evt.target.result);
       };
       reader.readAsDataURL(file);
@@ -859,6 +913,27 @@
       }
       lines.push(currentLine);
       return lines;
+    }
+
+    let currentMemeBlob = null;
+    let currentMemeFile = null;
+
+    function updateCanvasBlob() {
+      try {
+        canvas.toBlob((b) => {
+          if (b) {
+            currentMemeBlob = b;
+            currentMemeFile = new File([b], "meme.png", { type: "image/png" });
+          }
+        }, "image/png");
+      } catch (e) {
+        console.warn("toBlob error:", e);
+      }
+    }
+
+    async function getCanvasBlob() {
+      if (currentMemeBlob) return currentMemeBlob;
+      return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
     }
 
     function render() {
@@ -994,27 +1069,6 @@
     window.addEventListener("touchmove", onDragMove, { passive: false });
     window.addEventListener("touchend", onDragEnd);
 
-    let currentMemeBlob = null;
-    let currentMemeFile = null;
-
-    function updateCanvasBlob() {
-      try {
-        canvas.toBlob((b) => {
-          if (b) {
-            currentMemeBlob = b;
-            currentMemeFile = new File([b], "meme.png", { type: "image/png" });
-          }
-        }, "image/png");
-      } catch (e) {
-        console.warn("toBlob error:", e);
-      }
-    }
-
-    async function getCanvasBlob() {
-      if (currentMemeBlob) return currentMemeBlob;
-      return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-    }
-
     function downloadCanvasBlob(blob) {
       try {
         const link = document.createElement("a");
@@ -1029,39 +1083,45 @@
       }
     }
 
-    function openExternal(url) {
-      if (tg && tg.openLink) {
-        tg.openLink(url);
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {
+          fallbackCopyText(text);
+        });
       } else {
-        window.open(url, "_blank");
+        fallbackCopyText(text);
       }
     }
 
-    function sendToBot() {
-      const payload = {
-        action: "send_meme",
-        text: state.text,
-        font: state.font,
-        size: state.size,
-        color: state.color,
-        stroke: state.stroke,
-        plate: state.plate,
-        uppercase: state.uppercase,
-        posX_rel: state.posX != null ? state.posX / canvas.width : 0.5,
-        posY_rel: state.posY != null ? state.posY / canvas.height : 0.85,
-        img_url: state.imgUrl,
-      };
-      if (tg && tg.sendData) {
-        tg.sendData(JSON.stringify(payload));
-      } else {
-        showToast("Открыто вне Telegram. Скачиваю мем...");
-        if (currentMemeBlob) downloadCanvasBlob(currentMemeBlob);
+    function fallbackCopyText(text) {
+      try {
+        const temp = document.createElement("input");
+        temp.style.position = "fixed";
+        temp.style.opacity = "0";
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+      } catch (e) {}
+    }
+
+    function getShareUrl() {
+      if (state.imgUrl && (state.imgUrl.startsWith("http://") || state.imgUrl.startsWith("https://"))) {
+        return state.imgUrl;
       }
+      return "https://seregashtopor.github.io/meme-editor/";
+    }
+
+    function getShareText() {
+      return (state.uppercase ? state.text.toUpperCase() : state.text).trim();
     }
 
     // Управление окном «Поделиться»
     const shareModal = document.getElementById("shareModal");
     const shareCloseBtn = document.getElementById("shareCloseBtn");
+    const shareLinkInput = document.getElementById("shareLinkInput");
+    const shareCopyLinkBtn = document.getElementById("shareCopyLinkBtn");
     const shareToast = document.getElementById("shareToast");
     let toastTimeout = null;
 
@@ -1077,6 +1137,10 @@
 
     function openShareModal() {
       updateCanvasBlob();
+      const currentUrl = getShareUrl();
+      if (shareLinkInput) {
+        shareLinkInput.value = currentUrl;
+      }
       if (shareModal) shareModal.classList.add("active");
     }
 
@@ -1093,80 +1157,101 @@
       });
     }
 
-    // Главная кнопка в редакторе открывает красивое меню «Поделиться»
+    // Главная кнопка «Поделиться / Отправить мем»
     btnSubmit.addEventListener("click", () => {
       openShareModal();
     });
 
-    // 1. Иконка Telegram
+    // Копирование ссылки из строки
+    function copyShareLink() {
+      const url = getShareUrl();
+      copyTextToClipboard(url);
+      showToast("✅ Ссылка скопирована!");
+    }
+    if (shareCopyLinkBtn) shareCopyLinkBtn.addEventListener("click", copyShareLink);
+    if (shareLinkInput) shareLinkInput.addEventListener("click", copyShareLink);
+
+    // 1. Иконка Telegram: открывает выбор ЛЮБОГО чата в Telegram и вставляет ссылку на пикчу!
     document.getElementById("shareTgBtn").addEventListener("click", () => {
-      // На смартфоне (Android / iPhone) - вызываем системный шеринг (открывает Telegram со списком чатов!)
-      if (navigator.share && currentMemeFile) {
-        try {
-          navigator.share({ files: [currentMemeFile], title: "Мем" });
-          return;
-        } catch (err) {
-          if (err.name === "AbortError") return;
-        }
-      }
-
-      // На ПК - копируем в буфер (Ctrl+V в чат)
-      if (navigator.clipboard && window.ClipboardItem && currentMemeBlob) {
-        try {
-          navigator.clipboard.write([new ClipboardItem({ "image/png": currentMemeBlob })]);
-          showToast("✅ Мем скопирован! Нажми Ctrl + V в чате");
-        } catch (e) {}
-      }
-
-      // Если в Telegram на смартфоне WebView блокирует navigator.share - отправляем боту для 1-клик отправки в чат!
-      if (tg && tg.sendData) {
-        sendToBot();
-      } else if (currentMemeBlob) {
-        downloadCanvasBlob(currentMemeBlob);
+      const url = getShareUrl();
+      const text = getShareText();
+      const tgShareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url) + (text ? "&text=" + encodeURIComponent(text) : "");
+      
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(tgShareUrl);
+      } else {
+        window.open(tgShareUrl, "_blank");
       }
     });
 
-    // 2. Иконка WhatsApp
+    // 2. Иконка WhatsApp: переходит в WhatsApp и предлагает выбрать чат для отправки со ссылкой!
     document.getElementById("shareWaBtn").addEventListener("click", () => {
-      if (currentMemeBlob) downloadCanvasBlob(currentMemeBlob);
-      openExternal("https://api.whatsapp.com/send?text=" + encodeURIComponent("Лови мем!"));
+      const url = getShareUrl();
+      const text = getShareText();
+      const msg = (text ? text + "\n" : "") + url;
+      const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg);
+      
+      if (tg && tg.openLink) {
+        tg.openLink(waUrl);
+      } else {
+        window.open(waUrl, "_blank");
+      }
     });
 
-    // 3. Иконка VK
+    // 3. Иконка VK: открывает VK с выбором диалога/стены и вставляет ссылку!
     document.getElementById("shareVkBtn").addEventListener("click", () => {
-      if (currentMemeBlob) downloadCanvasBlob(currentMemeBlob);
-      openExternal("https://vk.com/im");
+      const url = getShareUrl();
+      const text = getShareText();
+      const vkUrl = "https://vk.com/share.php?url=" + encodeURIComponent(url) + (text ? "&title=" + encodeURIComponent(text) : "");
+      
+      if (tg && tg.openLink) {
+        tg.openLink(vkUrl);
+      } else {
+        window.open(vkUrl, "_blank");
+      }
     });
 
-    // 4. Иконка Viber
+    // 4. Иконка Viber: открывает Viber для выбора чата!
     document.getElementById("shareViberBtn").addEventListener("click", () => {
-      if (currentMemeBlob) downloadCanvasBlob(currentMemeBlob);
-      openExternal("viber://forward?text=" + encodeURIComponent("Лови мем!"));
+      const url = getShareUrl();
+      const text = getShareText();
+      const msg = (text ? text + " " : "") + url;
+      const viberUrl = "viber://forward?text=" + encodeURIComponent(msg);
+      
+      if (tg && tg.openLink) {
+        tg.openLink(viberUrl);
+      } else {
+        window.location.href = viberUrl;
+      }
     });
 
-    // 5. Иконка «Еще» (системное меню смартфона)
+    // 5. Иконка «Еще» (системное меню "Поделиться" смартфона)
     document.getElementById("shareSystemBtn").addEventListener("click", () => {
-      if (navigator.share && currentMemeFile) {
-        try {
-          navigator.share({ files: [currentMemeFile], title: "Мем" });
-          return;
-        } catch (e) {
-          if (e.name === "AbortError") return;
-        }
-      }
-      if (currentMemeBlob) {
-        downloadCanvasBlob(currentMemeBlob);
-        showToast("💾 Файл скачан на устройство");
+      const url = getShareUrl();
+      const text = getShareText();
+      if (navigator.share) {
+        navigator.share({ title: "Мем", text: text, url: url }).catch(() => {});
+      } else {
+        copyShareLink();
       }
     });
 
-    // Кнопка: 📋 Скопировать картинку
+    // Кнопка: 💾 Скачать картинку мема
+    document.getElementById("shareDownloadBtn").addEventListener("click", async () => {
+      const blob = currentMemeBlob || await getCanvasBlob();
+      if (blob) {
+        downloadCanvasBlob(blob);
+        showToast("✅ Мем скачан на устройство!");
+      }
+    });
+
+    // Кнопка: 📋 Скопировать картинку (PNG в буфер)
     document.getElementById("shareCopyImgBtn").addEventListener("click", async () => {
       const blob = currentMemeBlob || await getCanvasBlob();
       if (blob && navigator.clipboard && window.ClipboardItem) {
         try {
           await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-          showToast("✅ Скопировано в буфер! Вставь через Ctrl + V");
+          showToast("✅ Картинка скопирована! Вставь через Ctrl + V");
           return;
         } catch (e) {}
       }
@@ -1176,21 +1261,7 @@
       }
     });
 
-    // Кнопка: 💾 Скачать мем
-    document.getElementById("shareDownloadBtn").addEventListener("click", async () => {
-      const blob = currentMemeBlob || await getCanvasBlob();
-      if (blob) {
-        downloadCanvasBlob(blob);
-        showToast("✅ Мем сохранен на устройство!");
-      }
-    });
-
-    // Кнопка: 🤖 Отправить через бота в чат
-    document.getElementById("shareBotBtn").addEventListener("click", () => {
-      sendToBot();
-    });
-
-    // Кнопка «Скачать файл» на главном экране редактора
+    // Кнопка «Скачать файл» на главном экране
     const btnDownload = document.getElementById("btnDownload");
     if (btnDownload) {
       btnDownload.addEventListener("click", async () => {
