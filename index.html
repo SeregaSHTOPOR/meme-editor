@@ -2209,20 +2209,33 @@
       window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", updateTheme);
     }
 
-    // 100% проверенные, рабочие шаблоны рунета и мировых мемов
+        // 100% проверенные, рабочие шаблоны рунета и мировых мемов
     let allTemplates = [
-      // Мемы рунета: Язь
+      // Мемы рунета: Язь (все варианты из вирусных роликов и пабликов)
       { id: "yaz_goncharenko", title: "Язь - рыба моей мечты", tags: "язь рыба рыбалка мужик рыбак мечта кричит озеро блеать гончаренко", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D0%B2%D0%B8%D0%BA%D1%82%D0%BE%D1%80-%D0%B3%D0%BE%D0%BD%D1%87%D0%B0%D1%80%D0%B5%D0%BD%D0%BA%D0%BE-%D1%8F%D0%B7%D1%8C.jpg" },
       { id: "yaz_wojak", title: "ЗДОРОВЕННЫЙ ЯЗЬ БЛЕАТЬ!", tags: "язь рыба рыбалка вояк wojak орет кричит блеать", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D1%8F%D0%B7%D1%8C-%D0%B7%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9-%D0%BC%D0%B5%D0%BC.jpg" },
-      { id: "yaz_bleat", title: "Язь блеать", tags: "язь рыба рыбалка мужик мем", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D1%8F%D0%B7%D1%8C-%D0%B1%D0%BB%D0%B5%D0%B0%D1%82%D1%8C.jpg" },
+      { id: "yaz_sudar", title: "Судари, сей язь диковинных размеров", tags: "язь сударь цилиндр монокль мать я крайне обрадован чай рыба", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%8C-%D1%8F%D0%B7%D1%8C.jpg" },
+      { id: "yaz_bleat", title: "Язь блеать", tags: "язь рыба рыбалка мужик мем орет", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D1%8F%D0%B7%D1%8C-%D0%B1%D0%BB%D0%B5%D0%B0%D1%82%D1%8C.jpg" },
+      { id: "yaz_zdorovenny", title: "Вот он язь, здоровенный!", tags: "язь здоровенный рыба мужик улыбается рыбалка", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D1%8F%D0%B7%D1%8C-%D0%B7%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9.jpg" },
+      { id: "yaz_baby", title: "Язь язь бейби", tags: "язь язь бейби кепка рэп рыба мужик", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/05/%D1%8F%D0%B7%D1%8C-%D1%8F%D0%B7%D1%8C-%D0%B1%D0%B5%D0%B9%D0%B1%D0%B8.jpg" },
 
       // Мемы рунета: Лох
       { id: "lox_podjezd", title: "Ебать ты лох (Оригинал)", tags: "лох ебать ты лох пацаны подъезд гопники пацанчики ржут смеются ха лох", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/04/%D0%B5%D0%B1%D0%B0%D1%82%D1%8C-%D1%82%D1%8B-%D0%BB%D0%BE%D1%85-%D0%BE%D1%80%D0%B8%D0%B3%D0%B8%D0%BD%D0%B0%D0%BB.jpg" },
       { id: "lox_main", title: "Ебать ты лох", tags: "лох ебать ты лох пацаны мем классика надпись смех", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/04/%D0%B5%D0%B1%D0%B0%D1%82%D1%8C-%D1%82%D1%8B-%D0%BB%D0%BE%D1%85.jpg" },
       { id: "lox_who", title: "Ебать ты лох (Братья Чемезовы)", tags: "лох ебать ты лох чемезов парни подъезд", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/04/%D0%B5%D0%B1%D0%B0%D1%82%D1%8C-%D1%82%D1%8B-%D0%BB%D0%BE%D1%85-%D0%BA%D1%82%D0%BE-%D1%8D%D1%82%D0%B8-%D0%BF%D0%B0%D1%80%D0%BD%D0%B8.png" },
+      { id: "lox_chemezov", title: "Чемезов мем", tags: "лох ебать ты лох пацан кепка", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/04/%D1%87%D0%B5%D0%BC%D0%B5%D0%B7%D0%BE%D0%B2-%D0%BC%D0%B5%D0%BC.jpg" },
+      { id: "lox_bestoloch", title: "Едрить вы бестолочь", tags: "лох едрить вы бестолочь пацаны подъезд", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/04/%D0%B5%D0%B4%D1%80%D0%B8%D1%82%D1%8C-%D0%B2%D1%8B-%D0%B1%D0%B5%D1%81%D1%82%D0%BE%D0%BB%D0%BE%D1%87%D1%8C.jpg" },
+      { id: "lox_loxushka", title: "Ебать ты лохушка", tags: "лох ебать ты лохушка девушка пацаны", cat: "all", url: "https://memepedia.world/wp-content/uploads/2017/04/%D0%B5%D0%B1%D0%B0%D1%82%D1%8C-%D1%82%D1%8B-%D0%BB%D0%BE%D1%85%D1%83%D1%88%D0%BA%D0%B0.jpg" },
 
       // Мемы рунета: Рыба / Рыбов
-      { id: "cat_rybov", title: "Вы продаете рыбов", tags: "рыбов кот коты котик рыба продаете кошка красивое", cat: "cat", url: "https://i.imgflip.com/1g8my4.jpg" },
+      { id: "cat_rybov", title: "Вы продаете рыбов", tags: "рыбов кот коты котик рыба продаете кошка красивое", cat: "cat", url: "https://memepedia.world/wp-content/uploads/2021/08/vy-prodaete-rybov-1.jpg" },
+
+      // Мемы рунета: Волк ауф
+      { id: "wolf_auf", title: "Безумно можно быть первым (Волк ауф)", tags: "волк волки ауф луна цитата пацанские цитаты", cat: "all", url: "https://memepedia.world/wp-content/uploads/2020/01/bezumno-mozhno-byt-pervym.jpg" },
+
+      // Мемы: Райан Гослинг
+      { id: "gosling_drive", title: "Райан Гослинг (Драйв / Скорпион)", tags: "гослинг райан гослинг драйв куртка скорпион drive", cat: "all", url: "https://memepedia.world/wp-content/uploads/2022/10/rajan-gosling-v-kurtke-so-skorpionom.jpg" },
+      { id: "gosling_stairs", title: "Гослинг умирает на ступеньках", tags: "гослинг райан гослинг ступеньки кровь умирает грусть", cat: "sad", url: "https://memepedia.world/wp-content/uploads/2022/10/umer-li-rajan-gosling-v-kontse-draiva.jpg" },
 
       // Мемы: Коты
       { id: "cat_woman", title: "Женщина кричит на кота за столом", tags: "кот кошка стол женщина кричит белая салат орет", cat: "cat", url: "https://i.imgflip.com/345v97.jpg" },
@@ -2415,9 +2428,9 @@
     let searchState = {
       activeQuery: "",
       allResults: [],      // Все уникальные найденные картинки для текущего запроса
-      pageIndex: 0,        // Текущая страница (0 = первые 20, 1 = вторые 20 и т.д.)
-      pageSize: 10,
-      apiPage: 1,          // Номер страницы во внешних API (Memepedia, Wikimedia)
+      pageIndex: 0,        // Текущая страница (0 = первые 16, 1 = вторые 16 и т.д.)
+      pageSize: 16,
+      apiPage: 1,          // Номер страницы во внешних API (Memepedia, Media, Reddit)
       hasMoreApi: true,
       isLoading: false
     };
@@ -2457,26 +2470,36 @@
       "рыбов": ["vy-prodaete-rybov"],
       "лох": ["ebat-ty-lox"],
       "лошара": ["ebat-ty-lox"],
-      "волк": ["upal-vstavaj-vstal-upaj"],
-      "ауф": ["upal-vstavaj-vstal-upaj"],
-      "кот": ["kot-za-stolom", "belyj-kot-govorit", "kotenok-xvataetsya-za-golovu-i-krichit"],
-      "коты": ["kot-za-stolom", "belyj-kot-govorit"],
-      "котик": ["kot-za-stolom", "kotenok-xvataetsya-za-golovu-i-krichit"],
-      "собака": ["swole-doge-and-cheems", "this-is-fine"],
-      "доге": ["swole-doge-and-cheems"],
+      "волк": ["bezumno-mozhno-byt-pervym", "upal-vstavaj-vstal-upaj"],
+      "ауф": ["bezumno-mozhno-byt-pervym", "upal-vstavaj-vstal-upaj"],
+      "кот": ["vy-prodaete-rybov", "kot-za-stolom", "belyj-kot-govorit", "kotenok-xvataetsya-za-golovu-i-krichit", "kot-chmonya"],
+      "коты": ["vy-prodaete-rybov", "kot-za-stolom", "belyj-kot-govorit"],
+      "котик": ["kot-za-stolom", "kotenok-xvataetsya-za-golovu-i-krichit", "kot-chmonya"],
+      "собака": ["swole-doge-and-cheems", "this-is-fine", "doge"],
+      "доге": ["swole-doge-and-cheems", "doge"],
       "чимс": ["swole-doge-and-cheems"],
       "гигачад": ["gigachad"],
       "чад": ["gigachad"],
       "гарольд": ["garold-skryvayushhij-bol"],
+      "гослинг": ["rajan-gosling", "rajan-gosling-v-kurtke"],
       "поцык": ["opasnyj-pocyk"],
       "повар": ["povar"],
       "свидетель": ["svidetel-iz-fryazino"],
       "шрек": ["shrek"],
+      "скуф": ["skuf"],
+      "альтушка": ["altushka"],
+      "сигма": ["sigma-fejs-patrik-bejtman"],
+      "дрейк": ["drake-meme"],
       "бумер": ["30-letnij-bumer"],
       "зумер": ["zumer-v-naushnikax"],
       "думер": ["dumer-i-dumer-gerl"],
       "ди каприо": ["leonardo-dikaprio-s-bokalom"],
-      "леонардо": ["leonardo-dikaprio-s-bokalom"]
+      "леонардо": ["leonardo-dikaprio-s-bokalom"],
+      "вояк": ["wojak", "chad-i-soyjak"],
+      "wojak": ["wojak", "chad-i-soyjak"],
+      "литвин": ["litvin"],
+      "меллстрой": ["mellstroy"],
+      "папич": ["papich-arthas"]
     };
 
     // Двуязычный словарь для точного поиска мировых шаблонов мемов
@@ -2575,21 +2598,27 @@
         nextBtn.innerHTML = '<span class="p-icon">⏩</span><span class="p-label">Дальше</span>';
         nextBtn.addEventListener("click", async () => {
           if (searchState.isLoading) return;
-          searchState.isLoading = true;
-          nextBtn.innerHTML = '<span class="p-icon">⏳</span><span class="p-label">Ищу...</span>';
-          nextBtn.style.opacity = "0.7";
-
           const nextStartIdx = (searchState.pageIndex + 1) * searchState.pageSize;
-          if (searchState.allResults.length < nextStartIdx + 1 && searchState.hasMoreApi) {
+
+          if (searchState.allResults.length < nextStartIdx + searchState.pageSize && searchState.hasMoreApi) {
+            searchState.isLoading = true;
+            nextBtn.innerHTML = '<span class="p-icon">⏳</span><span class="p-label">Ищу...</span>';
+            nextBtn.style.opacity = "0.7";
             searchState.apiPage++;
             await fetchApiPage(searchState.activeQuery, searchState.apiPage);
+            searchState.isLoading = false;
           }
 
-          searchState.isLoading = false;
           if (searchState.allResults.length > nextStartIdx) {
             searchState.pageIndex++;
             renderCurrentPage();
             templatesBar.scrollTo({ left: 0, behavior: "smooth" });
+
+            // Фоновая подгрузка в буфер, если картинок осталось меньше чем на 2 страницы вперед
+            const remaining = searchState.allResults.length - (searchState.pageIndex + 1) * searchState.pageSize;
+            if (remaining < searchState.pageSize * 2 && searchState.hasMoreApi && !searchState.isLoading) {
+              fetchApiPage(searchState.activeQuery, ++searchState.apiPage).catch(() => {});
+            }
           } else {
             searchState.hasMoreApi = false;
             renderCurrentPage();
@@ -2656,8 +2685,7 @@
       renderCurrentPage();
     }
 
-    // Загрузка страницы данных из проверенных мемных источников (Memepedia МЕМЫ + Imgflip + Reddit)
-    // НИКАКОЙ ВИКИПЕДИИ И АРХИВНЫХ СКАНОВ! Только настоящие вирусные мемы!
+    // Загрузка страниц мемов из Memepedia (все категории + медиатека + тело статей) + Imgflip + Reddit
     async function fetchApiPage(query, pageNum) {
       const qTrim = (query || "").trim();
       if (!qTrim) return [];
@@ -2690,27 +2718,36 @@
         });
       }
 
-      // 2. Memepedia: только категория 46 (МЕМЫ)! Исключает рекламу казино, школ и услуг!
-      const mpUrlCat = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent(qTrim)}&categories=46&_embed=1&per_page=12&page=${pageNum}`;
-      const mpUrlMem = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent("мем " + qTrim)}&categories=46&_embed=1&per_page=10&page=${pageNum}`;
+      // 2. Memepedia Посты (все категории мемов, исключая спам 2608 и рекламу 1533)
+      const mpUrlPosts = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent(qTrim)}&categories_exclude=2608,1533&_embed=1&per_page=12&page=${pageNum}`;
+      const postsPromise = fetch(mpUrlPosts, { headers: { Accept: "application/json" } })
+        .then(r => r.ok ? r.json() : [])
+        .catch(() => []);
 
-      // 3. Imgflip мировые шаблоны (только на 1-й странице)
+      // 3. Memepedia Медиатека (71 000+ загруженных картинок мемов)
+      const mpUrlMedia = `https://memepedia.ru/wp-json/wp/v2/media?search=${encodeURIComponent(qTrim)}&per_page=15&page=${pageNum}`;
+      const mediaPromise = fetch(mpUrlMedia, { headers: { Accept: "application/json" } })
+        .then(r => r.ok ? r.json() : [])
+        .catch(() => []);
+
+      // 4. Imgflip мировые шаблоны (на 1-й странице)
       const imgflipPromise = (pageNum === 1) ? loadImgflipTemplates() : Promise.resolve([]);
 
-      // 4. Reddit Pikabu (для свежих мемов)
-      const redditPikabuPromise = fetch(`https://meme-api.com/gimme/Pikabu/12`)
+      // 5. Reddit Pikabu и мемы
+      const redditSub = (pageNum === 1) ? "Pikabu" : ((pageNum === 2) ? "memes" : "dankmemes");
+      const redditPromise = fetch(`https://meme-api.com/gimme/${redditSub}/12`)
         .then(r => r.ok ? r.json() : null)
         .catch(() => null);
 
-      const [slugResults, resCat, resMem, ifTemplates, redditData] = await Promise.all([
+      const [slugResults, postsData, mediaData, ifTemplates, redditData] = await Promise.all([
         Promise.all(slugPromises),
-        fetch(mpUrlCat, { headers: { Accept: "application/json" } }).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(mpUrlMem, { headers: { Accept: "application/json" } }).then(r => r.ok ? r.json() : []).catch(() => []),
+        postsPromise,
+        mediaPromise,
         imgflipPromise,
-        redditPikabuPromise
+        redditPromise
       ]);
 
-      // Обработка постов Memepedia
+      // Обработка постов Memepedia (извлекаем главное фото И ВСЕ картинки из тела статьи!)
       const processMpPosts = (posts) => {
         if (!Array.isArray(posts)) return;
         posts.forEach((p, idx) => {
@@ -2732,7 +2769,7 @@
             }
           }
 
-          // Извлечение всех графических картинок мема из тела статьи
+          // Извлечение всех картинок мемов из текста статьи!
           const contentHtml = p.content?.rendered || "";
           const innerMatches = contentHtml.match(/<img[^>]+src=["']([^"']+)["']/g) || [];
           innerMatches.forEach((tag, iIdx) => {
@@ -2757,16 +2794,36 @@
         });
       };
 
-      // 1. Сначала добавляем конкретные меметические посты по слогам (язь, лох, рыбов, волк и т.д.)
+      // 1. Статьи по известным слагам
       if (Array.isArray(slugResults)) {
         slugResults.forEach(posts => processMpPosts(posts));
       }
 
-      // 2. Затем категорию 46 Memepedia
-      processMpPosts(resCat);
-      processMpPosts(resMem);
+      // 2. Статьи Memepedia
+      processMpPosts(postsData);
 
-      // 3. Мировые шаблоны Imgflip
+      // 3. Медиатека Memepedia
+      if (Array.isArray(mediaData)) {
+        mediaData.forEach((m, mIdx) => {
+          const rawSrc = m.source_url;
+          if (rawSrc && rawSrc.includes("memepedia.world") && !rawSrc.includes("avatar") && !rawSrc.includes("icon") && !rawSrc.includes("logo") && !rawSrc.includes("banner")) {
+            const sSrc = safeMemeUrl(rawSrc);
+            if (!seenUrls.has(sSrc)) {
+              seenUrls.add(sSrc);
+              const mTitle = (m.title?.rendered || (qTrim + " фото #" + (mIdx + 1))).replace(/<[^>]+>/g, "").trim();
+              liveMemes.push({
+                id: "mp_m_" + (m.id || mIdx),
+                title: mTitle,
+                tags: qLower + " мем memepedia медиа",
+                cat: "all",
+                url: sSrc
+              });
+            }
+          }
+        });
+      }
+
+      // 4. Мировые шаблоны Imgflip
       if (Array.isArray(ifTemplates) && ifTemplates.length > 0) {
         const englishKeywords = memeBilingualMap[qLower] || [];
         const matches = ifTemplates.filter((m) => {
@@ -2789,20 +2846,20 @@
         });
       }
 
-      // 4. Reddit Pikabu (если найдено мало или на странице 2+)
+      // 5. Reddit
       if (redditData && Array.isArray(redditData.memes)) {
         redditData.memes.forEach((rm, rIdx) => {
           if (rm.url && !seenUrls.has(rm.url) && !rm.url.endsWith(".gif")) {
-            const rTitle = rm.title || (qTrim + " Пикабу #" + (rIdx + 1));
+            const rTitle = rm.title || (qTrim + " #" + (rIdx + 1));
             const rLower = rTitle.toLowerCase();
             const words = qLower.split(" ").filter(Boolean);
             const isMatch = words.some(w => rLower.includes(w));
             if (isMatch || liveMemes.length < 5) {
               seenUrls.add(rm.url);
               liveMemes.push({
-                id: "pk_" + rIdx,
+                id: "pk_" + (rm.id || rIdx),
                 title: rTitle.replace(/<[^>]+>/g, "").trim(),
-                tags: qLower + " мем пикабу reddit",
+                tags: qLower + " мем reddit",
                 cat: "all",
                 url: rm.url
               });
@@ -2811,15 +2868,16 @@
         });
       }
 
-      if (liveMemes.length === 0) {
+      if (liveMemes.length === 0 && pageNum >= 5) {
         searchState.hasMoreApi = false;
-      } else {
+      } else if (liveMemes.length > 0) {
+        searchState.hasMoreApi = true;
         searchState.allResults = searchState.allResults.concat(liveMemes);
       }
 
       if (statusPill) {
         if (searchState.allResults.length > 0) {
-          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} мемов по запросу «${qTrim}»`;
+          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} мемов по запросу «${qTrim}» (Стр. ${searchState.pageIndex + 1})`;
           setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
         } else {
           statusPill.textContent = `🔍 Мемы не найдены. Попробуй другое слово.`;
@@ -2830,7 +2888,7 @@
       return liveMemes;
     }
 
-    // Главная функция поиска онлайн по запросу
+        // Главная функция поиска онлайн по запросу
     let searchDebounceTimer = null;
     let isSearchingOnline = false;
 
