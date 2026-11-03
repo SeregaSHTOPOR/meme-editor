@@ -131,11 +131,17 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
     }
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      position: relative;
+    }
     body {
       background-color: var(--app-bg);
       color: var(--input-text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 12px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -148,6 +154,8 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      overflow-x: hidden;
+      box-sizing: border-box;
     }
     .header-bar {
       display: flex;
@@ -323,8 +331,8 @@
     .carousel-arrow:active {
       transform: translateY(-50%) scale(0.95);
     }
-    .carousel-arrow.prev { left: -8px; }
-    .carousel-arrow.next { right: -8px; }
+    .carousel-arrow.prev { left: 0px; }
+    .carousel-arrow.next { right: 0px; }
 
     .templates-bar {
       display: flex;
@@ -437,14 +445,31 @@
       gap: 10px;
       background: var(--card-bg);
       border: 1.5px solid var(--card-border);
-      padding: 14px;
+      padding: 12px;
       border-radius: 14px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+    .format-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
     .input-group {
       display: flex;
       flex-direction: column;
       gap: 5px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
     label {
       font-size: 12px;
@@ -454,6 +479,9 @@
     input[type="text"]#memeText, select,
     input[type="text"]#demotTitle, input[type="text"]#demotSubtitle, input[type="text"]#twitterText {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       padding: 9px 12px;
       font-size: 14px;
       border-radius: 8px;
@@ -462,6 +490,11 @@
       color: var(--input-text);
       outline: none;
       transition: border-color 0.15s;
+    }
+    select {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
     input[type="text"]#memeText::placeholder,
     input[type="text"]#demotTitle::placeholder,
@@ -475,15 +508,28 @@
     }
     .row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .row > .input-group,
+    .row > * {
+      min-width: 0 !important;
+      flex: 1 1 0;
     }
     .color-picker {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       overflow-x: auto;
       padding: 4px 0;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
     }
     .color-dot {
       width: 28px;
@@ -896,6 +942,56 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+    }
+    /* Всплывающее стильное уведомление (Toast) */
+    .share-toast {
+      display: none;
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(28, 28, 30, 0.96);
+      border: 1.5px solid var(--tg-theme-button-color, #2481cc);
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.4;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+      z-index: 1000000;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      max-width: 88vw;
+      width: max-content;
+      animation: fadeInDown 0.22s ease;
+      pointer-events: none;
+    }
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -15px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+    html.is-light .share-toast,
+    body.is-light .share-toast {
+      background: rgba(255, 255, 255, 0.98);
+      border: 1.5px solid var(--tg-theme-button-color, #2481cc);
+      color: #000000;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.25);
+    }
+    .share-status.pulse {
+      animation: statusPulse 0.4s ease;
+    }
+    @keyframes statusPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.04); background: rgba(36, 129, 204, 0.3); }
+      100% { transform: scale(1); }
     }
     .share-status.ready {
       background: rgba(46, 213, 115, 0.15);
@@ -2510,6 +2606,16 @@
             shareStatus.className = "share-status ready";
             shareStatus.innerHTML = `<span>✅</span> Мем загружен! Выбери куда отправить:`;
           }
+          // Если пользователь нажал кнопку отправки пока мем грузился — отправляем сразу!
+          if (pendingShareTarget) {
+            const target = pendingShareTarget;
+            pendingShareTarget = null;
+            if (target === "tg") doShareTelegram();
+            else if (target === "wa") doShareWhatsApp();
+            else if (target === "vk") doShareVk();
+            else if (target === "viber") doShareViber();
+            else if (target === "system") doShareSystem();
+          }
         } else {
           throw new Error(data?.error?.message || "Неверный ответ ImgBB");
         }
@@ -2605,11 +2711,9 @@
     if (shareLinkInput) shareLinkInput.addEventListener("click", copyShareLink);
 
     // 1. Иконка Telegram: открывает список чатов мгновенно!
-    document.getElementById("shareTgBtn").addEventListener("click", () => {
-      if (isUploadingMeme) {
-        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
-        return;
-      }
+    let pendingShareTarget = null;
+
+    function doShareTelegram() {
       if (uploadedMemeUrl) {
         const tgShareUrl = "https://t.me/share/url?url=" + encodeURIComponent(uploadedMemeUrl);
         if (tg && tg.openTelegramLink) {
@@ -2620,7 +2724,6 @@
         cleanStateAfterShare();
         return;
       }
-      // Если загрузка на ImgBB не удалась, на мобильном используем прямую отправку файла мема:
       if (navigator.share && currentMemeFile) {
         navigator.share({ files: [currentMemeFile], title: "Мем" }).catch(() => {});
         return;
@@ -2634,72 +2737,86 @@
         window.open(tgShareUrl, "_blank");
       }
       cleanStateAfterShare();
-    });
+    }
 
-    // 2. Иконка WhatsApp: мгновенный переход
-    document.getElementById("shareWaBtn").addEventListener("click", () => {
-      if (isUploadingMeme) {
-        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
-        return;
-      }
+    function doShareWhatsApp() {
       const url = getEffectiveShareUrl();
       const text = uploadedMemeUrl ? "" : getShareText();
       const msg = (text ? text + "\n" : "") + url;
       const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg);
-      
       if (tg && tg.openLink) {
         tg.openLink(waUrl);
       } else {
         window.open(waUrl, "_blank");
       }
       cleanStateAfterShare();
-    });
+    }
 
-    // 3. Иконка VK: мгновенный диалог VK
-    document.getElementById("shareVkBtn").addEventListener("click", () => {
-      if (isUploadingMeme) {
-        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
-        return;
-      }
+    function doShareVk() {
       const url = getEffectiveShareUrl();
       const text = getShareText();
       const vkUrl = "https://vk.com/share.php?url=" + encodeURIComponent(url) + (text ? "&title=" + encodeURIComponent(text) : "");
-      
       if (tg && tg.openLink) {
         tg.openLink(vkUrl);
       } else {
         window.open(vkUrl, "_blank");
       }
       cleanStateAfterShare();
-    });
+    }
 
-    // 4. Иконка Viber
-    document.getElementById("shareViberBtn").addEventListener("click", () => {
-      if (isUploadingMeme) {
-        showToast("⏳ Подожди секунду, загружаем мем на ImgBB...");
-        return;
-      }
+    function doShareViber() {
       const url = getEffectiveShareUrl();
       const text = getShareText();
       const msg = (text ? text + " " : "") + url;
       const viberUrl = "viber://forward?text=" + encodeURIComponent(msg);
-      
       if (tg && tg.openLink) {
         tg.openLink(viberUrl);
       } else {
         window.location.href = viberUrl;
       }
       cleanStateAfterShare();
-    });
+    }
 
-    // 5. Иконка «Еще» (системное меню "Поделиться" смартфона)
-    document.getElementById("shareSystemBtn").addEventListener("click", () => {
+    function doShareSystem() {
       if (navigator.share && currentMemeFile) {
         navigator.share({ files: [currentMemeFile], title: "Мем" }).catch(() => {});
         return;
       }
       copyShareLink();
-    });
+    }
+
+    // Обработчик нажатия на кнопку шеринга с проверкой статуса загрузки
+    function handleShareClick(target) {
+      // Если мем ещё генерируется и загружается на ImgBB
+      if (isUploadingMeme || !uploadedMemeUrl) {
+        pendingShareTarget = target;
+        const waitNotice = "⏳ Мем ещё генерируется и загружается на промежуточный хостинг ImgBB. Как только загрузится — сразу откроем отправку!";
+        if (shareStatus) {
+          shareStatus.classList.remove("pulse");
+          void shareStatus.offsetWidth;
+          shareStatus.classList.add("pulse");
+        }
+        if (tg && tg.showAlert) {
+          tg.showAlert(waitNotice);
+        } else {
+          showToast(waitNotice);
+        }
+        return;
+      }
+
+      // Если уже загружен — отправляем моментально без уведомления!
+      if (target === "tg") doShareTelegram();
+      else if (target === "wa") doShareWhatsApp();
+      else if (target === "vk") doShareVk();
+      else if (target === "viber") doShareViber();
+      else if (target === "system") doShareSystem();
+    }
+
+    document.getElementById("shareTgBtn").addEventListener("click", () => handleShareClick("tg"));
+    document.getElementById("shareWaBtn").addEventListener("click", () => handleShareClick("wa"));
+    document.getElementById("shareVkBtn").addEventListener("click", () => handleShareClick("vk"));
+    document.getElementById("shareViberBtn").addEventListener("click", () => handleShareClick("viber"));
+    document.getElementById("shareSystemBtn").addEventListener("click", () => handleShareClick("system"));
 
     // Кнопка: 💾 Скачать картинку мема (сохраняет готовый мем с текстом на устройство!)
     document.getElementById("shareDownloadBtn").addEventListener("click", async () => {
