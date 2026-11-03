@@ -154,7 +154,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-x: hidden;
+      overflow-x: clip;
       box-sizing: border-box;
     }
     .header-bar {
@@ -387,24 +387,7 @@
       transform: scale(1.08);
       box-shadow: 0 2px 8px rgba(36, 129, 204, 0.4);
     }
-    .search-bot-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: rgba(36, 129, 204, 0.15);
-      border: 1.5px solid var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-color, #2481cc);
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .search-bot-pill:active {
-      transform: scale(0.96);
-    }
+    
     .no-results {
       font-size: 13px;
       color: var(--text-muted);
@@ -413,7 +396,9 @@
       text-align: center;
     }
     .canvas-wrapper {
-      position: relative;
+      position: sticky;
+      top: 6px;
+      z-index: 90;
       width: 100%;
       background: #101014;
       border-radius: 14px;
@@ -422,15 +407,128 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 220px;
+      min-height: 180px;
       touch-action: none;
       border: 1.5px solid var(--card-border);
+      transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .canvas-wrapper.is-sticky {
+      box-shadow: 0 10px 32px rgba(0,0,0,0.45);
+      border-color: var(--tg-theme-button-color, #2481cc);
     }
     canvas {
       max-width: 100%;
       max-height: 48vh;
       display: block;
       object-fit: contain;
+      transition: max-height 0.25s ease;
+    }
+    .canvas-wrapper.is-sticky canvas {
+      max-height: 215px;
+    }
+    .sticky-pin-pill {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      background: rgba(36, 129, 204, 0.88);
+      backdrop-filter: blur(4px);
+      padding: 3px 8px;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 10;
+    }
+    .canvas-wrapper.is-sticky .sticky-pin-pill {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Панель искажений и стилизации фото (Photoshop FX) */
+    .fx-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .fx-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--btn-secondary-bg);
+      border-bottom: 1.5px solid var(--card-border);
+      transition: all 0.15s;
+    }
+    .fx-header:hover {
+      background: rgba(36, 129, 204, 0.1);
+    }
+    .fx-title-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--input-text);
+    }
+    .fx-badge {
+      display: none;
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      background: #ff3b30;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .fx-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fx-chevron {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    .fx-card.collapsed .fx-chevron {
+      transform: rotate(-90deg);
+    }
+    .fx-card.collapsed .fx-body {
+      display: none;
+    }
+    .fx-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+    .fx-group-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--tg-theme-button-color, #2481cc);
+      margin-top: 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px dashed var(--card-border);
+    }
+    .fx-slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .drag-hint {
       font-size: 12px;
@@ -1116,8 +1214,12 @@
       <button class="carousel-arrow next" id="arrowNext" title="Листать вперед" type="button">›</button>
     </div>
 
-    <!-- Холст редактора -->
-    <div class="canvas-wrapper">
+    <!-- Якорь для отслеживания залипания холста при скролле -->
+    <div id="canvasSentinel" style="height: 1px; margin-top: -1px;"></div>
+
+    <!-- Холст редактора (плавающий / закрепленный при скролле вниз) -->
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <span class="sticky-pin-pill" id="stickyPinPill">📌 Закреплено</span>
       <canvas id="memeCanvas"></canvas>
     </div>
     <div class="drag-hint">👆 Перетаскивай надпись пальцем или мышкой прямо по картинке!</div>
@@ -1283,6 +1385,94 @@
         <div class="input-group">
           <label>Текст в рамке сверху (Твиттер / ВК стиль)</label>
           <input type="text" id="twitterText" placeholder="Когда бот наконец-то работает идеально..." value="Когда бот наконец-то делает всё так, как надо:">
+        </div>
+      </div>
+
+      <!-- 🌀 Блок: Эффекты фото (как в Photoshop: Искажение, Стилизация, Пикселизация) -->
+      <div class="fx-card" id="fxCard">
+        <div class="fx-header" id="fxHeader">
+          <div class="fx-title-area">
+            <span>🌀 Эффекты фото (Photoshop)</span>
+            <span class="fx-badge" id="fxBadge">ВКЛ</span>
+          </div>
+          <div class="fx-actions">
+            <button class="reset-mini-btn" id="btnResetAllFx" title="Сбросить все эффекты фото" type="button">Сброс</button>
+            <span class="fx-chevron" id="fxChevron">▼</span>
+          </div>
+        </div>
+        
+        <div class="fx-body" id="fxBody">
+          <!-- 1. ИСКАЖЕНИЕ (DISTORT) -->
+          <div class="fx-group-title">Искажение (Distort)</div>
+
+          <!-- Сферизация (Spherize / Рыбий глаз / Лупа) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Сферизация (Лупа / Вдавление)</label>
+              <button class="reset-mini-btn" id="btnResetSpherize" type="button">0%</button>
+            </div>
+            <input type="range" id="fxSpherize" min="-100" max="100" value="0">
+          </div>
+
+          <!-- Скручивание (Twirl / Водоворот) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Скручивание (Twirl / Вихрь)</label>
+              <button class="reset-mini-btn" id="btnResetTwirl" type="button">0°</button>
+            </div>
+            <input type="range" id="fxTwirl" min="-180" max="180" value="0">
+          </div>
+
+          <!-- Дисторсия / Волна (Wave / Ripple) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Дисторсия (Волна / Рябь)</label>
+              <button class="reset-mini-btn" id="btnResetWave" type="button">0%</button>
+            </div>
+            <input type="range" id="fxWave" min="0" max="100" value="0">
+          </div>
+
+          <!-- 2. СТИЛИЗАЦИЯ (STYLIZE) -->
+          <div class="fx-group-title">Стилизация (Stylize)</div>
+
+          <!-- Масляная краска (Oil paint) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Масляная краска (Oil Paint)</label>
+              <button class="reset-mini-btn" id="btnResetOil" type="button">0</button>
+            </div>
+            <input type="range" id="fxOil" min="0" max="6" value="0" step="1">
+          </div>
+
+          <!-- Диффузия (Diffusion / Разброс пикселей) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Диффузия (Шум / Разброс)</label>
+              <button class="reset-mini-btn" id="btnResetDiffusion" type="button">0px</button>
+            </div>
+            <input type="range" id="fxDiffusion" min="0" max="25" value="0">
+          </div>
+
+          <!-- 3. ОФОРМЛЕНИЕ (PIXELATE) -->
+          <div class="fx-group-title">Оформление (Pixelate)</div>
+
+          <!-- Мозаика (Mosaic / Пиксели) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Мозаика (Пиксели 8-бит)</label>
+              <button class="reset-mini-btn" id="btnResetMosaic" type="button">0</button>
+            </div>
+            <input type="range" id="fxMosaic" min="0" max="40" value="0" step="2">
+          </div>
+
+          <!-- Кристаллизация (Crystallize / Грани) -->
+          <div class="fx-slider-item">
+            <div class="slider-header">
+              <label>Кристаллизация (Грани / Фасет)</label>
+              <button class="reset-mini-btn" id="btnResetCrystallize" type="button">0</button>
+            </div>
+            <input type="range" id="fxCrystallize" min="0" max="40" value="0" step="2">
+          </div>
         </div>
       </div>
 
@@ -1541,6 +1731,16 @@
       posX: null,
       posY: null,
       imgUrl: initialUrl,
+    
+      fx: {
+        spherize: 0,
+        twirl: 0,
+        wave: 0,
+        oil: 0,
+        diffusion: 0,
+        mosaic: 0,
+        crystallize: 0,
+      },
     };
 
     let isDragging = false;
@@ -1548,26 +1748,12 @@
     function renderTemplates(list, currentQuery) {
       templatesBar.innerHTML = "";
 
-      // Если введён поисковый запрос — всегда даём кнопку мгновенного поиска в боте через Яндекс + Bing!
-      if (currentQuery && currentQuery.trim().length >= 1) {
-        const qTrim = currentQuery.trim();
-        const botPill = document.createElement("div");
-        botPill.className = "search-bot-pill";
-        botPill.innerHTML = `🔍 Найти «${qTrim}» в боте (Яндекс + Bing)`;
-        botPill.addEventListener("click", () => {
-          if (tg && tg.switchInlineQuery) {
-            tg.switchInlineQuery(qTrim);
-          } else {
-            window.open("https://t.me/findPICTUREsv_bot?start=" + encodeURIComponent(qTrim), "_blank");
-          }
-        });
-        templatesBar.appendChild(botPill);
-      }
+
 
       if (!list || !list.length) {
         const noRes = document.createElement("div");
         noRes.className = "no-results";
-        noRes.textContent = "Нажми синюю кнопку выше, чтобы найти картинки через Яндекс и Bing!";
+        noRes.textContent = "Ничего не найдено. Попробуй другое слово для поиска.";
         templatesBar.appendChild(noRes);
         return;
       }
@@ -2022,11 +2208,250 @@
       });
     }
 
+    // ==========================================
+    // 🌀 ЭФФЕКТЫ ФОТО (PHOTOSHOP DISTORT & STYLIZE)
+    // ==========================================
+    function hasActiveFx() {
+      const f = state.fx;
+      return !!(
+        f &&
+        (f.spherize !== 0 ||
+          f.twirl !== 0 ||
+          f.wave !== 0 ||
+          f.oil !== 0 ||
+          f.diffusion !== 0 ||
+          f.mosaic !== 0 ||
+          f.crystallize !== 0)
+      );
+    }
+
+    function updateFxBadge() {
+      const badge = document.getElementById("fxBadge");
+      if (badge) {
+        badge.style.display = hasActiveFx() ? "inline-block" : "none";
+      }
+    }
+
+    let cachedFxCanvas = null;
+    let cachedFxKey = "";
+
+    function getProcessedImage(img) {
+      if (!hasActiveFx()) return img;
+
+      const f = state.fx;
+      const key = `${img.src || ""}_${img.naturalWidth || 0}_${img.naturalHeight || 0}_${f.spherize}_${f.twirl}_${f.wave}_${f.oil}_${f.diffusion}_${f.mosaic}_${f.crystallize}`;
+      if (cachedFxCanvas && cachedFxKey === key) {
+        return cachedFxCanvas;
+      }
+
+      const origW = img.naturalWidth || img.width || 600;
+      const origH = img.naturalHeight || img.height || 400;
+
+      // Ограничиваем максимальное измерение для мгновенной 60 FPS обработки на телефонах
+      const maxDim = 900;
+      let w = origW;
+      let h = origH;
+      if (Math.max(w, h) > maxDim) {
+        const scale = maxDim / Math.max(w, h);
+        w = Math.max(10, Math.round(w * scale));
+        h = Math.max(10, Math.round(h * scale));
+      }
+
+      // Создаем рабочий canvas для чтения исходных пикселей
+      const srcCanvas = document.createElement("canvas");
+      srcCanvas.width = w;
+      srcCanvas.height = h;
+      const sCtx = srcCanvas.getContext("2d", { willReadFrequently: true });
+      sCtx.drawImage(img, 0, 0, w, h);
+
+      const srcImageData = sCtx.getImageData(0, 0, w, h);
+      const src = srcImageData.data;
+
+      // Результирующий canvas
+      const dstCanvas = document.createElement("canvas");
+      dstCanvas.width = w;
+      dstCanvas.height = h;
+      const dCtx = dstCanvas.getContext("2d", { willReadFrequently: true });
+      const dstImageData = dCtx.createImageData(w, h);
+      const dst = dstImageData.data;
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxR = Math.min(w, h) * 0.65;
+
+      const spherizeVal = f.spherize || 0;
+      const twirlVal = f.twirl || 0;
+      const waveVal = f.wave || 0;
+      const diffVal = f.diffusion || 0;
+      const mosaicVal = f.mosaic || 0;
+      const crystalVal = f.crystallize || 0;
+
+      const hasSpherize = spherizeVal !== 0;
+      const sphPower = spherizeVal > 0 ? 1 + (spherizeVal / 100) * 1.6 : 1 + (Math.abs(spherizeVal) / 100) * 1.6;
+      const hasTwirl = twirlVal !== 0;
+      const twirlRad = (twirlVal * Math.PI) / 180;
+      const hasWave = waveVal > 0;
+      const waveAmp = (waveVal / 100) * 16;
+      const hasDiff = diffVal > 0;
+      const hasMosaic = mosaicVal > 1;
+      const bMosaic = Math.max(2, Math.round(mosaicVal));
+      const hasCrystal = crystalVal > 1;
+      const cSize = Math.max(2, Math.round(crystalVal));
+
+      for (let y = 0; y < h; y++) {
+        const yOff = y * w;
+        for (let x = 0; x < w; x++) {
+          let sx = x;
+          let sy = y;
+
+          // 1. Сферизация (Spherize)
+          if (hasSpherize) {
+            const dx = sx - cx;
+            const dy = sy - cy;
+            const r = Math.sqrt(dx * dx + dy * dy);
+            if (r < maxR && r > 0.0001) {
+              const normR = r / maxR;
+              const rSrc = spherizeVal > 0 ? maxR * Math.pow(normR, sphPower) : maxR * Math.pow(normR, 1 / sphPower);
+              const ratio = rSrc / r;
+              sx = cx + dx * ratio;
+              sy = cy + dy * ratio;
+            }
+          }
+
+          // 2. Скручивание (Twirl)
+          if (hasTwirl) {
+            const dx = sx - cx;
+            const dy = sy - cy;
+            const r = Math.sqrt(dx * dx + dy * dy);
+            if (r < maxR && r > 0.0001) {
+              const factor = 1 - r / maxR;
+              const twAngle = twirlRad * factor * factor;
+              const curAngle = Math.atan2(dy, dx);
+              const srcAngle = curAngle - twAngle;
+              sx = cx + r * Math.cos(srcAngle);
+              sy = cy + r * Math.sin(srcAngle);
+            }
+          }
+
+          // 3. Дисторсия / Волна (Wave)
+          if (hasWave) {
+            sx += waveAmp * Math.sin(sy * 0.05);
+            sy += waveAmp * Math.cos(sx * 0.05);
+          }
+
+          // 4. Диффузия (Diffusion)
+          if (hasDiff) {
+            sx += (Math.random() - 0.5) * 2 * diffVal;
+            sy += (Math.random() - 0.5) * 2 * diffVal;
+          }
+
+          let isx = Math.round(sx);
+          let isy = Math.round(sy);
+          if (isx < 0) isx = 0; else if (isx >= w) isx = w - 1;
+          if (isy < 0) isy = 0; else if (isy >= h) isy = h - 1;
+
+          // 5. Мозаика (Mosaic)
+          if (hasMosaic) {
+            isx = Math.floor(isx / bMosaic) * bMosaic + Math.floor(bMosaic / 2);
+            isy = Math.floor(isy / bMosaic) * bMosaic + Math.floor(bMosaic / 2);
+            if (isx >= w) isx = w - 1;
+            if (isy >= h) isy = h - 1;
+          }
+
+          // 6. Кристаллизация (Crystallize)
+          if (hasCrystal) {
+            const gx = Math.floor(isx / cSize);
+            const gy = Math.floor(isy / cSize);
+            let minDist = 1e9;
+            let bestX = isx;
+            let bestY = isy;
+            for (let cdy = -1; cdy <= 1; cdy++) {
+              for (let cdx = -1; cdx <= 1; cdx++) {
+                const cgx = gx + cdx;
+                const cgy = gy + cdy;
+                const h1 = Math.sin(cgx * 12.9898 + cgy * 78.233) * 43758.5453;
+                const h2 = Math.cos(cgx * 39.346 + cgy * 11.135) * 43758.5453;
+                const offX = (h1 - Math.floor(h1) - 0.5) * 0.75;
+                const offY = (h2 - Math.floor(h2) - 0.5) * 0.75;
+                const seedX = (cgx + 0.5 + offX) * cSize;
+                const seedY = (cgy + 0.5 + offY) * cSize;
+                const d = (isx - seedX) * (isx - seedX) + (isy - seedY) * (isy - seedY);
+                if (d < minDist) {
+                  minDist = d;
+                  bestX = seedX;
+                  bestY = seedY;
+                }
+              }
+            }
+            isx = Math.max(0, Math.min(w - 1, Math.round(bestX)));
+            isy = Math.max(0, Math.min(h - 1, Math.round(bestY)));
+          }
+
+          const dstIdx = (yOff + x) * 4;
+          const srcIdx = (isy * w + isx) * 4;
+
+          dst[dstIdx] = src[srcIdx];
+          dst[dstIdx + 1] = src[srcIdx + 1];
+          dst[dstIdx + 2] = src[srcIdx + 2];
+          dst[dstIdx + 3] = src[srcIdx + 3];
+        }
+      }
+
+      // 7. Масляная краска (Oil Paint)
+      if (f.oil > 0) {
+        const oilLevel = f.oil;
+        const levels = Math.max(4, 18 - oilLevel * 2);
+        const step = 255 / levels;
+        const totalPx = w * h * 4;
+        for (let i = 0; i < totalPx; i += 4) {
+          dst[i] = Math.min(255, Math.round(dst[i] / step) * step);
+          dst[i + 1] = Math.min(255, Math.round(dst[i + 1] / step) * step);
+          dst[i + 2] = Math.min(255, Math.round(dst[i + 2] / step) * step);
+        }
+      }
+
+      dCtx.putImageData(dstImageData, 0, 0);
+      cachedFxCanvas = dstCanvas;
+      cachedFxKey = key;
+      return dstCanvas;
+    }
+
+    function resetAllFx() {
+      state.fx.spherize = 0;
+      state.fx.twirl = 0;
+      state.fx.wave = 0;
+      state.fx.oil = 0;
+      state.fx.diffusion = 0;
+      state.fx.mosaic = 0;
+      state.fx.crystallize = 0;
+
+      const setVal = (id, btnId, val, suffix) => {
+        const el = document.getElementById(id);
+        const btn = document.getElementById(btnId);
+        if (el) el.value = val;
+        if (btn) btn.textContent = val + suffix;
+      };
+
+      setVal("fxSpherize", "btnResetSpherize", 0, "%");
+      setVal("fxTwirl", "btnResetTwirl", 0, "°");
+      setVal("fxWave", "btnResetWave", 0, "%");
+      setVal("fxOil", "btnResetOil", 0, "");
+      setVal("fxDiffusion", "btnResetDiffusion", 0, "px");
+      setVal("fxMosaic", "btnResetMosaic", 0, "");
+      setVal("fxCrystallize", "btnResetCrystallize", 0, "");
+
+      cachedFxCanvas = null;
+      cachedFxKey = "";
+      updateFxBadge();
+      render();
+    }
+
     function render() {
       if (!currentImage.complete) return;
 
       const imgW = currentImage.naturalWidth || 600;
       const imgH = currentImage.naturalHeight || 400;
+      const imgSource = hasActiveFx() ? getProcessedImage(currentImage) : currentImage;
 
       // 1. ФОРМАТ: ДЕМОТИВАТОР
       if (state.layout === "demotivator") {
@@ -2048,7 +2473,7 @@
         ctx.strokeRect(padX - 4, padTop - 4, imgW + 8, imgH + 8);
 
         // Отрисовка фото
-        ctx.drawImage(currentImage, padX, padTop, imgW, imgH);
+        ctx.drawImage(imgSource, padX, padTop, imgW, imgH);
 
         // Заголовок Демотиватора
         const titleText = (state.demotTitle || "").trim().toUpperCase();
@@ -2102,7 +2527,7 @@
         });
 
         // Фото снизу
-        ctx.drawImage(currentImage, 0, headerH, imgW, imgH);
+        ctx.drawImage(imgSource, 0, headerH, imgW, imgH);
 
         updateCanvasBlob();
         return;
@@ -2113,7 +2538,7 @@
       canvas.height = imgH;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(imgSource, 0, 0, canvas.width, canvas.height);
 
       let textToDraw = state.text;
       if (!textToDraw.trim()) {
@@ -2458,6 +2883,100 @@
     function onDragEnd() {
       isDragging = false;
     }
+
+
+    // ==========================================
+    // 📌 ЗАКРЕПЛЕНИЕ ХОЛСТА (STICKY FLOATING CANVAS)
+    // ==========================================
+    const canvasWrapperEl = document.getElementById("canvasWrapper");
+    const canvasSentinelEl = document.getElementById("canvasSentinel");
+    if (canvasWrapperEl && canvasSentinelEl && "IntersectionObserver" in window) {
+      const stickyObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+              canvasWrapperEl.classList.add("is-sticky");
+            } else {
+              canvasWrapperEl.classList.remove("is-sticky");
+            }
+          });
+        },
+        { threshold: [0, 1] }
+      );
+      stickyObserver.observe(canvasSentinelEl);
+    }
+
+    window.addEventListener("scroll", () => {
+      if (canvasSentinelEl && canvasWrapperEl) {
+        const rect = canvasSentinelEl.getBoundingClientRect();
+        if (rect.top <= 6) {
+          canvasWrapperEl.classList.add("is-sticky");
+        } else {
+          canvasWrapperEl.classList.remove("is-sticky");
+        }
+      }
+    }, { passive: true });
+
+    // ==========================================
+    // 🌀 ОБРАБОТЧИКИ ЭФФЕКТОВ ФОТО (PHOTOSHOP FX)
+    // ==========================================
+    // Сворачивание / разворачивание карточки эффектов
+    const fxCard = document.getElementById("fxCard");
+    const fxHeader = document.getElementById("fxHeader");
+    if (fxHeader && fxCard) {
+      fxHeader.addEventListener("click", (e) => {
+        // Если кликнули на кнопку сброса — не сворачиваем
+        if (e.target.closest("#btnResetAllFx")) return;
+        fxCard.classList.toggle("collapsed");
+      });
+    }
+
+    // Кнопка мастер-сброса всех эффектов
+    const btnResetAllFx = document.getElementById("btnResetAllFx");
+    if (btnResetAllFx) {
+      btnResetAllFx.addEventListener("click", (e) => {
+        e.stopPropagation();
+        resetAllFx();
+      });
+    }
+
+    // Хелпер для привязки слайдера эффекта
+    function bindFxSlider(sliderId, btnId, fxKey, suffix) {
+      const slider = document.getElementById(sliderId);
+      const btn = document.getElementById(btnId);
+      if (!slider) return;
+
+      slider.addEventListener("input", (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        state.fx[fxKey] = val;
+        if (btn) btn.textContent = val + suffix;
+        cachedFxCanvas = null;
+        cachedFxKey = "";
+        updateFxBadge();
+        render();
+      });
+
+      if (btn) {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          slider.value = 0;
+          state.fx[fxKey] = 0;
+          btn.textContent = "0" + suffix;
+          cachedFxCanvas = null;
+          cachedFxKey = "";
+          updateFxBadge();
+          render();
+        });
+      }
+    }
+
+    bindFxSlider("fxSpherize", "btnResetSpherize", "spherize", "%");
+    bindFxSlider("fxTwirl", "btnResetTwirl", "twirl", "°");
+    bindFxSlider("fxWave", "btnResetWave", "wave", "%");
+    bindFxSlider("fxOil", "btnResetOil", "oil", "");
+    bindFxSlider("fxDiffusion", "btnResetDiffusion", "diffusion", "px");
+    bindFxSlider("fxMosaic", "btnResetMosaic", "mosaic", "");
+    bindFxSlider("fxCrystallize", "btnResetCrystallize", "crystallize", "");
 
     canvas.addEventListener("mousedown", onDragStart);
     window.addEventListener("mousemove", onDragMove);
