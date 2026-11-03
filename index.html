@@ -719,34 +719,76 @@
       color: #ffffff !important;
     }
 
-    /* Вкладки формата мема (Классика / Демотиватор / Шапка) */
-    .format-tabs {
+    /* Лента 10 форматов мемов (горизонтальный скролл со стрелками и ползунком) */
+    .formats-bar-wrapper {
+      position: relative;
       display: flex;
-      gap: 6px;
-      margin-bottom: 2px;
+      align-items: center;
+      width: 100%;
+      margin: 2px 0 6px;
     }
-    .format-tab {
-      flex: 1;
-      padding: 9px 4px;
+    .formats-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 6px 8px;
+      align-items: center;
+      width: 100%;
+      cursor: grab;
+      user-select: none;
+      scrollbar-width: thin;
+      scrollbar-color: var(--tag-border) transparent;
+      scroll-behavior: smooth;
+    }
+    .formats-bar::-webkit-scrollbar {
+      height: 5px;
+    }
+    .formats-bar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 4px;
+    }
+    .formats-bar::-webkit-scrollbar-thumb {
+      background: var(--tag-border);
+      border-radius: 4px;
+    }
+    .format-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      min-width: 84px;
+      height: 60px;
+      padding: 6px 8px;
       background: var(--tab-bg);
       border: 1.5px solid var(--tab-border);
-      border-radius: 10px;
+      border-radius: 12px;
       color: var(--tab-text);
-      font-size: 12px;
-      font-weight: 700;
       cursor: pointer;
-      text-align: center;
+      flex-shrink: 0;
       transition: all 0.15s ease;
-      user-select: none;
+      white-space: nowrap;
+      box-sizing: border-box;
     }
-    .format-tab:hover {
+    .format-card:hover {
       border-color: var(--tg-theme-button-color, #2481cc);
+      transform: translateY(-2px);
     }
-    .format-tab.active {
+    .format-card.active {
       background: var(--tg-theme-button-color, #2481cc) !important;
       border-color: var(--tg-theme-button-color, #2481cc) !important;
       color: #ffffff !important;
-      box-shadow: 0 2px 8px rgba(36, 129, 204, 0.35);
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(36, 129, 204, 0.4);
+      transform: translateY(-2px);
+    }
+    .format-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+    .format-name {
+      font-size: 11px;
+      font-weight: 700;
     }
 
     /* Заголовки слайдеров с мини-кнопкой сброса */
@@ -1269,11 +1311,52 @@
     </div>
     <div class="drag-hint">👆 Перетаскивай надпись пальцем или мышкой прямо по картинке!</div>
 
-    <!-- Переключатель формата мема -->
-    <div class="format-tabs">
-      <button class="format-tab active" data-layout="classic">🖼 Классика</button>
-      <button class="format-tab" data-layout="demotivator">⬛ Демотиватор</button>
-      <button class="format-tab" data-layout="twitter">💬 Шапка сверху</button>
+    <!-- Лента 10 форматов мемов (горизонтальный скролл со стрелками и ползунком) -->
+    <div class="formats-bar-wrapper">
+      <button class="carousel-arrow prev" id="arrowFormatPrev" title="Листать форматы назад" type="button">‹</button>
+      <div class="formats-bar" id="formatsBar">
+        <button class="format-card active" data-layout="classic" type="button">
+          <span class="format-icon">🖼</span>
+          <span class="format-name">Классика</span>
+        </button>
+        <button class="format-card" data-layout="demotivator" type="button">
+          <span class="format-icon">⬛</span>
+          <span class="format-name">Демотиватор</span>
+        </button>
+        <button class="format-card" data-layout="twitter" type="button">
+          <span class="format-icon">💬</span>
+          <span class="format-name">Шапка сверху</span>
+        </button>
+        <button class="format-card" data-layout="footer" type="button">
+          <span class="format-icon">🗨</span>
+          <span class="format-name">Шапка снизу</span>
+        </button>
+        <button class="format-card" data-layout="advice" type="button">
+          <span class="format-icon">🔝</span>
+          <span class="format-name">Верх + Низ</span>
+        </button>
+        <button class="format-card" data-layout="speech" type="button">
+          <span class="format-icon">🗯</span>
+          <span class="format-name">Спичбабл</span>
+        </button>
+        <button class="format-card" data-layout="breaking" type="button">
+          <span class="format-icon">📰</span>
+          <span class="format-name">Новости ТВ</span>
+        </button>
+        <button class="format-card" data-layout="quote" type="button">
+          <span class="format-icon">🐺</span>
+          <span class="format-name">Цитата волка</span>
+        </button>
+        <button class="format-card" data-layout="split" type="button">
+          <span class="format-icon">⚖️</span>
+          <span class="format-name">До / После</span>
+        </button>
+        <button class="format-card" data-layout="chat" type="button">
+          <span class="format-icon">📱</span>
+          <span class="format-name">Смс чат</span>
+        </button>
+      </div>
+      <button class="carousel-arrow next" id="arrowFormatNext" title="Листать форматы вперед" type="button">›</button>
     </div>
 
     <!-- Пульт настроек текста -->
@@ -1448,6 +1531,84 @@
         <div class="input-group">
           <label>Текст в рамке сверху (Твиттер / ВК стиль)</label>
           <input type="text" id="twitterText" placeholder="Когда бот наконец-то работает идеально..." value="Когда бот наконец-то делает всё так, как надо:">
+        </div>
+      </div>
+
+      <!-- 4. Панель формата: ШАПКА СНИЗУ -->
+      <div class="format-panel" id="footerControls" style="display: none;">
+        <div class="input-group">
+          <label>Текст в плашке снизу (Подвал мема)</label>
+          <input type="text" id="footerText" placeholder="Вот это я понимаю уровень 🔥" value="Вот это я понимаю уровень 🔥">
+        </div>
+      </div>
+
+      <!-- 5. Панель формата: ВЕРХ + НИЗ (ADVICE ANIMALS) -->
+      <div class="format-panel" id="adviceControls" style="display: none;">
+        <div class="input-group">
+          <label>Верхний текст</label>
+          <input type="text" id="adviceTopText" placeholder="КОГДА НАПИСАЛ КОД" value="КОГДА НАПИСАЛ КОД">
+        </div>
+        <div class="input-group">
+          <label>Нижний текст</label>
+          <input type="text" id="adviceBottomText" placeholder="И ОН ЗАРАБОТАЛ С ПЕРВОГО РАЗА" value="И ОН ЗАРАБОТАЛ С ПЕРВОГО РАЗА">
+        </div>
+      </div>
+
+      <!-- 6. Панель формата: СПИЧБАБЛ (ОБЛАЧКО РЕЧИ) -->
+      <div class="format-panel" id="speechControls" style="display: none;">
+        <div class="input-group">
+          <label>Фраза персонажа в облачке речи</label>
+          <input type="text" id="speechText" placeholder="Да я тебе говорю, рыба вот такая была!" value="Да я тебе говорю, рыба вот такая была!">
+        </div>
+      </div>
+
+      <!-- 7. Панель формата: НОВОСТИ ТВ -->
+      <div class="format-panel" id="breakingControls" style="display: none;">
+        <div class="input-group">
+          <label>Плашка телеканала</label>
+          <input type="text" id="breakingTicker" placeholder="СРОЧНЫЕ НОВОСТИ" value="СРОЧНЫЕ НОВОСТИ">
+        </div>
+        <div class="input-group">
+          <label>Текст бегущей строки</label>
+          <input type="text" id="breakingText" placeholder="В реке пойман гигантский язь рекордных размеров" value="В реке пойман гигантский язь рекордных размеров">
+        </div>
+      </div>
+
+      <!-- 8. Панель формата: ЦИТАТА ВОЛКА -->
+      <div class="format-panel" id="quoteControls" style="display: none;">
+        <div class="input-group">
+          <label>Текст глубокой цитаты</label>
+          <input type="text" id="quoteText" placeholder="Не бойся ошибаться, бойся не ловить рыбу." value="Не бойся ошибаться, бойся не ловить рыбу.">
+        </div>
+        <div class="input-group">
+          <label>Автор цитаты</label>
+          <input type="text" id="quoteAuthor" placeholder="Джейсон Стэтхем" value="Джейсон Стэтхем">
+        </div>
+      </div>
+
+      <!-- 9. Панель формата: ДО / ПОСЛЕ -->
+      <div class="format-panel" id="splitControls" style="display: none;">
+        <div class="row">
+          <div class="input-group" style="flex: 1;">
+            <label>Левая плашка</label>
+            <input type="text" id="splitLeftText" placeholder="ОЖИДАНИЕ" value="ОЖИДАНИЕ">
+          </div>
+          <div class="input-group" style="flex: 1;">
+            <label>Правая плашка</label>
+            <input type="text" id="splitRightText" placeholder="РЕАЛЬНОСТЬ" value="РЕАЛЬНОСТЬ">
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. Панель формата: СМС ЧАТ -->
+      <div class="format-panel" id="chatControls" style="display: none;">
+        <div class="input-group">
+          <label>Имя собеседника / Отправитель</label>
+          <input type="text" id="chatSender" placeholder="Батя" value="Батя">
+        </div>
+        <div class="input-group">
+          <label>Текст сообщения</label>
+          <input type="text" id="chatText" placeholder="Смотри кого я поймал 😂" value="Смотри кого я поймал 😂">
         </div>
       </div>
 
@@ -1875,6 +2036,18 @@
       demotTitle: "КОГДА ВСЁ РАБОТАЕТ",
       demotSubtitle: "Идеально и без единого бага",
       twitterText: "Когда бот наконец-то делает всё так, как надо:",
+      footerText: "Вот это я понимаю уровень 🔥",
+      adviceTopText: "КОГДА НАПИСАЛ КОД",
+      adviceBottomText: "И ОН ЗАРАБОТАЛ С ПЕРВОГО РАЗА",
+      speechText: "Да я тебе говорю, рыба вот такая была!",
+      breakingTicker: "СРОЧНЫЕ НОВОСТИ",
+      breakingText: "В реке пойман гигантский язь рекордных размеров",
+      quoteText: "Не бойся ошибаться, бойся не ловить рыбу.",
+      quoteAuthor: "Джейсон Стэтхем",
+      splitLeftText: "ОЖИДАНИЕ",
+      splitRightText: "РЕАЛЬНОСТЬ",
+      chatSender: "Батя",
+      chatText: "Смотри кого я поймал 😂",
       posX: null,
       posY: null,
       imgUrl: initialUrl,
@@ -2772,20 +2945,16 @@
         canvas.width = imgW + padX * 2;
         canvas.height = imgH + padTop + padBottom;
 
-        // Черный фон
         ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Белая рамка вокруг фото
         const borderThick = Math.max(2, Math.round(imgW * 0.005));
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = borderThick;
         ctx.strokeRect(padX - 4, padTop - 4, imgW + 8, imgH + 8);
 
-        // Отрисовка фото
         ctx.drawImage(imgSource, padX, padTop, imgW, imgH);
 
-        // Заголовок Демотиватора
         const titleText = (state.demotTitle || "").trim().toUpperCase();
         if (titleText) {
           const titleSize = Math.max(24, Math.round(imgW * 0.065));
@@ -2796,7 +2965,6 @@
           ctx.fillText(titleText, canvas.width / 2, padTop + imgH + 50);
         }
 
-        // Подпись Демотиватора
         const subText = (state.demotSubtitle || "").trim();
         if (subText) {
           const subSize = Math.max(16, Math.round(imgW * 0.038));
@@ -2821,11 +2989,9 @@
         canvas.width = imgW;
         canvas.height = imgH + headerH;
 
-        // Белая плашка
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, headerH);
 
-        // Черный текст
         ctx.font = `bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
         ctx.fillStyle = "#111111";
         ctx.textAlign = "center";
@@ -2836,14 +3002,333 @@
           ctx.fillText(l, canvas.width / 2, startY + idx * 34);
         });
 
-        // Фото снизу
         ctx.drawImage(imgSource, 0, headerH, imgW, imgH);
+        updateCanvasBlob();
+        return;
+      }
+
+      // 3. ФОРМАТ: ШАПКА СНИЗУ (Подвал)
+      if (state.layout === "footer") {
+        const botText = (state.footerText || "").trim();
+        ctx.font = `bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+        const lines = wrapText(ctx, botText, imgW * 0.9);
+        const footerH = Math.max(80, lines.length * 34 + 36);
+
+        canvas.width = imgW;
+        canvas.height = imgH + footerH;
+
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, imgH, canvas.width, footerH);
+        ctx.strokeStyle = "#e5e5ea";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, imgH);
+        ctx.lineTo(canvas.width, imgH);
+        ctx.stroke();
+
+        ctx.font = `bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
+        ctx.fillStyle = "#111111";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const startY = imgH + footerH / 2 - ((lines.length - 1) * 34) / 2;
+        lines.forEach((l, idx) => {
+          ctx.fillText(l, canvas.width / 2, startY + idx * 34);
+        });
 
         updateCanvasBlob();
         return;
       }
 
-      // 3. ФОРМАТ: КЛАССИКА (Свободное перемещение, поворот, дуга, плашка)
+      // 4. ФОРМАТ: ВЕРХ + НИЗ (Advice Animals)
+      if (state.layout === "advice") {
+        canvas.width = imgW;
+        canvas.height = imgH;
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        const drawAdviceText = (str, yPos) => {
+          if (!str) return;
+          const fSize = Math.max(26, Math.round(imgW * 0.08));
+          ctx.font = `bold ${fSize}px "${state.font}", Impact, Arial, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const lines = wrapText(ctx, str.toUpperCase(), imgW * 0.92);
+          const lineH = fSize * 1.15;
+          const startY = yPos - ((lines.length - 1) * lineH) / 2;
+          lines.forEach((l, idx) => {
+            const curY = startY + idx * lineH;
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = Math.max(4, Math.round(fSize * 0.12));
+            ctx.strokeText(l, canvas.width / 2, curY);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(l, canvas.width / 2, curY);
+          });
+        };
+
+        const topT = (state.adviceTopText || "").trim();
+        const botT = (state.adviceBottomText || "").trim();
+        const fSize = Math.max(26, Math.round(imgW * 0.08));
+        drawAdviceText(topT, fSize * 1.1);
+        drawAdviceText(botT, imgH - fSize * 1.1);
+
+        updateCanvasBlob();
+        return;
+      }
+
+      // 5. ФОРМАТ: СПИЧБАБЛ (Облачко речи)
+      if (state.layout === "speech") {
+        canvas.width = imgW;
+        canvas.height = imgH;
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        const spText = (state.speechText || "").trim();
+        if (spText) {
+          const bW = Math.round(imgW * 0.85);
+          ctx.font = `bold 22px "${state.font}", -apple-system, Arial, sans-serif`;
+          const lines = wrapText(ctx, spText, bW - 32);
+          const bH = Math.max(64, lines.length * 30 + 32);
+          const bX = Math.round((imgW - bW) / 2);
+          const bY = 24;
+
+          // Рисуем белое облачко с хвостиком
+          ctx.save();
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.roundRect(bX, bY, bW, bH, 18);
+          ctx.fill();
+          ctx.stroke();
+
+          // Хвостик облачка, указывающий вниз на персонажа
+          ctx.beginPath();
+          ctx.moveTo(bX + bW * 0.45, bY + bH);
+          ctx.lineTo(bX + bW * 0.5, bY + bH + 22);
+          ctx.lineTo(bX + bW * 0.55, bY + bH);
+          ctx.fillStyle = "#ffffff";
+          ctx.fill();
+          ctx.stroke();
+
+          // Текст внутри облачка
+          ctx.font = `bold 22px "${state.font}", -apple-system, Arial, sans-serif`;
+          ctx.fillStyle = "#111111";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const startY = bY + bH / 2 - ((lines.length - 1) * 30) / 2;
+          lines.forEach((l, idx) => {
+            ctx.fillText(l, bX + bW / 2, startY + idx * 30);
+          });
+          ctx.restore();
+        }
+
+        updateCanvasBlob();
+        return;
+      }
+
+      // 6. ФОРМАТ: СРОЧНЫЕ НОВОСТИ ТВ
+      if (state.layout === "breaking") {
+        canvas.width = imgW;
+        canvas.height = imgH;
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        // Бейдж «ПРЯМОЙ ЭФИР» в верхнем левом углу
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(20, 20, 140, 36);
+        ctx.fillStyle = "#ff3b30";
+        ctx.beginPath();
+        ctx.arc(38, 38, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = "bold 14px Arial, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText("ПРЯМОЙ ЭФИР", 52, 38);
+
+        // Нижняя новостная плашка
+        const barH = 75;
+        const barY = imgH - barH;
+        ctx.fillStyle = "rgba(18, 18, 22, 0.95)";
+        ctx.fillRect(0, barY, imgW, barH);
+
+        // Красный плашечный блок слева
+        const tickerStr = (state.breakingTicker || "СРОЧНЫЕ НОВОСТИ").toUpperCase();
+        ctx.font = "bold 18px Impact, Arial, sans-serif";
+        const tickerW = Math.max(180, ctx.measureText(tickerStr).width + 36);
+        ctx.fillStyle = "#e00000";
+        ctx.fillRect(0, barY, tickerW, barH);
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("🚨 " + tickerStr, tickerW / 2, barY + barH / 2);
+
+        // Желтая полоска над бегущей строкой
+        ctx.fillStyle = "#ffd600";
+        ctx.fillRect(0, barY - 4, imgW, 4);
+
+        // Текст новости
+        const newsText = (state.breakingText || "").trim();
+        if (newsText) {
+          ctx.font = "bold 20px Arial, sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillText(newsText, tickerW + 16, barY + barH / 2);
+        }
+        ctx.restore();
+
+        updateCanvasBlob();
+        return;
+      }
+
+      // 7. ФОРМАТ: ЦИТАТА ВОЛКА (Пацанские цитаты)
+      if (state.layout === "quote") {
+        canvas.width = imgW;
+        canvas.height = imgH;
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        // Затемняющий оверлей с виньеткой
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.52)";
+        ctx.fillRect(0, 0, imgW, imgH);
+
+        // Золотистые кавычки
+        ctx.font = `bold 64px "Times New Roman", Georgia, serif`;
+        ctx.fillStyle = "rgba(255, 215, 0, 0.85)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("«", imgW / 2, imgH * 0.28);
+
+        // Текст цитаты
+        const qText = (state.quoteText || "").trim();
+        if (qText) {
+          const qSize = Math.max(22, Math.round(imgW * 0.052));
+          ctx.font = `italic bold ${qSize}px "${state.font}", Georgia, serif`;
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const lines = wrapText(ctx, qText, imgW * 0.84);
+          const startY = imgH * 0.46 - ((lines.length - 1) * (qSize * 1.3)) / 2;
+          lines.forEach((l, idx) => {
+            ctx.fillText(l, imgW / 2, startY + idx * (qSize * 1.3));
+          });
+        }
+
+        // Автор цитаты
+        const author = (state.quoteAuthor || "").trim();
+        if (author) {
+          ctx.font = `bold 18px Arial, sans-serif`;
+          ctx.fillStyle = "#ffd700";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("— (с) " + author, imgW / 2, imgH * 0.82);
+        }
+        ctx.restore();
+
+        updateCanvasBlob();
+        return;
+      }
+
+      // 8. ФОРМАТ: ДО / ПОСЛЕ (Сравнение)
+      if (state.layout === "split") {
+        canvas.width = imgW;
+        canvas.height = imgH;
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        ctx.save();
+        // Разделительная линия по центру
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(imgW / 2, 0);
+        ctx.lineTo(imgW / 2, imgH);
+        ctx.stroke();
+
+        // Левая плашка
+        const leftT = (state.splitLeftText || "ОЖИДАНИЕ").toUpperCase();
+        ctx.font = "bold 20px Impact, Arial, sans-serif";
+        const lW = ctx.measureText(leftT).width + 30;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+        ctx.roundRect(20, 20, lW, 40, 8);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(leftT, 20 + lW / 2, 40);
+
+        // Правая плашка
+        const rightT = (state.splitRightText || "РЕАЛЬНОСТЬ").toUpperCase();
+        const rW = ctx.measureText(rightT).width + 30;
+        ctx.fillStyle = "rgba(0, 122, 255, 0.85)";
+        ctx.roundRect(imgW - rW - 20, 20, rW, 40, 8);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(rightT, imgW - 20 - rW / 2, 40);
+        ctx.restore();
+
+        updateCanvasBlob();
+        return;
+      }
+
+      // 9. ФОРМАТ: СМС ЧАТ (Мессенджер)
+      if (state.layout === "chat") {
+        canvas.width = imgW;
+        canvas.height = imgH;
+        ctx.drawImage(imgSource, 0, 0, imgW, imgH);
+
+        const chatMsg = (state.chatText || "").trim();
+        const sender = (state.chatSender || "Собеседник").trim();
+        if (chatMsg) {
+          ctx.save();
+          const bW = Math.round(imgW * 0.8);
+          ctx.font = `18px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+          const lines = wrapText(ctx, chatMsg, bW - 40);
+          const bH = Math.max(76, lines.length * 24 + 48);
+          const bX = 24;
+          const bY = 24;
+
+          // Тень и плашка бабла
+          ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.roundRect(bX, bY, bW, bH, 16);
+          ctx.fill();
+          ctx.shadowColor = "transparent";
+
+          // Имя отправителя
+          ctx.font = `bold 15px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+          ctx.fillStyle = "#007aff";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          ctx.fillText(sender, bX + 16, bY + 12);
+
+          // Текст сообщения
+          ctx.font = `18px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+          ctx.fillStyle = "#000000";
+          lines.forEach((l, idx) => {
+            ctx.fillText(l, bX + 16, bY + 36 + idx * 24);
+          });
+
+          // Время и галочки в правом нижнем углу бабла
+          ctx.font = "11px Arial, sans-serif";
+          ctx.fillStyle = "#8e8e93";
+          ctx.textAlign = "right";
+          ctx.fillText("13:37  ✓✓", bX + bW - 14, bY + bH - 10);
+          ctx.restore();
+        }
+
+        updateCanvasBlob();
+        return;
+      }
+
+      // 10. ФОРМАТ: КЛАССИКА (Свободное перемещение, поворот, дуга, плашка)
       canvas.width = imgW;
       canvas.height = imgH;
 
@@ -2947,9 +3432,25 @@
       render();
     });
 
-    fontSelect.addEventListener("change", (e) => {
-      state.font = e.target.value;
+    fontSelect.addEventListener("change", async (e) => {
+      const chosenFont = e.target.value;
+      state.font = chosenFont;
       render();
+
+      // Мгновенная динамическая загрузка веб-шрифта в память браузера
+      if ("fonts" in document) {
+        try {
+          await document.fonts.load(`bold ${state.size}px "${chosenFont}"`);
+          render();
+        } catch (err) {}
+        document.fonts.ready.then(() => render());
+      }
+
+      // Такты рендера после загрузки файла шрифта с Google Fonts
+      setTimeout(render, 50);
+      setTimeout(render, 150);
+      setTimeout(render, 350);
+      setTimeout(render, 700);
     });
 
     fontSizeSlider.addEventListener("input", (e) => {
@@ -3120,27 +3621,96 @@
     }
 
     // Вкладки форматов мемов
-    const formatTabs = document.querySelectorAll(".format-tab");
-    const classicControls = document.getElementById("classicControls");
-    const demotivatorControls = document.getElementById("demotivatorControls");
-    const twitterControls = document.getElementById("twitterControls");
-    const demotTitle = document.getElementById("demotTitle");
-    const demotSubtitle = document.getElementById("demotSubtitle");
-    const twitterText = document.getElementById("twitterText");
+    // Переключение между 10 форматами мемов
+    const formatCards = document.querySelectorAll(".format-card");
+    const allPanels = [
+      "classicControls", "demotivatorControls", "twitterControls",
+      "footerControls", "adviceControls", "speechControls",
+      "breakingControls", "quoteControls", "splitControls", "chatControls"
+    ];
 
-    formatTabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        formatTabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        state.layout = tab.dataset.layout;
+    formatCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        formatCards.forEach((c) => c.classList.remove("active"));
+        card.classList.add("active");
+        state.layout = card.dataset.layout;
 
-        if (classicControls) classicControls.style.display = state.layout === "classic" ? "flex" : "none";
-        if (demotivatorControls) demotivatorControls.style.display = state.layout === "demotivator" ? "flex" : "none";
-        if (twitterControls) twitterControls.style.display = state.layout === "twitter" ? "flex" : "none";
+        // Скрываем все панели и открываем нужную
+        allPanels.forEach((pId) => {
+          const p = document.getElementById(pId);
+          if (p) p.style.display = "none";
+        });
+
+        const targetPanelId = state.layout + "Controls";
+        const targetPanel = document.getElementById(targetPanelId);
+        if (targetPanel) {
+          targetPanel.style.display = "block";
+        }
 
         render();
       });
     });
+
+    // Горизонтальный скролл ленты 10 форматов (стрелки + drag мышкой для ПК)
+    const formatsBar = document.getElementById("formatsBar");
+    const arrowFormatPrev = document.getElementById("arrowFormatPrev");
+    const arrowFormatNext = document.getElementById("arrowFormatNext");
+
+    if (formatsBar && arrowFormatPrev && arrowFormatNext) {
+      arrowFormatPrev.addEventListener("click", () => {
+        formatsBar.scrollBy({ left: -200, behavior: "smooth" });
+      });
+      arrowFormatNext.addEventListener("click", () => {
+        formatsBar.scrollBy({ left: 200, behavior: "smooth" });
+      });
+
+      let isFormatDown = false;
+      let formatStartX, formatScrollLeft;
+      formatsBar.addEventListener("mousedown", (e) => {
+        isFormatDown = true;
+        formatsBar.style.cursor = "grabbing";
+        formatStartX = e.pageX - formatsBar.offsetLeft;
+        formatScrollLeft = formatsBar.scrollLeft;
+      });
+      window.addEventListener("mouseup", () => {
+        isFormatDown = false;
+        formatsBar.style.cursor = "grab";
+      });
+      formatsBar.addEventListener("mousemove", (e) => {
+        if (!isFormatDown) return;
+        e.preventDefault();
+        const x = e.pageX - formatsBar.offsetLeft;
+        const walk = (x - formatStartX) * 1.5;
+        formatsBar.scrollLeft = formatScrollLeft - walk;
+      });
+    }
+
+    // Слушатели инпутов для всех 10 шаблонов
+    const bindTemplateInput = (id, key) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input", (e) => {
+          state[key] = e.target.value;
+          render();
+        });
+      }
+    };
+
+    bindTemplateInput("demotTitle", "demotTitle");
+    bindTemplateInput("demotSubtitle", "demotSubtitle");
+    bindTemplateInput("twitterText", "twitterText");
+    bindTemplateInput("footerText", "footerText");
+    bindTemplateInput("adviceTopText", "adviceTopText");
+    bindTemplateInput("adviceBottomText", "adviceBottomText");
+    bindTemplateInput("speechText", "speechText");
+    bindTemplateInput("breakingTicker", "breakingTicker");
+    bindTemplateInput("breakingText", "breakingText");
+    bindTemplateInput("quoteText", "quoteText");
+    bindTemplateInput("quoteAuthor", "quoteAuthor");
+    bindTemplateInput("splitLeftText", "splitLeftText");
+    bindTemplateInput("splitRightText", "splitRightText");
+    bindTemplateInput("chatSender", "chatSender");
+    bindTemplateInput("chatText", "chatText");
 
     if (demotTitle) {
       demotTitle.addEventListener("input", (e) => {
