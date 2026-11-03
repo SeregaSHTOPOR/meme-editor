@@ -879,6 +879,7 @@
     input[type="range"] {
       width: 100%;
       accent-color: var(--tg-theme-button-color, #2481cc);
+      touch-action: pan-x;
     }
     input[type="range"]::-webkit-slider-runnable-track {
       background: var(--slider-track);
@@ -1758,12 +1759,10 @@
           <label>Форма спичбабла (10 стилей комиксов):</label>
           <div class="bubble-shapes-bar" id="bubbleShapesBar">
             <button class="bubble-shape-btn active" data-shape="round" type="button">💬 Овал</button>
-            <button class="bubble-shape-btn" data-shape="cloud" type="button">💭 Мысли</button>
             <button class="bubble-shape-btn" data-shape="shout" type="button">💥 Крик</button>
             <button class="bubble-shape-btn" data-shape="pixel" type="button">🤖 Пиксель</button>
             <button class="bubble-shape-btn" data-shape="electric" type="button">⚡ Электро</button>
             <button class="bubble-shape-btn" data-shape="whisper" type="button">🤫 Шёпот</button>
-            <button class="bubble-shape-btn" data-shape="heart" type="button">❤️ Сердце</button>
             <button class="bubble-shape-btn" data-shape="scroll" type="button">📜 Свиток</button>
             <button class="bubble-shape-btn" data-shape="square" type="button">🔲 Квадрат</button>
             <button class="bubble-shape-btn" data-shape="drip" type="button">🦇 Хоррор</button>
@@ -2215,6 +2214,8 @@
     const tagElements = document.querySelectorAll(".tag");
 
     let currentImage = new Image();
+    let cachedFxCanvas = null;
+    let cachedFxKey = "";
 
     const urlParams = new URLSearchParams(window.location.search);
     const passedImg = urlParams.get("img");
@@ -2601,33 +2602,61 @@
     }
 
     function loadImage(url) {
-      const safeUrl = getSafeImageUrl(url);
-      currentImage = new Image();
-      if (!url.startsWith("data:") && !url.startsWith("blob:")) {
-        currentImage.crossOrigin = "anonymous";
-      }
-      currentImage.onload = () => {
+      if (!url) return;
+      cachedFxCanvas = null;
+      cachedFxKey = "";
+
+      const onImageReady = (img) => {
+        currentImage = img;
         canvas.width = currentImage.naturalWidth || 600;
         canvas.height = currentImage.naturalHeight || 400;
         state.posX = canvas.width / 2;
         state.posY = canvas.height - 45;
         render();
       };
-      currentImage.onerror = () => {
-        if (currentImage.src !== url) {
+
+      // Если это уже data: или blob: — грузим напрямую (100% CORS-safe)
+      if (url.startsWith("data:") || url.startsWith("blob:")) {
+        const img = new Image();
+        img.onload = () => onImageReady(img);
+        img.src = url;
+        return;
+      }
+
+      // Функция загрузки через fetch -> blob (надежно исключает CORS tainting в Canvas!)
+      const tryFetchBlob = (fetchUrl, fallbackNext) => {
+        fetch(fetchUrl)
+          .then((r) => {
+            if (!r.ok) throw new Error("status " + r.status);
+            return r.blob();
+          })
+          .then((blob) => {
+            const blobUrl = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => onImageReady(img);
+            img.src = blobUrl;
+          })
+          .catch(() => {
+            if (fallbackNext) fallbackNext();
+          });
+      };
+
+      // 1. Прокси weserv -> 2. Прокси wsrv -> 3. Прямая загрузка с crossOrigin -> 4. Обычная загрузка
+      const safeUrl = getSafeImageUrl(url);
+      tryFetchBlob(safeUrl, () => {
+        const altProxy = "https://wsrv.nl/?url=" + encodeURIComponent(url);
+        tryFetchBlob(altProxy, () => {
           const directImg = new Image();
-          directImg.onload = () => {
-            currentImage = directImg;
-            canvas.width = currentImage.naturalWidth || 600;
-            canvas.height = currentImage.naturalHeight || 400;
-            state.posX = canvas.width / 2;
-            state.posY = canvas.height - 45;
-            render();
+          directImg.crossOrigin = "anonymous";
+          directImg.onload = () => onImageReady(directImg);
+          directImg.onerror = () => {
+            const plainImg = new Image();
+            plainImg.onload = () => onImageReady(plainImg);
+            plainImg.src = url;
           };
           directImg.src = url;
-        }
-      };
-      currentImage.src = safeUrl;
+        });
+      });
     }
 
     loadImage(state.imgUrl);
@@ -2810,9 +2839,6 @@
       }
     }
 
-    let cachedFxCanvas = null;
-    let cachedFxKey = "";
-
     function getProcessedImage(img) {
       if (!hasActiveFx()) return img;
 
@@ -2842,7 +2868,13 @@
       const sCtx = srcCanvas.getContext("2d", { willReadFrequently: true });
       sCtx.drawImage(img, 0, 0, w, h);
 
-      const srcImageData = sCtx.getImageData(0, 0, w, h);
+      let srcImageData;
+      try {
+        srcImageData = sCtx.getImageData(0, 0, w, h);
+      } catch (err) {
+        console.warn("getProcessedImage canvas tainted:", err);
+        return img;
+      }
       const src = srcImageData.data;
 
       // Холст назначения
@@ -3377,35 +3409,7 @@
             ctx.stroke();
           };
 
-          if (shape === "cloud") {
-            // 💭 МЫСЛИ (Пушистое облако из дуг)
-            ctx.beginPath();
-            const numArcs = 10;
-            const rX = baseW / 2;
-            const rY = baseH / 2;
-            for (let i = 0; i < numArcs; i++) {
-              const ang = (i / numArcs) * Math.PI * 2;
-              const nextAng = ((i + 1) / numArcs) * Math.PI * 2;
-              const arcX = cX + Math.cos(ang) * (rX * 0.9);
-              const arcY = cY + Math.sin(ang) * (rY * 0.9);
-              const arcR = (baseW / numArcs) * 0.9;
-              ctx.arc(arcX, arcY, arcR, 0, Math.PI * 2);
-            }
-            ctx.fill();
-            ctx.stroke();
-
-            // Хвостик облака мыслей: 3 нисходящих кружка
-            [
-              { x: cX, y: bY + baseH + 12 * scale, r: 9 * scale },
-              { x: cX - 8 * scale, y: bY + baseH + 24 * scale, r: 6 * scale },
-              { x: cX - 16 * scale, y: bY + baseH + 34 * scale, r: 3.5 * scale },
-            ].forEach((c) => {
-              ctx.beginPath();
-              ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.stroke();
-            });
-          } else if (shape === "shout") {
+          if (shape === "shout") {
             // 💥 КРИК / ВЗРЫВ (Остроконечный зигзаг)
             ctx.beginPath();
             const numPoints = 18;
@@ -3478,17 +3482,6 @@
             ctx.stroke();
             ctx.setLineDash([]);
             drawTail();
-          } else if (shape === "heart") {
-            // ❤️ СЕРДЦЕ (Любовный бабл)
-            ctx.beginPath();
-            const topY = bY + baseH * 0.3;
-            ctx.moveTo(cX, topY + baseH * 0.6);
-            ctx.bezierCurveTo(bX, bY + baseH * 0.6, bX, bY, cX, bY + baseH * 0.2);
-            ctx.bezierCurveTo(bX + baseW, bY, bX + baseW, bY + baseH * 0.6, cX, topY + baseH * 0.6);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            drawTail();
           } else if (shape === "scroll") {
             // 📜 СВИТОК (Древний пергамент)
             ctx.fillStyle = "#fff8e7";
@@ -3557,7 +3550,7 @@
         return;
       }
 
-      // 6. ФОРМАТ: СРОЧНЫЕ НОВОСТИ ТВ
+      // 6. ФОРМАТ: СРОЧНЫЕ НОВОСТИ ТВ (С АВТО-ПЕРЕНОСОМ БЕГУЩЕЙ СТРОКИ)
       if (state.layout === "breaking") {
         canvas.width = imgW;
         canvas.height = imgH;
@@ -3565,7 +3558,7 @@
 
         // Бейдж «ПРЯМОЙ ЭФИР» в верхнем левом углу
         ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
         ctx.fillRect(20, 20, 140, 36);
         ctx.fillStyle = "#ff3b30";
         ctx.beginPath();
@@ -3577,38 +3570,63 @@
         ctx.textBaseline = "middle";
         ctx.fillText("ПРЯМОЙ ЭФИР", 52, 38);
 
-        // Нижняя новостная плашка
-        const barH = 75;
+        // Расчет плашки телеканала
+        const tickerStr = (state.breakingTicker || "СРОЧНЫЕ НОВОСТИ").toUpperCase();
+        ctx.font = "bold 18px Impact, Arial, sans-serif";
+        const tickerW = Math.max(160, Math.min(Math.round(imgW * 0.4), ctx.measureText(tickerStr).width + 36));
+
+        // Авто-перенос и расчет размера текста новости, чтобы текст никогда не вылезал за границы!
+        const newsText = (state.breakingText || "").trim();
+        const maxNewsW = Math.max(140, imgW - tickerW - 28);
+
+        let fSize = 20;
+        ctx.font = `bold ${fSize}px Arial, sans-serif`;
+        let lines = wrapText(ctx, newsText, maxNewsW);
+        if (lines.length > 2) {
+          fSize = 16;
+          ctx.font = `bold ${fSize}px Arial, sans-serif`;
+          lines = wrapText(ctx, newsText, maxNewsW);
+        }
+        if (lines.length > 3) {
+          fSize = 13;
+          ctx.font = `bold ${fSize}px Arial, sans-serif`;
+          lines = wrapText(ctx, newsText, maxNewsW);
+        }
+
+        const lineH = Math.round(fSize * 1.35);
+        const barH = Math.max(76, lines.length * lineH + 24);
         const barY = imgH - barH;
+
+        // Нижняя новостная темная плашка
         ctx.fillStyle = "rgba(18, 18, 22, 0.95)";
         ctx.fillRect(0, barY, imgW, barH);
 
         // Красный плашечный блок слева
-        const tickerStr = (state.breakingTicker || "СРОЧНЫЕ НОВОСТИ").toUpperCase();
-        ctx.font = "bold 18px Impact, Arial, sans-serif";
-        const tickerW = Math.max(180, ctx.measureText(tickerStr).width + 36);
         ctx.fillStyle = "#e00000";
         ctx.fillRect(0, barY, tickerW, barH);
+
+        ctx.font = "bold 18px Impact, Arial, sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("🚨 " + tickerStr, tickerW / 2, barY + barH / 2);
 
-        // Желтая полоска над бегущей строкой
+        // Желтая разделительная полоска
         ctx.fillStyle = "#ffd600";
         ctx.fillRect(0, barY - 4, imgW, 4);
 
-        // Текст новости
-        const newsText = (state.breakingText || "").trim();
-        if (newsText) {
-          ctx.font = "bold 20px Arial, sans-serif";
-          ctx.fillStyle = "#ffffff";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
-          ctx.fillText(newsText, tickerW + 16, barY + barH / 2);
-        }
-        ctx.restore();
+        // Текст новости с аккуратным переносом строк
+        ctx.font = `bold ${fSize}px Arial, sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
 
+        const startTextY = barY + barH / 2 - ((lines.length - 1) * lineH) / 2;
+        lines.forEach((l, idx) => {
+          ctx.fillText(l, tickerW + 14, startTextY + idx * lineH);
+        });
+
+        ctx.restore();
         updateCanvasBlob();
         return;
       }
@@ -4518,7 +4536,7 @@
       const btn = document.getElementById(btnId);
       if (!slider) return;
 
-      slider.addEventListener("input", (e) => {
+      const handleUpdate = (e) => {
         const val = parseFloat(e.target.value) || 0;
         state.fx[fxKey] = val;
         if (btn) btn.textContent = val + suffix;
@@ -4526,7 +4544,10 @@
         cachedFxKey = "";
         updateFxBadge();
         render();
-      });
+      };
+
+      slider.addEventListener("input", handleUpdate);
+      slider.addEventListener("change", handleUpdate);
 
       if (btn) {
         btn.addEventListener("click", (e) => {
