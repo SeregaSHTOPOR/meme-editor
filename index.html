@@ -1772,7 +1772,7 @@
         <div class="row">
           <div class="input-group" style="flex: 1;">
             <label>Масштаб бабла: <span id="speechScaleVal">100%</span></label>
-            <input type="range" id="speechScaleSlider" min="60" max="150" value="100">
+            <input type="range" id="speechScaleSlider" min="40" max="220" value="100">
           </div>
           <div class="input-group" style="flex: 1;">
             <label>Хвостик бабла:</label>
@@ -1832,6 +1832,14 @@
         <div class="chat-panel-header">
           <label style="font-weight: 700;">Сообщения диалога (тяни чат по картинке!):</label>
           <button class="chat-add-btn" id="btnAddChatMessage" type="button">➕ Добавить</button>
+        </div>
+
+        <!-- Ползунок масштабирования блочков сообщений -->
+        <div class="row" style="margin-top: 8px; margin-bottom: 12px;">
+          <div class="input-group" style="flex: 1;">
+            <label>Размер сообщений: <span id="chatScaleVal">100%</span></label>
+            <input type="range" id="chatScaleSlider" min="50" max="200" value="100">
+          </div>
         </div>
 
         <!-- Список сообщений диалога -->
@@ -2286,6 +2294,7 @@
       povStyle: "neon",
       povY: null,
       chatY: null,
+      chatScale: 1.0,
       chatMessages: [
         { id: 1, side: "incoming", text: "Ты где пропал?", time: "14:15" },
         { id: 2, side: "outgoing", text: "Я на рыбалке, тут ЯЗЬ!", time: "14:16" }
@@ -3350,7 +3359,7 @@
         return;
       }
 
-      // 5. ФОРМАТ: СПИЧБАБЛ (10 ФОРМ ОБЛАЧКА РЕЧИ)
+      // 5. ФОРМАТ: СПИЧБАБЛ (ПОДСТРАИВАЕТСЯ ПОД ТЕКСТ + МАСШТАБИРОВАНИЕ)
       if (state.layout === "speech") {
         canvas.width = imgW;
         canvas.height = imgH;
@@ -3359,10 +3368,46 @@
         const spText = (state.speechText || "").trim();
         if (spText) {
           const scale = state.speechScale || 1.0;
-          const baseW = Math.round(imgW * 0.72 * scale);
-          ctx.font = `bold ${Math.round(22 * scale)}px "${state.font}", -apple-system, Arial, sans-serif`;
-          const lines = wrapText(ctx, spText, baseW - 36);
-          const baseH = Math.max(Math.round(65 * scale), lines.length * Math.round(28 * scale) + Math.round(36 * scale));
+          const shape = state.speechShape || "round";
+          const tail = state.speechTail || "bottom-center";
+
+          // Размер шрифта и высота строки прямо масштабируются ползунком
+          const fSize = Math.max(12, Math.round(22 * scale));
+          const lineH = Math.round(fSize * 1.32);
+          ctx.font = `bold ${fSize}px "${state.font}", -apple-system, Arial, sans-serif`;
+
+          // Внутренние отступы бабла (с запасом для декоративных форм)
+          let padX = Math.round(34 * scale);
+          let padY = Math.round(24 * scale);
+          if (shape === "shout") {
+            padX = Math.round(48 * scale);
+            padY = Math.round(32 * scale);
+          } else if (shape === "scroll") {
+            padX = Math.round(40 * scale);
+            padY = Math.round(26 * scale);
+          } else if (shape === "drip") {
+            padY = Math.round(28 * scale);
+          }
+
+          // Максимальная допустимая ширина бабла (не вылезая за края изображения)
+          const maxBubbleW = Math.min(Math.round(imgW * 0.90), Math.max(Math.round(imgW * 0.50), Math.round(imgW * 0.78 * Math.max(1, scale))));
+          const maxTextW = Math.max(Math.round(60 * scale), maxBubbleW - padX * 2);
+
+          // Разбивка текста на строки
+          const lines = wrapText(ctx, spText, maxTextW);
+
+          // Точное измерение максимальной ширины строки текста
+          let maxLineW = 0;
+          lines.forEach((l) => {
+            const lw = ctx.measureText(l).width;
+            if (lw > maxLineW) maxLineW = lw;
+          });
+
+          // Бабл ТОЧНО подстраивается по ширине и высоте под написанный текст!
+          const minBubbleW = Math.round(75 * scale);
+          const minBubbleH = Math.round(48 * scale);
+          const baseW = Math.max(minBubbleW, Math.min(imgW - 16, Math.round(maxLineW + padX * 2)));
+          const baseH = Math.max(minBubbleH, Math.round(lines.length * lineH + padY * 2));
 
           // Положение центра бабла (можно перетаскивать пальцем по всему экрану!)
           const cX = state.speechX !== null ? state.speechX : imgW / 2;
@@ -3373,14 +3418,11 @@
           ctx.save();
           ctx.fillStyle = "#ffffff";
           ctx.strokeStyle = "#000000";
-          ctx.lineWidth = Math.max(3, Math.round(3.5 * scale));
+          ctx.lineWidth = Math.max(2.5, Math.round(3.5 * scale));
           ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = Math.round(12 * scale);
 
-          const shape = state.speechShape || "round";
-          const tail = state.speechTail || "bottom-center";
-
-          // Функция отрисовки хвоста бабла
+          // Функция отрисовки хвоста бабла (пропорционально масштабируется)
           const drawTail = () => {
             ctx.beginPath();
             if (tail === "bottom-left") {
@@ -3428,7 +3470,7 @@
           } else if (shape === "pixel") {
             // 🤖 ПИКСЕЛЬНЫЙ (8-Bit ступеньки)
             ctx.beginPath();
-            const step = Math.round(8 * scale);
+            const step = Math.max(4, Math.round(8 * scale));
             ctx.moveTo(bX + step * 2, bY);
             ctx.lineTo(bX + baseW - step * 2, bY);
             ctx.lineTo(bX + baseW - step * 2, bY + step);
@@ -3457,17 +3499,18 @@
             // ⚡ ЭЛЕКТРО / РАЦИЯ (Молнии по краям)
             ctx.beginPath();
             ctx.moveTo(bX, bY);
-            for (let i = 0; i <= baseW; i += 20 * scale) {
-              ctx.lineTo(bX + i, bY + (i % 40 === 0 ? -6 * scale : 6 * scale));
+            const eStep = Math.max(12, Math.round(20 * scale));
+            for (let i = 0; i <= baseW; i += eStep) {
+              ctx.lineTo(bX + i, bY + (i % (eStep * 2) === 0 ? -6 * scale : 6 * scale));
             }
-            for (let i = 0; i <= baseH; i += 20 * scale) {
-              ctx.lineTo(bX + baseW + (i % 40 === 0 ? 6 * scale : -6 * scale), bY + i);
+            for (let i = 0; i <= baseH; i += eStep) {
+              ctx.lineTo(bX + baseW + (i % (eStep * 2) === 0 ? 6 * scale : -6 * scale), bY + i);
             }
-            for (let i = baseW; i >= 0; i -= 20 * scale) {
-              ctx.lineTo(bX + i, bY + baseH + (i % 40 === 0 ? 6 * scale : -6 * scale));
+            for (let i = baseW; i >= 0; i -= eStep) {
+              ctx.lineTo(bX + i, bY + baseH + (i % (eStep * 2) === 0 ? 6 * scale : -6 * scale));
             }
-            for (let i = baseH; i >= 0; i -= 20 * scale) {
-              ctx.lineTo(bX + (i % 40 === 0 ? -6 * scale : 6 * scale), bY + i);
+            for (let i = baseH; i >= 0; i -= eStep) {
+              ctx.lineTo(bX + (i % (eStep * 2) === 0 ? -6 * scale : 6 * scale), bY + i);
             }
             ctx.closePath();
             ctx.fill();
@@ -3475,9 +3518,9 @@
             drawTail();
           } else if (shape === "whisper") {
             // 🤫 ШЁПОТ (Пунктирный контур)
-            ctx.setLineDash([8 * scale, 5 * scale]);
+            ctx.setLineDash([Math.round(8 * scale), Math.round(5 * scale)]);
             ctx.beginPath();
-            ctx.roundRect(bX, bY, baseW, baseH, 18 * scale);
+            ctx.roundRect(bX, bY, baseW, baseH, Math.min(baseH * 0.45, 18 * scale));
             ctx.fill();
             ctx.stroke();
             ctx.setLineDash([]);
@@ -3490,11 +3533,12 @@
             ctx.fill();
             ctx.stroke();
             // Завитки по краям
+            const curlR = Math.min(14, Math.round(baseH * 0.22));
             ctx.beginPath();
-            ctx.arc(bX, bY + 12, 12, 0, Math.PI * 2);
-            ctx.arc(bX + baseW, bY + 12, 12, 0, Math.PI * 2);
-            ctx.arc(bX, bY + baseH - 12, 12, 0, Math.PI * 2);
-            ctx.arc(bX + baseW, bY + baseH - 12, 12, 0, Math.PI * 2);
+            ctx.arc(bX, bY + curlR, curlR, 0, Math.PI * 2);
+            ctx.arc(bX + baseW, bY + curlR, curlR, 0, Math.PI * 2);
+            ctx.arc(bX, bY + baseH - curlR, curlR, 0, Math.PI * 2);
+            ctx.arc(bX + baseW, bY + baseH - curlR, curlR, 0, Math.PI * 2);
             ctx.fillStyle = "#eddcb6";
             ctx.fill();
             ctx.stroke();
@@ -3508,8 +3552,9 @@
             drawTail();
           } else if (shape === "drip") {
             // 🦇 ХОРРОР / КАПЛИ
+            const dropOff = Math.round(15 * scale);
             ctx.beginPath();
-            ctx.roundRect(bX, bY, baseW, baseH - 15 * scale, [16, 16, 0, 0]);
+            ctx.roundRect(bX, bY, baseW, baseH - dropOff, [16, 16, 0, 0]);
             ctx.fill();
             ctx.stroke();
             // Капли снизу
@@ -3517,7 +3562,7 @@
               const dx = bX + (i + 0.5) * (baseW / 5);
               const dropLen = ((i * 37) % 25 + 15) * scale;
               ctx.beginPath();
-              ctx.arc(dx, bY + baseH - 15 * scale + dropLen, 7 * scale, 0, Math.PI * 2);
+              ctx.arc(dx, bY + baseH - dropOff + dropLen, 7 * scale, 0, Math.PI * 2);
               ctx.fill();
               ctx.stroke();
             }
@@ -3525,20 +3570,19 @@
           } else {
             // 💬 КЛАССИЧЕСКИЙ ОВАЛ (По умолчанию)
             ctx.beginPath();
-            ctx.roundRect(bX, bY, baseW, baseH, 20 * scale);
+            ctx.roundRect(bX, bY, baseW, baseH, Math.min(baseH * 0.45, 20 * scale));
             ctx.fill();
             ctx.stroke();
             drawTail();
           }
 
-          // Текст внутри бабла
+          // Текст внутри бабла (идеально по центру, шрифт масштабируется вместе с баблом)
           ctx.shadowColor = "transparent";
-          ctx.font = `bold ${Math.round(22 * scale)}px "${state.font}", -apple-system, Arial, sans-serif`;
+          ctx.font = `bold ${fSize}px "${state.font}", -apple-system, Arial, sans-serif`;
           ctx.fillStyle = "#111111";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
 
-          const lineH = Math.round(28 * scale);
           const startY = cY - ((lines.length - 1) * lineH) / 2;
           lines.forEach((l, idx) => {
             ctx.fillText(l, cX, startY + idx * lineH);
@@ -3763,7 +3807,7 @@
         return;
       }
 
-      // 9. ФОРМАТ: СМС ЧАТ (ПОЛНОЦЕННЫЙ ДИАЛОГ С ДВУХ СТОРОН)
+      // 10. ФОРМАТ: СМС ЧАТ (ДИАЛОГ С ПРОПОРЦИОНАЛЬНЫМ МАСШТАБИРОВАНИЕМ БЛОКОВ И ТЕКСТА)
       if (state.layout === "chat") {
         canvas.width = imgW;
         canvas.height = imgH;
@@ -3772,8 +3816,18 @@
         const msgs = state.chatMessages || [];
         if (msgs.length > 0) {
           ctx.save();
-          let curY = state.chatY !== null ? state.chatY : 30;
-          const maxBubbleW = Math.round(imgW * 0.72);
+          const chatScale = state.chatScale || 1.0;
+          let curY = state.chatY !== null ? state.chatY : Math.round(26 * chatScale);
+          const maxBubbleW = Math.round(imgW * 0.78);
+
+          // Пропорциональные размеры шрифтов, отступов и скруглений
+          const fSize = Math.max(11, Math.round(18 * chatScale));
+          const lineH = Math.round(fSize * 1.34);
+          const timeSize = Math.max(9, Math.round(11 * chatScale));
+          const padX = Math.round(16 * chatScale);
+          const padRight = Math.round(48 * chatScale);
+          const cornerR = Math.max(8, Math.round(16 * chatScale));
+          const gapY = Math.max(6, Math.round(10 * chatScale));
 
           msgs.forEach((m) => {
             const side = m.side || "incoming";
@@ -3781,8 +3835,9 @@
             const time = m.time || "12:00";
             if (!txt) return;
 
-            ctx.font = `18px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
-            const lines = wrapText(ctx, txt, maxBubbleW - 45);
+            ctx.font = `${fSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+            const maxTextW = maxBubbleW - padX - padRight;
+            const lines = wrapText(ctx, txt, maxTextW);
 
             let maxLineW = 0;
             lines.forEach((l) => {
@@ -3790,75 +3845,81 @@
               if (lw > maxLineW) maxLineW = lw;
             });
 
-            const bW = Math.max(120, Math.min(maxBubbleW, Math.round(maxLineW + 55)));
-            const bH = Math.max(54, lines.length * 24 + 32);
+            // Время для расчета минимальной ширины подложки
+            ctx.font = `${timeSize}px Arial, sans-serif`;
+            const timeW = ctx.measureText(time + (side === "outgoing" ? "  ✓✓" : "")).width;
 
-            let bX = 20;
+            // Ширина и высота подложки пропорционально увеличиваются/уменьшаются вместе с текстом!
+            const minBubbleW = Math.max(Math.round(85 * chatScale), Math.round(timeW + padX * 2 + 10 * chatScale));
+            const bW = Math.max(minBubbleW, Math.min(maxBubbleW, Math.round(maxLineW + padX + padRight)));
+            const bH = Math.max(Math.round(44 * chatScale), Math.round(lines.length * lineH + 28 * chatScale));
+
+            let bX = Math.round(20 * chatScale);
             if (side === "outgoing") {
-              bX = imgW - bW - 20;
+              bX = imgW - bW - Math.round(20 * chatScale);
             }
 
-            // Тень и форма бабла
+            // Тень и скруглённая подложка сообщения
             ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = Math.round(10 * chatScale);
             ctx.beginPath();
-            ctx.roundRect(bX, curY, bW, bH, 16);
+            ctx.roundRect(bX, curY, bW, bH, cornerR);
 
             if (side === "outgoing") {
-              // Исходящее (Зеленый или Телеграм синий)
+              // Исходящее сообщение (Синий Телеграм #2b5278)
               ctx.fillStyle = "#2b5278";
               ctx.fill();
               ctx.shadowColor = "transparent";
 
               // Хвостик справа
               ctx.beginPath();
-              ctx.moveTo(bX + bW - 4, curY + bH - 12);
-              ctx.lineTo(bX + bW + 8, curY + bH);
-              ctx.lineTo(bX + bW - 14, curY + bH);
+              ctx.moveTo(bX + bW - 4 * chatScale, curY + bH - 12 * chatScale);
+              ctx.lineTo(bX + bW + 8 * chatScale, curY + bH);
+              ctx.lineTo(bX + bW - 14 * chatScale, curY + bH);
               ctx.fill();
 
-              // Текст
-              ctx.font = `18px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+              // Текст исходящего сообщения
+              ctx.font = `${fSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
               ctx.fillStyle = "#ffffff";
               ctx.textAlign = "left";
               lines.forEach((l, idx) => {
-                ctx.fillText(l, bX + 16, curY + 24 + idx * 24);
+                ctx.fillText(l, bX + padX, curY + Math.round(20 * chatScale) + idx * lineH);
               });
 
-              // Время и две синие галочки
-              ctx.font = "11px Arial, sans-serif";
+              // Время и две галочки прочтения
+              ctx.font = `${timeSize}px Arial, sans-serif`;
               ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
               ctx.textAlign = "right";
-              ctx.fillText(time + "  ✓✓", bX + bW - 12, curY + bH - 10);
+              ctx.fillText(time + "  ✓✓", bX + bW - Math.round(12 * chatScale), curY + bH - Math.round(8 * chatScale));
             } else {
-              // Входящее (Белое)
+              // Входящее сообщение (Белая карточка)
               ctx.fillStyle = "#ffffff";
               ctx.fill();
               ctx.shadowColor = "transparent";
 
               // Хвостик слева
               ctx.beginPath();
-              ctx.moveTo(bX + 4, curY + bH - 12);
-              ctx.lineTo(bX - 8, curY + bH);
-              ctx.lineTo(bX + 14, curY + bH);
+              ctx.moveTo(bX + 4 * chatScale, curY + bH - 12 * chatScale);
+              ctx.lineTo(bX - 8 * chatScale, curY + bH);
+              ctx.lineTo(bX + 14 * chatScale, curY + bH);
               ctx.fill();
 
-              // Текст
-              ctx.font = `18px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
+              // Текст входящего сообщения
+              ctx.font = `${fSize}px -apple-system, BlinkMacSystemFont, Arial, sans-serif`;
               ctx.fillStyle = "#111111";
               ctx.textAlign = "left";
               lines.forEach((l, idx) => {
-                ctx.fillText(l, bX + 16, curY + 24 + idx * 24);
+                ctx.fillText(l, bX + padX, curY + Math.round(20 * chatScale) + idx * lineH);
               });
 
-              // Время
-              ctx.font = "11px Arial, sans-serif";
+              // Время сообщения
+              ctx.font = `${timeSize}px Arial, sans-serif`;
               ctx.fillStyle = "#8e8e93";
               ctx.textAlign = "right";
-              ctx.fillText(time, bX + bW - 12, curY + bH - 10);
+              ctx.fillText(time, bX + bW - Math.round(12 * chatScale), curY + bH - Math.round(8 * chatScale));
             }
 
-            curY += bH + 10;
+            curY += bH + gapY;
           });
           ctx.restore();
         }
@@ -4263,12 +4324,27 @@
     const speechScaleSlider = document.getElementById("speechScaleSlider");
     const speechScaleVal = document.getElementById("speechScaleVal");
     if (speechScaleSlider) {
-      speechScaleSlider.addEventListener("input", (e) => {
+      const updateSpeechScale = (e) => {
         const val = parseInt(e.target.value, 10) || 100;
         state.speechScale = val / 100;
         if (speechScaleVal) speechScaleVal.textContent = val + "%";
         render();
-      });
+      };
+      speechScaleSlider.addEventListener("input", updateSpeechScale);
+      speechScaleSlider.addEventListener("change", updateSpeechScale);
+    }
+
+    const chatScaleSlider = document.getElementById("chatScaleSlider");
+    const chatScaleVal = document.getElementById("chatScaleVal");
+    if (chatScaleSlider) {
+      const updateChatScale = (e) => {
+        const val = parseInt(e.target.value, 10) || 100;
+        state.chatScale = val / 100;
+        if (chatScaleVal) chatScaleVal.textContent = val + "%";
+        render();
+      };
+      chatScaleSlider.addEventListener("input", updateChatScale);
+      chatScaleSlider.addEventListener("change", updateChatScale);
     }
 
     const speechTailSelect = document.getElementById("speechTailSelect");
