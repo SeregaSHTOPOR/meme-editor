@@ -1805,6 +1805,14 @@
           <label>Текст глубокой цитаты</label>
           <input type="text" id="quoteText" placeholder="Не бойся ошибаться, бойся не ловить рыбу." value="Не бойся ошибаться, бойся не ловить рыбу.">
         </div>
+
+        <!-- Ползунок масштабирования цитаты -->
+        <div class="row" style="margin-top: 8px; margin-bottom: 6px;">
+          <div class="input-group" style="flex: 1;">
+            <label>Размер цитаты: <span id="quoteScaleVal">100%</span></label>
+            <input type="range" id="quoteScaleSlider" min="50" max="200" value="100">
+          </div>
+        </div>
         <div class="input-group">
           <label>Автор цитаты</label>
           <input type="text" id="quoteAuthor" placeholder="Джейсон Стэтхем" value="Джейсон Стэтхем">
@@ -1816,6 +1824,14 @@
         <div class="input-group">
           <label>Текст ситуации от первого лица (POV):</label>
           <input type="text" id="povText" placeholder="Ты пришёл на рыбалку в 5 утра, а там ЯЗЬ..." value="Ты пришёл на рыбалку в 5 утра, а там ЯЗЬ!">
+        </div>
+
+        <!-- Ползунок масштабирования POV -->
+        <div class="row" style="margin-top: 8px; margin-bottom: 6px;">
+          <div class="input-group" style="flex: 1;">
+            <label>Размер POV: <span id="povScaleVal">100%</span></label>
+            <input type="range" id="povScaleSlider" min="50" max="200" value="100">
+          </div>
         </div>
         <div class="input-group">
           <label>Стиль оформления POV:</label>
@@ -2292,6 +2308,9 @@
       quoteAuthor: "Джейсон Стэтхем",
       povText: "Ты пришёл на рыбалку в 5 утра, а там ЯЗЬ!",
       povStyle: "neon",
+      quoteScale: 1.0,
+      quoteY: null,
+      povScale: 1.0,
       povY: null,
       chatY: null,
       chatScale: 1.0,
@@ -3675,55 +3694,90 @@
         return;
       }
 
-      // 7. ФОРМАТ: ЦИТАТА ВОЛКА (Пацанские цитаты)
+      // 7. ФОРМАТ: ЦИТАТА ВОЛКА (ТЕКСТ В ЖЕЛТЫХ КАВЫЧКАХ + МАСШТАБИРОВАНИЕ)
       if (state.layout === "quote") {
         canvas.width = imgW;
         canvas.height = imgH;
         ctx.drawImage(imgSource, 0, 0, imgW, imgH);
 
-        // Затемняющий оверлей с виньеткой
+        // Затемняющий оверлей с виньеткой для кинематографичности
         ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.52)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.54)";
         ctx.fillRect(0, 0, imgW, imgH);
 
-        // Золотистые кавычки
-        ctx.font = `bold 64px "Times New Roman", Georgia, serif`;
-        ctx.fillStyle = "rgba(255, 215, 0, 0.85)";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("«", imgW / 2, imgH * 0.28);
-
-        // Текст цитаты
+        const qScale = state.quoteScale || 1.0;
         const qText = (state.quoteText || "").trim();
+        const author = (state.quoteAuthor || "").trim();
+
         if (qText) {
-          const qSize = Math.max(22, Math.round(imgW * 0.052));
+          // Размер шрифта цитаты прямо масштабируется ползунком
+          const qSize = Math.max(16, Math.round(imgW * 0.052 * qScale));
+          const lineH = Math.round(qSize * 1.34);
+          ctx.font = `italic bold ${qSize}px "${state.font}", Georgia, serif`;
+
+          // Разбивка цитаты на строки
+          const maxTextW = Math.round(imgW * 0.74);
+          const lines = wrapText(ctx, qText, maxTextW);
+
+          let maxLineW = 0;
+          lines.forEach((l) => {
+            const lw = ctx.measureText(l).width;
+            if (lw > maxLineW) maxLineW = lw;
+          });
+
+          // Положение блока цитаты по вертикали (можно перетаскивать пальцем!)
+          const totalTextH = lines.length * lineH;
+          const centerY = state.quoteY !== null ? state.quoteY : Math.round(imgH * 0.46);
+          const startY = centerY - ((lines.length - 1) * lineH) / 2;
+
+          // Крупные стильные ЖЕЛТЫЕ КАВЫЧКИ « ... », обрамляющие текст цитаты с двух сторон!
+          const markSize = Math.max(26, Math.round(qSize * 1.55));
+          ctx.font = `bold ${markSize}px "Times New Roman", Georgia, serif`;
+          ctx.fillStyle = "#ffd700";
+          ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+          ctx.shadowBlur = Math.round(10 * qScale);
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          // Левая открывающая желтая кавычка « (вверху слева от текста)
+          const leftQuoteX = Math.round(imgW / 2 - maxLineW / 2 - markSize * 0.52);
+          const leftQuoteY = Math.round(startY - (lines.length > 1 ? lineH * 0.28 : 0));
+          ctx.fillText("«", Math.max(markSize * 0.45, leftQuoteX), leftQuoteY);
+
+          // Правая закрывающая желтая кавычка » (внизу справа от текста)
+          const rightQuoteX = Math.round(imgW / 2 + maxLineW / 2 + markSize * 0.52);
+          const rightQuoteY = Math.round(startY + (lines.length - 1) * lineH + (lines.length > 1 ? lineH * 0.28 : 0));
+          ctx.fillText("»", Math.min(imgW - markSize * 0.45, rightQuoteX), rightQuoteY);
+
+          // Сам текст цитаты (белый, четкий, центрированный)
+          ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+          ctx.shadowBlur = Math.round(8 * qScale);
           ctx.font = `italic bold ${qSize}px "${state.font}", Georgia, serif`;
           ctx.fillStyle = "#ffffff";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          const lines = wrapText(ctx, qText, imgW * 0.84);
-          const startY = imgH * 0.46 - ((lines.length - 1) * (qSize * 1.3)) / 2;
           lines.forEach((l, idx) => {
-            ctx.fillText(l, imgW / 2, startY + idx * (qSize * 1.3));
+            ctx.fillText(l, imgW / 2, startY + idx * lineH);
           });
+
+          // Автор цитаты снизу (также масштабируется и привязан к тексту)
+          if (author) {
+            const authorSize = Math.max(13, Math.round(18 * qScale));
+            const authorY = Math.min(imgH - 24, startY + (lines.length - 1) * lineH + Math.round(44 * qScale));
+            ctx.font = `bold ${authorSize}px Arial, sans-serif`;
+            ctx.fillStyle = "#ffd700";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("— (с) " + author, imgW / 2, authorY);
+          }
         }
 
-        // Автор цитаты
-        const author = (state.quoteAuthor || "").trim();
-        if (author) {
-          ctx.font = `bold 18px Arial, sans-serif`;
-          ctx.fillStyle = "#ffd700";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("— (с) " + author, imgW / 2, imgH * 0.82);
-        }
         ctx.restore();
-
         updateCanvasBlob();
         return;
       }
 
-      // 8. ФОРМАТ: POV (POINT OF VIEW / ОТ ПЕРВОГО ЛИЦА)
+      // 8. ФОРМАТ: POV (ОТ ПЕРВОГО ЛИЦА С МАСШТАБИРОВАНИЕМ ТЕКСТА И КАРТОЧКИ)
       if (state.layout === "pov") {
         canvas.width = imgW;
         canvas.height = imgH;
@@ -3732,72 +3786,108 @@
         const pText = (state.povText || "").trim();
         if (pText) {
           ctx.save();
-          const pY = state.povY !== null ? state.povY : 40;
+          const povScale = state.povScale || 1.0;
+          const pY = state.povY !== null ? state.povY : Math.round(40 * povScale);
           const pStyle = state.povStyle || "neon";
 
-          ctx.font = `bold 24px "${state.font}", -apple-system, Arial, sans-serif`;
-          const lines = wrapText(ctx, pText, imgW * 0.85);
-          const cardW = Math.min(imgW * 0.92, Math.max(260, ctx.measureText(lines[0] || "").width + 60));
-          const cardH = Math.max(70, lines.length * 32 + 38);
-          const cardX = Math.round((imgW - cardW) / 2);
-
           if (pStyle === "neon") {
-            // Неоновая карточка с градиентом
+            // Стиль 1: Неоновая карточка (шрифт и карточка масштабируются)
+            const fSize = Math.max(12, Math.round(22 * povScale));
+            const lineH = Math.round(fSize * 1.36);
+            const badgeSize = Math.max(10, Math.round(13 * povScale));
+            const padX = Math.round(22 * povScale);
+
+            ctx.font = `bold ${fSize}px "${state.font}", -apple-system, Arial, sans-serif`;
+            const maxTextW = Math.round(imgW * 0.85);
+            const lines = wrapText(ctx, pText, maxTextW);
+
+            let maxLineW = 0;
+            lines.forEach((l) => {
+              const lw = ctx.measureText(l).width;
+              if (lw > maxLineW) maxLineW = lw;
+            });
+
+            const cardW = Math.min(imgW - 16, Math.max(Math.round(220 * povScale), maxLineW + padX * 2));
+            const cardH = Math.max(Math.round(64 * povScale), lines.length * lineH + Math.round(42 * povScale));
+            const cardX = Math.round((imgW - cardW) / 2);
+
             ctx.shadowColor = "rgba(0, 240, 255, 0.6)";
-            ctx.shadowBlur = 18;
-            ctx.fillStyle = "rgba(14, 18, 26, 0.88)";
+            ctx.shadowBlur = Math.round(18 * povScale);
+            ctx.fillStyle = "rgba(14, 18, 26, 0.90)";
             ctx.strokeStyle = "#00f0ff";
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth = Math.max(1.8, 2.5 * povScale);
             ctx.beginPath();
-            ctx.roundRect(cardX, pY, cardW, cardH, 16);
+            ctx.roundRect(cardX, pY, cardW, cardH, Math.round(16 * povScale));
             ctx.fill();
             ctx.stroke();
 
             // Бейдж POV
             ctx.shadowColor = "transparent";
             ctx.fillStyle = "#00f0ff";
-            ctx.font = "800 13px Arial, sans-serif";
-            ctx.fillText("👁️ POV:", cardX + 22, pY + 22);
+            ctx.font = `800 ${badgeSize}px Arial, sans-serif`;
+            ctx.fillText("👁️ POV:", cardX + padX, pY + Math.round(20 * povScale));
 
-            // Текст
-            ctx.font = `bold 22px "${state.font}", -apple-system, Arial, sans-serif`;
+            // Текст ситуации
+            ctx.font = `bold ${fSize}px "${state.font}", -apple-system, Arial, sans-serif`;
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "left";
-            const startTextY = pY + 44;
+            const startTextY = pY + Math.round(42 * povScale);
             lines.forEach((l, idx) => {
-              ctx.fillText(l, cardX + 22, startTextY + idx * 30);
+              ctx.fillText(l, cardX + padX, startTextY + idx * lineH);
             });
           } else if (pStyle === "dark") {
-            // Черная капсула
+            // Стиль 2: Черная капсула (масштабируется)
+            const fSize = Math.max(12, Math.round(22 * povScale));
+            const lineH = Math.round(fSize * 1.34);
+            const padX = Math.round(26 * povScale);
+
+            ctx.font = `bold ${fSize}px "${state.font}", -apple-system, Arial, sans-serif`;
+            const maxTextW = Math.round(imgW * 0.85);
+            const lines = wrapText(ctx, pText, maxTextW);
+
+            let maxLineW = 0;
+            lines.forEach((l) => {
+              const lw = ctx.measureText("👁️ POV: " + l).width;
+              if (lw > maxLineW) maxLineW = lw;
+            });
+
+            const cardW = Math.min(imgW - 16, Math.max(Math.round(220 * povScale), maxLineW + padX * 2));
+            const cardH = Math.max(Math.round(52 * povScale), lines.length * lineH + Math.round(26 * povScale));
+            const cardX = Math.round((imgW - cardW) / 2);
+
             ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
-            ctx.shadowBlur = 15;
-            ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+            ctx.shadowBlur = Math.round(15 * povScale);
+            ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
             ctx.beginPath();
             ctx.roundRect(cardX, pY, cardW, cardH, cardH / 2);
             ctx.fill();
 
             ctx.shadowColor = "transparent";
-            ctx.font = `bold 22px "${state.font}", -apple-system, Arial, sans-serif`;
+            ctx.font = `bold ${fSize}px "${state.font}", -apple-system, Arial, sans-serif`;
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            const startTextY = pY + cardH / 2 - ((lines.length - 1) * 28) / 2;
+            const startTextY = pY + cardH / 2 - ((lines.length - 1) * lineH) / 2;
             lines.forEach((l, idx) => {
-              ctx.fillText("👁️ POV: " + l, imgW / 2, startTextY + idx * 28);
+              ctx.fillText("👁️ POV: " + l, imgW / 2, startTextY + idx * lineH);
             });
           } else {
-            // Классический крупный мемный текст с обводкой
-            ctx.font = `bold 36px "${state.font}", Impact, Arial, sans-serif`;
+            // Стиль 3: Классический крупный мемный текст с обводкой (масштабируется)
+            const tSize = Math.max(16, Math.round(36 * povScale));
+            const tLineH = Math.round(tSize * 1.25);
+            const strokeW = Math.max(2.5, Math.round(6 * povScale));
+
+            ctx.font = `bold ${tSize}px "${state.font}", Impact, Arial, sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             const pLines = wrapText(ctx, ("POV: " + pText).toUpperCase(), imgW * 0.92);
-            const startY = pY + 20;
+            const startY = pY + Math.round(20 * povScale);
             pLines.forEach((l, idx) => {
               ctx.strokeStyle = "#000000";
-              ctx.lineWidth = 6;
-              ctx.strokeText(l, imgW / 2, startY + idx * 42);
+              ctx.lineWidth = strokeW;
+              ctx.strokeText(l, imgW / 2, startY + idx * tLineH);
               ctx.fillStyle = "#ffffff";
-              ctx.fillText(l, imgW / 2, startY + idx * 42);
+              ctx.fillText(l, imgW / 2, startY + idx * tLineH);
             });
           }
           ctx.restore();
@@ -4347,6 +4437,32 @@
       chatScaleSlider.addEventListener("change", updateChatScale);
     }
 
+    const quoteScaleSlider = document.getElementById("quoteScaleSlider");
+    const quoteScaleVal = document.getElementById("quoteScaleVal");
+    if (quoteScaleSlider) {
+      const updateQuoteScale = (e) => {
+        const val = parseInt(e.target.value, 10) || 100;
+        state.quoteScale = val / 100;
+        if (quoteScaleVal) quoteScaleVal.textContent = val + "%";
+        render();
+      };
+      quoteScaleSlider.addEventListener("input", updateQuoteScale);
+      quoteScaleSlider.addEventListener("change", updateQuoteScale);
+    }
+
+    const povScaleSlider = document.getElementById("povScaleSlider");
+    const povScaleVal = document.getElementById("povScaleVal");
+    if (povScaleSlider) {
+      const updatePovScale = (e) => {
+        const val = parseInt(e.target.value, 10) || 100;
+        state.povScale = val / 100;
+        if (povScaleVal) povScaleVal.textContent = val + "%";
+        render();
+      };
+      povScaleSlider.addEventListener("input", updatePovScale);
+      povScaleSlider.addEventListener("change", updatePovScale);
+    }
+
     const speechTailSelect = document.getElementById("speechTailSelect");
     if (speechTailSelect) {
       speechTailSelect.addEventListener("change", (e) => {
@@ -4517,6 +4633,8 @@
         state.chatY = coords.y;
       } else if (state.layout === "pov") {
         state.povY = coords.y;
+      } else if (state.layout === "quote") {
+        state.quoteY = coords.y;
       } else {
         state.posX = coords.x;
         state.posY = coords.y;
@@ -4535,6 +4653,8 @@
         state.chatY = coords.y;
       } else if (state.layout === "pov") {
         state.povY = coords.y;
+      } else if (state.layout === "quote") {
+        state.quoteY = coords.y;
       } else {
         state.posX = coords.x;
         state.posY = coords.y;
