@@ -382,6 +382,46 @@
     .thumb:hover {
       transform: scale(1.05);
     }
+    .pagination-btn {
+      width: 68px;
+      min-width: 68px;
+      height: 58px;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--tg-theme-button-color, #2481cc), #166ba8);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      user-select: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      transition: transform 0.15s, background 0.15s, filter 0.15s;
+    }
+    .pagination-btn:hover {
+      transform: scale(1.05);
+      filter: brightness(1.15);
+    }
+    .pagination-btn:active {
+      transform: scale(0.95);
+    }
+    .pagination-btn .p-icon {
+      font-size: 17px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .pagination-btn .p-label {
+      font-size: 10px;
+      line-height: 1.1;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
     .thumb.active {
       border-color: var(--tg-theme-button-color, #2481cc);
       transform: scale(1.08);
@@ -2343,12 +2383,66 @@
 
     let isDragging = false;
 
-    function renderTemplates(list, currentQuery) {
+        // Сохраняем исходную базу встроенных шаблонов
+    const initialBaseTemplates = Array.isArray(allTemplates) ? [...allTemplates] : [];
+
+    // Глобальное состояние постраничного поиска
+    let searchState = {
+      activeQuery: "",
+      allResults: [],      // Все уникальные найденные картинки для текущего запроса
+      pageIndex: 0,        // Текущая страница (0 = первые 20, 1 = вторые 20 и т.д.)
+      pageSize: 15,
+      apiPage: 1,          // Номер страницы во внешних API (Memepedia, Wikimedia)
+      hasMoreApi: true,
+      isLoading: false
+    };
+    window.searchState = searchState;
+
+    // Кеш шаблонов Imgflip
+    let imgflipTemplatesCache = null;
+    async function loadImgflipTemplates() {
+      if (imgflipTemplatesCache) return imgflipTemplatesCache;
+      try {
+        const res = await fetch("https://api.imgflip.com/get_memes");
+        if (res.ok) {
+          const data = await res.json();
+          imgflipTemplatesCache = data?.data?.memes || [];
+        }
+      } catch (e) {
+        imgflipTemplatesCache = [];
+      }
+      return imgflipTemplatesCache || [];
+    }
+
+    // Двуязычный словарь для точного поиска мировых шаблонов мемов
+    const memeBilingualMap = {
+      "кот": ["cat"], "кошка": ["cat"], "коты": ["cat"], "котик": ["cat"],
+      "собака": ["dog", "doge"], "пес": ["dog"], "доге": ["doge"], "дог": ["dog"],
+      "арнольд": ["arnold", "schwarzenegger"], "шварц": ["schwarzenegger"],
+      "бумер": ["boomer"], "зумер": ["zoomer"],
+      "язь": ["fish"], "рыба": ["fish"], "рыбалка": ["fish", "fishing"],
+      "качок": ["buff", "chad"], "гигачад": ["gigachad"], "чад": ["chad"],
+      "бэтмен": ["batman"], "дрейк": ["drake"], "волк": ["wolf"],
+      "обезьяна": ["monkey"], "медведь": ["bear"], "хомяк": ["hamster"],
+      "шрек": ["shrek"], "леонардо": ["dicaprio"], "ди каприо": ["dicaprio"],
+      "питер": ["parker"], "человек паук": ["spiderman"]
+    };
+
+    // Отрисовка текущей страницы картинок с кнопками пагинации
+    function renderCurrentPage() {
       templatesBar.innerHTML = "";
 
+      const q = searchState.activeQuery;
+      let displayItems = [];
 
+      if (!q) {
+        displayItems = allTemplates;
+      } else {
+        const startIdx = searchState.pageIndex * searchState.pageSize;
+        displayItems = searchState.allResults.slice(startIdx, startIdx + searchState.pageSize);
+      }
 
-      if (!list || !list.length) {
+      if (!displayItems || !displayItems.length) {
         const noRes = document.createElement("div");
         noRes.className = "no-results";
         noRes.textContent = "Ничего не найдено. Попробуй другое слово для поиска.";
@@ -2356,12 +2450,29 @@
         return;
       }
 
-      list.forEach((item) => {
+      // Кнопка «⏪ НАЗАД» в начале списка, если находимся на странице 2 или дальше
+      if (q && searchState.pageIndex > 0) {
+        const prevBtn = document.createElement("div");
+        prevBtn.className = "pagination-btn prev-btn";
+        prevBtn.title = `Вернуться к предыдущим картинкам (Стр. ${searchState.pageIndex})`;
+        prevBtn.innerHTML = '<span class="p-icon">⏪</span><span class="p-label">Назад</span>';
+        prevBtn.addEventListener("click", () => {
+          if (searchState.pageIndex > 0) {
+            searchState.pageIndex--;
+            renderCurrentPage();
+            templatesBar.scrollTo({ left: 0, behavior: "smooth" });
+          }
+        });
+        templatesBar.appendChild(prevBtn);
+      }
+
+      // Отрисовка картинок текущей страницы
+      displayItems.forEach((item) => {
         const img = document.createElement("img");
         img.className = "thumb" + (item.url === state.imgUrl ? " active" : "");
-        
+
         let thumbUrl = item.url;
-        if (thumbUrl.includes("pikabu.ru") || thumbUrl.includes("vk.com") || thumbUrl.includes("rutube.ru") || thumbUrl.includes("faceit-cdn")) {
+        if (thumbUrl.includes("pikabu.ru") || thumbUrl.includes("vk.com") || thumbUrl.includes("rutube.ru") || thumbUrl.includes("memepedia.world")) {
           thumbUrl = "https://images.weserv.nl/?url=" + encodeURIComponent(thumbUrl) + "&w=130&h=130&fit=cover";
         }
         img.src = thumbUrl;
@@ -2373,156 +2484,317 @@
           }
         };
 
-        img.title = item.title;
+        img.title = item.title || "";
         img.addEventListener("click", () => {
-          document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".thumb").forEach((t) => t.classList.remove("active"));
           img.classList.add("active");
           state.imgUrl = item.url;
           loadImage(item.url);
         });
         templatesBar.appendChild(img);
       });
+
+      // Кнопка «⏩ ДАЛЬШЕ / ИСКАТЬ ЕЩЁ» в конце списка
+      if (q && (searchState.allResults.length > (searchState.pageIndex + 1) * searchState.pageSize || searchState.hasMoreApi)) {
+        const nextBtn = document.createElement("div");
+        nextBtn.className = "pagination-btn next-btn";
+        nextBtn.title = `Искать и загрузить следующие картинки (Стр. ${searchState.pageIndex + 2})`;
+        nextBtn.innerHTML = '<span class="p-icon">⏩</span><span class="p-label">Дальше</span>';
+        nextBtn.addEventListener("click", async () => {
+          if (searchState.isLoading) return;
+          searchState.isLoading = true;
+          nextBtn.innerHTML = '<span class="p-icon">⏳</span><span class="p-label">Ищу...</span>';
+          nextBtn.style.opacity = "0.7";
+
+          const nextStartIdx = (searchState.pageIndex + 1) * searchState.pageSize;
+          if (searchState.allResults.length < nextStartIdx + 1 && searchState.hasMoreApi) {
+            searchState.apiPage++;
+            await fetchApiPage(searchState.activeQuery, searchState.apiPage);
+          }
+
+          searchState.isLoading = false;
+          if (searchState.allResults.length > nextStartIdx) {
+            searchState.pageIndex++;
+            renderCurrentPage();
+            templatesBar.scrollTo({ left: 0, behavior: "smooth" });
+          } else {
+            searchState.hasMoreApi = false;
+            renderCurrentPage();
+            const statusPill = document.getElementById("searchStatusPill");
+            if (statusPill) {
+              statusPill.style.display = "block";
+              statusPill.textContent = `Больше картинок по запросу «${searchState.activeQuery}» нет`;
+              setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3000);
+            }
+          }
+        });
+        templatesBar.appendChild(nextBtn);
+      }
+    }
+
+    // Совместимость со старыми вызовами
+    function renderTemplates(list, currentQuery) {
+      if (!currentQuery) {
+        searchState.activeQuery = "";
+        searchState.allResults = [];
+        searchState.pageIndex = 0;
+        renderCurrentPage();
+        return;
+      }
+      renderCurrentPage();
     }
 
     function filterMemes() {
       const q = searchBar.value.toLowerCase().trim();
       const activeTag = document.querySelector(".tag.active")?.dataset.tag || "all";
 
-      let filtered = allTemplates;
+      if (!q) {
+        searchState.activeQuery = "";
+        searchState.allResults = [];
+        searchState.pageIndex = 0;
 
-      if (activeTag !== "all") {
-        filtered = filtered.filter(t => t.cat === activeTag);
-      }
-
-      if (q) {
-        if (q.startsWith("http://") || q.startsWith("https://")) {
-          loadImage(q);
-          return;
+        let filtered = initialBaseTemplates;
+        if (activeTag !== "all") {
+          filtered = filtered.filter((t) => t.cat === activeTag);
         }
-
-        const words = q.split(" ").filter(Boolean);
-        const matched = filtered.filter(t => {
-          const hay = (t.title + " " + (t.tags || "")).toLowerCase();
-          return words.some(w => hay.includes(w));
-        });
-
-        filtered = matched;
+        allTemplates = filtered;
+        renderCurrentPage();
+        return;
       }
 
-      renderTemplates(filtered, q);
+      if (q.startsWith("http://") || q.startsWith("https://")) {
+        loadImage(q);
+        return;
+      }
+
+      // Мгновенная локальная фильтрация из встроенной базы мемов
+      const words = q.split(" ").filter(Boolean);
+      const matched = initialBaseTemplates.filter((t) => {
+        const hay = (t.title + " " + (t.tags || "")).toLowerCase();
+        return words.some((w) => hay.includes(w));
+      });
+
+      searchState.activeQuery = q;
+      searchState.pageIndex = 0;
+      searchState.apiPage = 1;
+      searchState.hasMoreApi = true;
+      searchState.allResults = [...matched];
+
+      renderCurrentPage();
     }
 
-    // Управление поиском: онлайн через Wikimedia Commons + Memepedia (CORS-friendly)
-    let searchDebounceTimer = null;
-    let onlineSearchAbort = null;
-    let isSearchingOnline = false;
-
-    async function searchOnlineMemes(query, force = false) {
+    // Загрузка страницы данных из внешних мемных и поисковых источников
+    async function fetchApiPage(query, pageNum) {
       const qTrim = (query || "").trim();
-      if (!qTrim || qTrim.length < 2) return;
-
-      if (onlineSearchAbort) {
-        onlineSearchAbort.abort();
-      }
-      onlineSearchAbort = new AbortController();
-
-      isSearchingOnline = true;
-      const qLower = qTrim.toLowerCase();
+      if (!qTrim) return [];
 
       const statusPill = document.getElementById("searchStatusPill");
       if (statusPill) {
         statusPill.style.display = "block";
-        statusPill.textContent = `⏳ Ищу картинки «${qTrim}» в сети...`;
+        statusPill.textContent = `⏳ Ищу мемы «${qTrim}» (стр. ${pageNum})...`;
       }
 
-      try {
-        const liveMemes = [];
-        const seenUrls = new Set(allTemplates.map(t => t.url));
+      const liveMemes = [];
+      const seenUrls = new Set(searchState.allResults.map((t) => t.url));
+      const qLower = qTrim.toLowerCase();
 
-        // 1. Wikimedia Commons API — миллионы фотографий, мемов, людей, без CORS-проблем
-        const wikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(qTrim)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url|thumburl&iiurlwidth=720&format=json&origin=*`;
-        
-        // 2. Memepedia API — русские вирусные мемы и шаблоны
-        const mpUrl = "https://memepedia.ru/wp-json/wp/v2/posts?search=" + encodeURIComponent(qTrim) + "&_embed=1&per_page=15";
+      // 1. РОССИЙСКИЕ МЕМЫ: Memepedia API (по двум вариантам запроса)
+      const mpUrl1 = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent(qTrim)}&_embed=1&per_page=12&page=${pageNum}`;
+      const mpUrl2 = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent("мем " + qTrim)}&_embed=1&per_page=8&page=${pageNum}`;
 
-        const [wikiRes, mpRes] = await Promise.allSettled([
-          fetch(wikiUrl, { signal: onlineSearchAbort.signal }),
-          fetch(mpUrl, { signal: onlineSearchAbort.signal, headers: { Accept: "application/json" } })
-        ]);
+      // 2. ПОИСКОВИКИ КАРТИНОК: Russian Wikipedia + Wikimedia Commons
+      const ruWikiUrl = `https://ru.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(qTrim)}&gsrlimit=10&gsroffset=${(pageNum - 1) * 10}&prop=pageimages&pithumbsize=800&format=json&origin=*`;
+      const commWikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(qTrim + " мем")}&gsrnamespace=6&gsrlimit=12&gsroffset=${(pageNum - 1) * 12}&prop=imageinfo&iiprop=url|thumburl&iiurlwidth=720&format=json&origin=*`;
 
-        // Обработка Memepedia
-        if (mpRes.status === "fulfilled" && mpRes.value.ok) {
+      const results = await Promise.allSettled([
+        fetch(mpUrl1, { headers: { Accept: "application/json" } }),
+        fetch(mpUrl2, { headers: { Accept: "application/json" } }),
+        fetch(ruWikiUrl),
+        fetch(commWikiUrl),
+        loadImgflipTemplates()
+      ]);
+
+      // Обработка Memepedia (Featured + все картинки из тела статьи)
+      const parseMpPosts = async (res) => {
+        if (res.status === "fulfilled" && res.value.ok) {
           try {
-            const posts = await mpRes.value.json();
+            const posts = await res.value.json();
             if (Array.isArray(posts)) {
               posts.forEach((p, idx) => {
                 const media = p._embedded?.["wp:featuredmedia"]?.[0];
-                const src = media?.source_url;
-                if (src && !seenUrls.has(src)) {
-                  seenUrls.add(src);
-                  const rawTitle = p.title?.rendered || (qTrim + " #" + (idx + 1));
-                  const cleanTitle = rawTitle.replace(/<[^>]+>/g, "").trim();
+                const featSrc = media?.source_url;
+                const rawTitle = p.title?.rendered || (qTrim + " #" + (idx + 1));
+                const cleanTitle = rawTitle.replace(/<[^>]+>/g, "").trim();
+
+                if (featSrc && !seenUrls.has(featSrc)) {
+                  seenUrls.add(featSrc);
                   liveMemes.push({
-                    id: "mp_" + (p.id || idx),
+                    id: "mp_f_" + (p.id || idx),
                     title: cleanTitle,
                     tags: qLower + " мем memepedia",
                     cat: "all",
-                    url: src
+                    url: featSrc
                   });
                 }
+
+                // Извлечение всех картинок из содержания статьи мема
+                const contentHtml = p.content?.rendered || "";
+                const innerMatches = contentHtml.match(/<img[^>]+src=["']([^"']+)["']/g) || [];
+                innerMatches.forEach((tag, iIdx) => {
+                  const m = tag.match(/src=["']([^"']+)["']/);
+                  if (m && m[1]) {
+                    const src = m[1];
+                    if (src.startsWith("http") && !seenUrls.has(src)) {
+                      if (!src.includes("avatar") && !src.includes("icon") && !src.includes("logo") && !src.includes("banner")) {
+                        seenUrls.add(src);
+                        liveMemes.push({
+                          id: `mp_i_${p.id || idx}_${iIdx}`,
+                          title: cleanTitle + ` (вариант ${iIdx + 1})`,
+                          tags: qLower + " мем memepedia",
+                          cat: "all",
+                          url: src
+                        });
+                      }
+                    }
+                  }
+                });
               });
             }
           } catch (e) {}
         }
+      };
 
-        // Обработка Wikimedia Commons
-        if (wikiRes.status === "fulfilled" && wikiRes.value.ok) {
-          try {
-            const data = await wikiRes.value.json();
-            const pages = data?.query?.pages || {};
-            let wIdx = 0;
-            for (const pid in pages) {
-              const p = pages[pid];
-              const info = p.imageinfo?.[0];
-              const u = info?.thumburl || info?.url;
-              if (u && !seenUrls.has(u)) {
-                if (u.endsWith(".svg") || u.endsWith(".pdf") || u.endsWith(".djvu")) continue;
-                seenUrls.add(u);
-                const title = (p.title || (qTrim + " #" + (wIdx + 1))).replace(/^File:/i, "").trim();
-                liveMemes.push({
-                  id: "wiki_" + pid,
-                  title: title,
-                  tags: qLower + " фото сеть картинка",
-                  cat: "all",
-                  url: u
-                });
-                wIdx++;
-              }
+      await parseMpPosts(results[0]);
+      await parseMpPosts(results[1]);
+
+      // 3. МИРОВЫЕ МЕМЫ: Imgflip (только на 1-й странице, чтобы не дублировать)
+      if (pageNum === 1 && results[4].status === "fulfilled") {
+        const allMemes = results[4].value || [];
+        const englishKeywords = memeBilingualMap[qLower] || [];
+        const matches = allMemes.filter((m) => {
+          const name = (m.name || "").toLowerCase();
+          if (name.includes(qLower)) return true;
+          return englishKeywords.some((kw) => name.includes(kw));
+        });
+
+        matches.forEach((m) => {
+          if (m.url && !seenUrls.has(m.url)) {
+            seenUrls.add(m.url);
+            liveMemes.push({
+              id: "if_" + m.id,
+              title: m.name + " (Мем)",
+              tags: qLower + " мем imgflip",
+              cat: "all",
+              url: m.url
+            });
+          }
+        });
+      }
+
+      // 4. ПОИСКОВИКИ: Русская Википедия
+      if (results[2].status === "fulfilled" && results[2].value.ok) {
+        try {
+          const data = await results[2].value.json();
+          const pages = data?.query?.pages || {};
+          for (const pid in pages) {
+            const p = pages[pid];
+            const src = p.thumbnail?.source;
+            if (src && !seenUrls.has(src)) {
+              seenUrls.add(src);
+              liveMemes.push({
+                id: "ruw_" + pid,
+                title: p.title || qTrim,
+                tags: qLower + " фото википедия",
+                cat: "all",
+                url: src
+              });
             }
-          } catch (e) {}
-        }
+          }
+        } catch (e) {}
+      }
 
-        if (liveMemes.length > 0) {
-          allTemplates = liveMemes.concat(allTemplates);
-          filterMemes();
-          if (statusPill) {
-            statusPill.textContent = `✅ Найдено ${liveMemes.length} картинок по запросу «${qTrim}»`;
-            setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
+      // 5. ПОИСКОВИКИ: Wikimedia Commons
+      if (results[3].status === "fulfilled" && results[3].value.ok) {
+        try {
+          const data = await results[3].value.json();
+          const pages = data?.query?.pages || {};
+          let wIdx = 0;
+          for (const pid in pages) {
+            const p = pages[pid];
+            const info = p.imageinfo?.[0];
+            const u = info?.thumburl || info?.url;
+            if (u && !seenUrls.has(u)) {
+              if (u.endsWith(".svg") || u.endsWith(".pdf") || u.endsWith(".djvu")) continue;
+              seenUrls.add(u);
+              const title = (p.title || (qTrim + " #" + (wIdx + 1))).replace(/^File:/i, "").trim();
+              liveMemes.push({
+                id: "wiki_" + pid,
+                title: title,
+                tags: qLower + " фото сеть картинка",
+                cat: "all",
+                url: u
+              });
+              wIdx++;
+            }
           }
-          if (force && liveMemes[0]) {
-            state.imgUrl = liveMemes[0].url;
-            loadImage(liveMemes[0].url);
-          }
+        } catch (e) {}
+      }
+
+      if (liveMemes.length === 0) {
+        searchState.hasMoreApi = false;
+      } else {
+        searchState.allResults = searchState.allResults.concat(liveMemes);
+      }
+
+      if (statusPill) {
+        if (searchState.allResults.length > 0) {
+          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} мемов и картинок по запросу «${qTrim}»`;
+          setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
         } else {
-          if (statusPill) {
-            statusPill.textContent = `🔍 Картинки не найдены — нажми кнопку поиска в боте`;
-            setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 4000);
-          }
+          statusPill.textContent = `🔍 Картинки не найдены. Попробуй другое слово.`;
+          setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 4000);
+        }
+      }
+
+      return liveMemes;
+    }
+
+    // Главная функция поиска онлайн по запросу
+    let searchDebounceTimer = null;
+    let isSearchingOnline = false;
+
+    async function searchOnlineMemes(query, force = false) {
+      window.searchOnlineMemes = searchOnlineMemes;
+      const qTrim = (query || "").trim();
+      if (!qTrim || qTrim.length < 2) return;
+
+      if (isSearchingOnline && searchState.activeQuery === qTrim) return;
+      isSearchingOnline = true;
+
+      searchState.activeQuery = qTrim;
+      searchState.pageIndex = 0;
+      searchState.apiPage = 1;
+      searchState.hasMoreApi = true;
+
+      // Мгновенно выводим совпадения из локальной базы, если есть
+      const words = qTrim.toLowerCase().split(" ").filter(Boolean);
+      const matchedLocal = initialBaseTemplates.filter((t) => {
+        const hay = (t.title + " " + (t.tags || "")).toLowerCase();
+        return words.some((w) => hay.includes(w));
+      });
+      searchState.allResults = [...matchedLocal];
+      renderCurrentPage();
+
+      try {
+        await fetchApiPage(qTrim, 1);
+        renderCurrentPage();
+
+        if (force && searchState.allResults[0]) {
+          state.imgUrl = searchState.allResults[0].url;
+          loadImage(searchState.allResults[0].url);
         }
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.warn("Online search note:", err);
-        }
+        console.warn("Online search note:", err);
       } finally {
         isSearchingOnline = false;
       }
@@ -2532,7 +2804,7 @@
       filterMemes();
       searchOnlineMemes(passedQuery, false);
     } else {
-      renderTemplates(allTemplates, "");
+      renderCurrentPage();
     }
 
     // Живой поиск при вводе
@@ -2541,7 +2813,7 @@
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {
         searchOnlineMemes(searchBar.value, false);
-      }, 400);
+      }, 450);
     });
 
     // Нажатие клавиши Enter в строке поиска
@@ -4989,6 +5261,11 @@
 
       // 2. Очищаем строку поиска
       if (searchBar) searchBar.value = "";
+      searchState.activeQuery = "";
+      searchState.allResults = [];
+      searchState.pageIndex = 0;
+      allTemplates = [...initialBaseTemplates];
+      renderCurrentPage();
 
       // 3. Сбрасываем поворот и изгиб
       state.rotation = 0;
