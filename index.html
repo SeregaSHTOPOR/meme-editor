@@ -2998,7 +2998,338 @@
 
     }
 
-  </style>
+  
+    /* ========================================================
+       УНИВЕРСАЛЬНАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ (ОБРЕЗКА + МАРКЕР)
+       ======================================================== */
+    .universal-tools-bar {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 8px 0 10px;
+    }
+    .utool-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-color);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .utool-btn:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .utool-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+    }
+    .utool-icon {
+      font-size: 15px;
+    }
+
+    /* Панель настроек маркера */
+    .marker-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.2s ease;
+    }
+    .marker-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .marker-panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .marker-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .marker-colors-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .marker-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .marker-color-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      flex-shrink: 0;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .marker-color-swatch:hover {
+      transform: scale(1.15);
+    }
+    .marker-color-swatch.active {
+      transform: scale(1.2);
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+    .marker-custom-color {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--btn-secondary-bg);
+      border: 1px dashed var(--btn-secondary-border);
+      cursor: pointer;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .marker-custom-color input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .marker-sizes-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .marker-size-btn {
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--btn-secondary-border);
+      background: var(--btn-secondary-bg);
+      color: var(--text-color);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .marker-size-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+    .marker-actions-row {
+      display: flex;
+      gap: 8px;
+    }
+    .marker-act-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--btn-secondary-border);
+      background: var(--btn-secondary-bg);
+      color: var(--text-color);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .marker-act-btn.danger {
+      color: #f87171;
+    }
+
+    /* Модалка обрезки (Crop) */
+    .crop-modal {
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .crop-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .crop-ratios-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      margin-bottom: 10px;
+      padding-bottom: 4px;
+    }
+    .crop-ratio-btn {
+      padding: 5px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--btn-secondary-border);
+      background: var(--btn-secondary-bg);
+      color: var(--text-color);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .crop-ratio-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+    .crop-viewport {
+      position: relative;
+      background: #090d16;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      max-height: 52vh;
+      margin-bottom: 12px;
+      touch-action: none;
+    }
+    #cropCanvas {
+      max-width: 100%;
+      max-height: 52vh;
+      display: block;
+      cursor: crosshair;
+    }
+    .crop-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* СТИКЕРЫ (ДЛЯ ФОРМАТА КЛАССИКА) */
+    .stickers-block {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 14px;
+    }
+    .sticker-selected-bar {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px dashed #38bdf8;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sticker-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--btn-secondary-border);
+      background: var(--btn-secondary-bg);
+      color: var(--text-color);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .sticker-btn.danger {
+      color: #f87171;
+    }
+    .stickers-modal {
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .sticker-tabs-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+      padding-bottom: 4px;
+    }
+    .sticker-tab-btn {
+      padding: 6px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--btn-secondary-border);
+      background: var(--btn-secondary-bg);
+      color: var(--text-color);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .sticker-tab-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+    .stickers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 10px;
+      overflow-y: auto;
+      max-height: 55vh;
+      padding: 4px 2px 14px;
+    }
+    .sticker-card {
+      aspect-ratio: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 6px;
+      transition: transform 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .sticker-card:hover {
+      transform: scale(1.08);
+      border-color: #38bdf8;
+    }
+    .sticker-card:active {
+      transform: scale(0.95);
+    }
+    .sticker-card img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .sticker-card-emoji {
+      font-size: 34px;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .sticker-card-name {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+</style>
 
 </head>
 
@@ -3089,6 +3420,55 @@
     </div>
 
     <div class="drag-hint">👆 Перетаскивай надпись пальцем или мышкой прямо по картинке!</div>
+
+    <!-- Универсальная панель инструментов: Обрезка + Маркер (доступно во всех шаблонах) -->
+    <div class="universal-tools-bar" id="universalToolsBar">
+      <button class="utool-btn" id="btnToolCrop" type="button">
+        <span class="utool-icon">✂️</span>
+        <span>Обрезать</span>
+      </button>
+      <button class="utool-btn" id="btnToolMarker" type="button">
+        <span class="utool-icon">✏️</span>
+        <span>Маркер</span>
+      </button>
+    </div>
+
+    <!-- Панель маркера (появляется при включении режима) -->
+    <div class="marker-panel" id="markerPanel" style="display: none;">
+      <div class="marker-panel-header">
+        <span class="marker-panel-title">✏️ Режим рисования маркером</span>
+        <button class="marker-close-btn" id="btnMarkerClose" type="button" title="Закрыть маркер">✕</button>
+      </div>
+
+      <div class="marker-colors-row">
+        <span class="marker-label">Цвет:</span>
+        <div class="marker-color-swatch active" data-color="#facc15" style="background: #facc15;" title="Жёлтый"></div>
+        <div class="marker-color-swatch" data-color="#ef4444" style="background: #ef4444;" title="Красный"></div>
+        <div class="marker-color-swatch" data-color="#22c55e" style="background: #22c55e;" title="Зелёный"></div>
+        <div class="marker-color-swatch" data-color="#3b82f6" style="background: #3b82f6;" title="Синий"></div>
+        <div class="marker-color-swatch" data-color="#a855f7" style="background: #a855f7;" title="Фиолетовый"></div>
+        <div class="marker-color-swatch" data-color="#ffffff" style="background: #ffffff;" title="Белый"></div>
+        <div class="marker-color-swatch" data-color="#000000" style="background: #000000;" title="Чёрный"></div>
+        <label class="marker-custom-color" title="Свой цвет">
+          🎨
+          <input type="color" id="markerCustomColor" value="#facc15">
+        </label>
+      </div>
+
+      <div class="marker-sizes-row">
+        <span class="marker-label">Толщина:</span>
+        <button class="marker-size-btn" data-size="4" type="button">Тонкий</button>
+        <button class="marker-size-btn active" data-size="10" type="button">Средний</button>
+        <button class="marker-size-btn" data-size="22" type="button">Жирный</button>
+        <button class="marker-size-btn" data-size="32" data-opacity="0.5" type="button">Выделитель</button>
+      </div>
+
+      <div class="marker-actions-row">
+        <button class="marker-act-btn" id="btnMarkerUndo" type="button">↩️ Отменить штрих</button>
+        <button class="marker-act-btn danger" id="btnMarkerClear" type="button">🗑 Очистить рисунок</button>
+      </div>
+    </div>
+
 
 
 
@@ -3492,6 +3872,34 @@
 
           </div>
 
+        </div>
+
+      
+        <!-- Блок наклеек и стикеров (для формата Классика) -->
+        <div class="stickers-block" id="classicStickersBlock">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="margin: 0; font-weight: 600; font-size: 13px;">🎭 Наклейки и стикеры</label>
+            <span style="font-size: 11px; color: #94a3b8;">Только в «Классика»</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="share-action-btn primary" id="btnOpenStickersModal" type="button" style="flex: 1; padding: 9px; font-size: 13px;">
+              ➕ Выбрать наклейку / стикер
+            </button>
+            <button class="share-action-btn secondary" id="btnClearAllStickers" type="button" style="padding: 9px 12px; font-size: 13px;" title="Очистить все наклейки">
+              🗑
+            </button>
+          </div>
+
+          <div class="sticker-selected-bar" id="stickerSelectedBar" style="display: none;">
+            <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">Выбрана наклейка:</span>
+            <div style="display: flex; gap: 5px; align-items: center;">
+              <button class="sticker-btn" id="btnStickerScaleDown" type="button" title="Уменьшить">➖</button>
+              <button class="sticker-btn" id="btnStickerScaleUp" type="button" title="Увеличить">➕</button>
+              <button class="sticker-btn" id="btnStickerRotate" type="button" title="Повернуть">🔄</button>
+              <button class="sticker-btn danger" id="btnStickerDelete" type="button" title="Удалить">🗑</button>
+              <button class="sticker-btn" id="btnStickerDeselect" type="button" title="Снять выбор">✓</button>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -5697,6 +6105,337 @@
       renderCurrentPage();
     }
 
+    
+    // ========================================================
+    // 🎭 БАЗА ДАННЫХ НАКЛЕЕК И СТИКЕРОВ
+    // ========================================================
+    const STICKER_PACKS = {"thug": [{"id": "thug_glasses", "name": "Очки Thug Life", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%2040%22%20width%3D%22160%22%20height%3D%2240%22%3E%3Crect%20x%3D%220%22%20y%3D%228%22%20width%3D%2264%22%20height%3D%2224%22%20fill%3D%22%23000%22/%3E%3Crect%20x%3D%228%22%20y%3D%2212%22%20width%3D%2212%22%20height%3D%226%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%2264%22%20y%3D%2214%22%20width%3D%2232%22%20height%3D%226%22%20fill%3D%22%23000%22/%3E%3Crect%20x%3D%2296%22%20y%3D%228%22%20width%3D%2264%22%20height%3D%2224%22%20fill%3D%22%23000%22/%3E%3Crect%20x%3D%22104%22%20y%3D%2212%22%20width%3D%2212%22%20height%3D%226%22%20fill%3D%22%23fff%22/%3E%3C/svg%3E"}, {"id": "cigarette", "name": "Сигарета с дымком", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2040%22%20width%3D%22100%22%20height%3D%2240%22%3E%3Crect%20x%3D%2225%22%20y%3D%2220%22%20width%3D%2260%22%20height%3D%2210%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23ddd%22%20stroke-width%3D%221%22/%3E%3Crect%20x%3D%2225%22%20y%3D%2220%22%20width%3D%2218%22%20height%3D%2210%22%20fill%3D%22%23f59e0b%22/%3E%3Crect%20x%3D%2285%22%20y%3D%2220%22%20width%3D%225%22%20height%3D%2210%22%20fill%3D%22%23ef4444%22/%3E%3Ccircle%20cx%3D%2292%22%20cy%3D%2223%22%20r%3D%222%22%20fill%3D%22%239ca3af%22%20opacity%3D%220.8%22/%3E%3Cpath%20d%3D%22M92%2020%20Q95%2010%20100%205%20Q92%202%2096%20-5%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20opacity%3D%220.6%22/%3E%3C/svg%3E"}, {"id": "dollar_chain", "name": "Золотая цепь $", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20120%22%20width%3D%22100%22%20height%3D%22120%22%3E%3Cpath%20d%3D%22M%2020%2010%20Q%2050%2070%2080%2010%22%20fill%3D%22none%22%20stroke%3D%22%23eab308%22%20stroke-width%3D%228%22%20stroke-dasharray%3D%228%203%22/%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2285%22%20r%3D%2226%22%20fill%3D%22%23facc15%22%20stroke%3D%22%23ca8a04%22%20stroke-width%3D%224%22/%3E%3Ctext%20x%3D%2250%22%20y%3D%2298%22%20font-family%3D%22Arial%20Black%2C%20Impact%2C%20sans-serif%22%20font-size%3D%2234%22%20font-weight%3D%22900%22%20fill%3D%22%23854d0e%22%20text-anchor%3D%22middle%22%3E%24%3C/text%3E%3C/svg%3E"}, {"id": "crown", "name": "Корона", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2080%22%20width%3D%22100%22%20height%3D%2280%22%3E%3Cpolygon%20points%3D%2210%2C70%2090%2C70%2095%2C25%2070%2C45%2050%2C15%2030%2C45%205%2C25%22%20fill%3D%22%23facc15%22%20stroke%3D%22%23ca8a04%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2215%22%20r%3D%225%22%20fill%3D%22%23ef4444%22/%3E%3Ccircle%20cx%3D%225%22%20cy%3D%2225%22%20r%3D%224%22%20fill%3D%22%233b82f6%22/%3E%3Ccircle%20cx%3D%2295%22%20cy%3D%2225%22%20r%3D%224%22%20fill%3D%22%233b82f6%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2255%22%20r%3D%224%22%20fill%3D%22%23ec4899%22/%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2255%22%20r%3D%225%22%20fill%3D%22%2322c55e%22/%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2255%22%20r%3D%224%22%20fill%3D%22%23ec4899%22/%3E%3C/svg%3E"}, {"id": "laser_eyes", "name": "Лазерные глаза", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%2040%22%20width%3D%22120%22%20height%3D%2240%22%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%2214%22%20fill%3D%22%23ff0000%22/%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%226%22%20fill%3D%22%23ffff00%22/%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%222%22%20fill%3D%22%23ffffff%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%2220%22%20r%3D%2214%22%20fill%3D%22%23ff0000%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%2220%22%20r%3D%226%22%20fill%3D%22%23ffff00%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%2220%22%20r%3D%222%22%20fill%3D%22%23ffffff%22/%3E%3C/svg%3E"}, {"id": "mustache", "name": "Усы джентльмена", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%2050%22%20width%3D%22120%22%20height%3D%2250%22%3E%3Cpath%20d%3D%22M%2060%2025%20C%2050%2010%2025%2010%205%2035%20C%2020%2042%2045%2042%2060%2030%20C%2075%2042%20100%2042%20115%2035%20C%2095%2010%2070%2010%2060%2025%20Z%22%20fill%3D%22%231e293b%22/%3E%3C/svg%3E"}, {"id": "halo", "name": "Нимб ангела", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2040%22%20width%3D%22100%22%20height%3D%2240%22%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2220%22%20rx%3D%2242%22%20ry%3D%2214%22%20fill%3D%22none%22%20stroke%3D%22%23facc15%22%20stroke-width%3D%227%22/%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2220%22%20rx%3D%2242%22%20ry%3D%2214%22%20fill%3D%22none%22%20stroke%3D%22%23fef08a%22%20stroke-width%3D%223%22/%3E%3C/svg%3E"}, {"id": "horns", "name": "Рожки дьявола", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%2060%22%20width%3D%22120%22%20height%3D%2260%22%3E%3Cpath%20d%3D%22M%2015%2050%20C%205%2030%2010%2010%2035%205%20C%2030%2020%2030%2035%2030%2050%20Z%22%20fill%3D%22%23dc2626%22/%3E%3Cpath%20d%3D%22M%20105%2050%20C%20115%2030%20110%2010%2085%205%20C%2090%2020%2090%2035%2090%2050%20Z%22%20fill%3D%22%23dc2626%22/%3E%3C/svg%3E"}], "stamps": [{"id": "censored", "name": "CENSORED", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%2050%22%20width%3D%22160%22%20height%3D%2250%22%3E%3Crect%20x%3D%222%22%20y%3D%222%22%20width%3D%22156%22%20height%3D%2246%22%20fill%3D%22%23000000%22%20rx%3D%224%22/%3E%3Ctext%20x%3D%2280%22%20y%3D%2232%22%20font-family%3D%22Impact%2C%20Arial%20Black%2C%20sans-serif%22%20font-size%3D%2224%22%20font-weight%3D%22bold%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%223%22%3ECENSORED%3C/text%3E%3C/svg%3E"}, {"id": "top_secret", "name": "TOP SECRET", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%2060%22%20width%3D%22180%22%20height%3D%2260%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%22172%22%20height%3D%2252%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%225%22%20rx%3D%226%22/%3E%3Ctext%20x%3D%2290%22%20y%3D%2238%22%20font-family%3D%22Impact%2C%20Arial%20Black%2C%20sans-serif%22%20font-size%3D%2226%22%20font-weight%3D%22bold%22%20fill%3D%22%23dc2626%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%222%22%3ETOP%20SECRET%3C/text%3E%3C/svg%3E"}, {"id": "stamp_18", "name": "18+ Штамп", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2070%2070%22%20width%3D%2270%22%20height%3D%2270%22%3E%3Ccircle%20cx%3D%2235%22%20cy%3D%2235%22%20r%3D%2230%22%20fill%3D%22%23dc2626%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224%22/%3E%3Ctext%20x%3D%2235%22%20y%3D%2246%22%20font-family%3D%22Arial%2C%20Impact%2C%20sans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22900%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%3E18%2B%3C/text%3E%3C/svg%3E"}, {"id": "approved", "name": "ОДОБРЕНО", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%2060%22%20width%3D%22180%22%20height%3D%2260%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%22172%22%20height%3D%2252%22%20fill%3D%22none%22%20stroke%3D%22%2316a34a%22%20stroke-width%3D%225%22%20rx%3D%226%22/%3E%3Ctext%20x%3D%2290%22%20y%3D%2238%22%20font-family%3D%22Impact%2C%20Arial%20Black%2C%20sans-serif%22%20font-size%3D%2224%22%20font-weight%3D%22bold%22%20fill%3D%22%2316a34a%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%222%22%3E%D0%9E%D0%94%D0%9E%D0%91%D0%A0%D0%95%D0%9D%D0%9E%3C/text%3E%3C/svg%3E"}, {"id": "wow_bubble", "name": "WOW!", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%2070%22%20width%3D%22120%22%20height%3D%2270%22%3E%3Cpolygon%20points%3D%2260%2C2%2075%2C18%20100%2C8%2098%2C30%20118%2C40%2098%2C52%20102%2C68%2080%2C60%2068%2C68%2052%2C60%2038%2C68%2040%2C52%202%2C40%2022%2C30%2018%2C8%2045%2C18%22%20fill%3D%22%23facc15%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%224%22/%3E%3Ctext%20x%3D%2260%22%20y%3D%2246%22%20font-family%3D%22Impact%2C%20Arial%20Black%2C%20sans-serif%22%20font-size%3D%2228%22%20font-style%3D%22italic%22%20font-weight%3D%22900%22%20fill%3D%22%23dc2626%22%20text-anchor%3D%22middle%22%3EWOW%21%3C/text%3E%3C/svg%3E"}, {"id": "shock_stamp", "name": "ШОК!", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20140%2050%22%20width%3D%22140%22%20height%3D%2250%22%3E%3Crect%20x%3D%222%22%20y%3D%222%22%20width%3D%22136%22%20height%3D%2246%22%20fill%3D%22%23dc2626%22%20rx%3D%226%22/%3E%3Ctext%20x%3D%2270%22%20y%3D%2234%22%20font-family%3D%22Impact%2C%20Arial%20Black%2C%20sans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22bold%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%222%22%3E%D0%A8%D0%9E%D0%9A%21%3C/text%3E%3C/svg%3E"}], "faces": [{"id": "trollface", "name": "Trollface", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2085%22%20width%3D%22100%22%20height%3D%2285%22%3E%3Cpath%20d%3D%22M%208%2030%20C%205%2060%2030%2080%2060%2080%20C%2085%2080%2095%2060%2095%2035%20C%2095%2015%2075%205%2050%205%20C%2020%205%2010%2015%208%2030%20Z%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23000000%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2235%22%20cy%3D%2228%22%20r%3D%225%22%20fill%3D%22%23000%22/%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2228%22%20r%3D%225%22%20fill%3D%22%23000%22/%3E%3Cpath%20d%3D%22M%2028%2020%20Q%2035%2015%2045%2022%22%20stroke%3D%22%23000%22%20stroke-width%3D%223%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M%2062%2022%20Q%2072%2015%2080%2020%22%20stroke%3D%22%23000%22%20stroke-width%3D%223%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M%2052%2028%20Q%2050%2038%2045%2040%22%20stroke%3D%22%23000%22%20stroke-width%3D%223%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M%2018%2042%20Q%2050%2090%2088%2042%20Q%2050%2055%2018%2042%20Z%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23000000%22%20stroke-width%3D%223%22/%3E%3Cline%20x1%3D%2228%22%20y1%3D%2246%22%20x2%3D%2230%22%20y2%3D%2258%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22/%3E%3Cline%20x1%3D%2238%22%20y1%3D%2248%22%20x2%3D%2240%22%20y2%3D%2264%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22/%3E%3Cline%20x1%3D%2250%22%20y1%3D%2249%22%20x2%3D%2250%22%20y2%3D%2267%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22/%3E%3Cline%20x1%3D%2262%22%20y1%3D%2248%22%20x2%3D%2260%22%20y2%3D%2264%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22/%3E%3Cline%20x1%3D%2272%22%20y1%3D%2246%22%20x2%3D%2270%22%20y2%3D%2258%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22/%3E%3Cline%20x1%3D%2225%22%20y1%3D%2252%22%20x2%3D%2278%22%20y2%3D%2252%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22/%3E%3C/svg%3E"}, {"id": "pepe_face", "name": "Pepe", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2090%22%20width%3D%22100%22%20height%3D%2290%22%3E%3Cpath%20d%3D%22M%2015%2035%20C%2010%2015%2035%2010%2045%2020%20C%2055%2010%2080%2015%2075%2035%20C%2085%2045%2092%2065%2075%2080%20C%2055%2090%2035%2090%2015%2080%20C%200%2065%205%2045%2015%2035%20Z%22%20fill%3D%22%2365a30d%22%20stroke%3D%22%233f6212%22%20stroke-width%3D%223%22/%3E%3Cellipse%20cx%3D%2232%22%20cy%3D%2225%22%20rx%3D%2214%22%20ry%3D%2212%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23000%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2234%22%20cy%3D%2225%22%20r%3D%225%22%20fill%3D%22%23000%22/%3E%3Cellipse%20cx%3D%2262%22%20cy%3D%2225%22%20rx%3D%2214%22%20ry%3D%2212%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23000%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2264%22%20cy%3D%2225%22%20r%3D%225%22%20fill%3D%22%23000%22/%3E%3Cpath%20d%3D%22M%2018%2020%20Q%2032%2012%2046%2020%22%20stroke%3D%22%233f6212%22%20stroke-width%3D%224%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M%2048%2020%20Q%2062%2012%2076%2020%22%20stroke%3D%22%233f6212%22%20stroke-width%3D%224%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M%2020%2062%20Q%2045%2052%2075%2062%20Q%2050%2068%2020%2062%20Z%22%20fill%3D%22%23dc2626%22%20stroke%3D%22%23991b1b%22%20stroke-width%3D%222%22/%3E%3C/svg%3E"}, {"id": "clown", "name": "Клоун", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2080%2080%22%20width%3D%2280%22%20height%3D%2280%22%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2235%22%20r%3D%2218%22%20fill%3D%22%23ef4444%22%20stroke%3D%22%23b91c1c%22%20stroke-width%3D%222%22/%3E%3Cellipse%20cx%3D%2236%22%20cy%3D%2230%22%20rx%3D%225%22%20ry%3D%223%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.6%22/%3E%3Cpath%20d%3D%22M%2015%2055%20Q%2040%2080%2065%2055%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%225%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%2215%22%20cy%3D%2255%22%20r%3D%225%22%20fill%3D%22%23dc2626%22/%3E%3Ccircle%20cx%3D%2265%22%20cy%3D%2255%22%20r%3D%225%22%20fill%3D%22%23dc2626%22/%3E%3C/svg%3E"}, {"id": "chad_sigma", "name": "Сигма", "type": "emoji", "char": "🗿"}, {"id": "doge_face", "name": "Doge", "type": "emoji", "char": "🐶"}], "effects": [{"id": "fire", "name": "Огонь", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2080%20100%22%20width%3D%2280%22%20height%3D%22100%22%3E%3Cpath%20d%3D%22M%2040%205%20C%2045%2030%2075%2040%2075%2070%20C%2075%2088%2058%2098%2040%2098%20C%2022%2098%205%2088%205%2070%20C%205%2045%2025%2035%2030%2020%20C%2035%2015%2038%2010%2040%205%20Z%22%20fill%3D%22%23ef4444%22/%3E%3Cpath%20d%3D%22M%2040%2035%20C%2045%2050%2062%2055%2062%2075%20C%2062%2086%2052%2092%2040%2092%20C%2028%2092%2018%2086%2018%2075%20C%2018%2060%2032%2050%2035%2040%20Z%22%20fill%3D%22%23f59e0b%22/%3E%3Cpath%20d%3D%22M%2040%2060%20C%2043%2068%2050%2072%2050%2082%20C%2050%2088%2045%2090%2040%2090%20C%2035%2090%2030%2088%2030%2082%20C%2030%2075%2037%2070%2040%2060%20Z%22%20fill%3D%22%23fef08a%22/%3E%3C/svg%3E"}, {"id": "heart_eyes", "name": "Сердечки", "type": "svg", "src": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2245%22%20fill%3D%22%23facc15%22%20stroke%3D%22%23ca8a04%22%20stroke-width%3D%223%22/%3E%3Cpath%20d%3D%22M%2028%2032%20A%206%206%200%200%200%2020%2038%20C%2020%2045%2028%2052%2028%2052%20C%2028%2052%2036%2045%2036%2038%20A%206%206%200%200%200%2028%2032%20Z%22%20fill%3D%22%23ef4444%22/%3E%3Cpath%20d%3D%22M%2072%2032%20A%206%206%200%200%200%2064%2038%20C%2064%2045%2072%2052%2072%2052%20C%2072%2052%2080%2045%2080%2038%20A%206%206%200%200%200%2072%2032%20Z%22%20fill%3D%22%23ef4444%22/%3E%3Cpath%20d%3D%22M%2030%2065%20Q%2050%2085%2070%2065%20Z%22%20fill%3D%22%23854d0e%22/%3E%3C/svg%3E"}, {"id": "boom", "name": "Взрыв БУМ", "type": "emoji", "char": "💥"}, {"id": "skull", "name": "Череп", "type": "emoji", "char": "💀"}, {"id": "stop_sign", "name": "Знак СТОП", "type": "emoji", "char": "🛑"}, {"id": "tears", "name": "Слёзы ручьём", "type": "emoji", "char": "😭"}], "emoji": [{"id": "e_rofl", "name": "Угар", "type": "emoji", "char": "🤣"}, {"id": "e_cool", "name": "Крутой", "type": "emoji", "char": "😎"}, {"id": "e_devil", "name": "Дьявол", "type": "emoji", "char": "😈"}, {"id": "e_poop", "name": "Какашка", "type": "emoji", "char": "💩"}, {"id": "e_money", "name": "Деньги", "type": "emoji", "char": "💸"}, {"id": "e_cap", "name": "Кепка", "type": "emoji", "char": "🧢"}, {"id": "e_rocket", "name": "Ракета", "type": "emoji", "char": "🚀"}, {"id": "e_beer", "name": "Пиво", "type": "emoji", "char": "🍺"}, {"id": "e_clown", "name": "Клоун", "type": "emoji", "char": "🤡"}, {"id": "e_heart", "name": "Сердце", "type": "emoji", "char": "❤️"}, {"id": "e_broken", "name": "Разбитое", "type": "emoji", "char": "💔"}, {"id": "e_star", "name": "Звезда", "type": "emoji", "char": "⭐"}]};
+
+    // Состояние наклеек (для формата Классика)
+    let memeStickers = [];
+    let selectedStickerId = null;
+    let isDraggingSticker = false;
+    let stickerDragOffset = { x: 0, y: 0 };
+
+    // Состояние рисования маркером (для ВСЕХ шаблонов)
+    let isMarkerMode = false;
+    let markerColor = "#facc15";
+    let markerSize = 10;
+    let markerOpacity = 1.0;
+    let markerStrokes = [];
+    let activeStroke = null;
+    let isDrawingStroke = false;
+
+    // Состояние обрезки (для ВСЕХ шаблонов)
+    let originalRawImage = null;
+    let cropRatio = "free";
+    let cropRect = { x: 0, y: 0, width: 0, height: 0 };
+    let cropDragMode = null;
+    let cropDragStart = { x: 0, y: 0 };
+    let cropRectStart = { x: 0, y: 0, width: 0, height: 0 };
+    let cropDisplayScale = 1.0;
+
+    // Отрисовка штрихов маркера на переданном контексте
+    function drawMarkerStrokes(targetCtx) {
+      if (!markerStrokes || markerStrokes.length === 0) return;
+      targetCtx.save();
+      markerStrokes.forEach(s => {
+        if (!s.points || s.points.length < 1) return;
+        targetCtx.strokeStyle = s.color || "#facc15";
+        targetCtx.lineWidth = s.size || 10;
+        targetCtx.globalAlpha = s.opacity !== undefined ? s.opacity : 1.0;
+        targetCtx.lineCap = "round";
+        targetCtx.lineJoin = "round";
+        targetCtx.beginPath();
+        targetCtx.moveTo(s.points[0].x, s.points[0].y);
+        if (s.points.length === 1) {
+          targetCtx.lineTo(s.points[0].x, s.points[0].y);
+        } else {
+          for (let i = 1; i < s.points.length; i++) {
+            targetCtx.lineTo(s.points[i].x, s.points[i].y);
+          }
+        }
+        targetCtx.stroke();
+      });
+      targetCtx.restore();
+    }
+
+    // Отрисовка наклеек (стикеров) в Классике
+    function drawStickers(targetCtx, isExporting) {
+      if (state.layout !== "classic" || !memeStickers || memeStickers.length === 0) return;
+      memeStickers.forEach(st => {
+        targetCtx.save();
+        targetCtx.translate(st.x, st.y);
+        targetCtx.rotate((st.rotation || 0) * Math.PI / 180);
+
+        if (st.type === "emoji") {
+          const sz = st.size || 70;
+          targetCtx.font = `${sz}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+          targetCtx.textAlign = "center";
+          targetCtx.textBaseline = "middle";
+          targetCtx.fillText(st.char, 0, 0);
+
+          if (!isExporting && selectedStickerId === st.id) {
+            targetCtx.strokeStyle = "#38bdf8";
+            targetCtx.lineWidth = 2;
+            targetCtx.setLineDash([6, 4]);
+            targetCtx.strokeRect(-sz / 2 - 4, -sz / 2 - 4, sz + 8, sz + 8);
+          }
+        } else if (st.type === "image" && st.img && st.img.complete) {
+          const w = st.width || 120;
+          const h = st.height || 120;
+          targetCtx.drawImage(st.img, -w / 2, -h / 2, w, h);
+
+          if (!isExporting && selectedStickerId === st.id) {
+            targetCtx.strokeStyle = "#38bdf8";
+            targetCtx.lineWidth = 2;
+            targetCtx.setLineDash([6, 4]);
+            targetCtx.strokeRect(-w / 2 - 4, -h / 2 - 4, w + 8, h + 8);
+          }
+        }
+        targetCtx.restore();
+      });
+    }
+
+    function updateStickerControlsBar() {
+      const bar = document.getElementById("stickerSelectedBar");
+      if (bar) {
+        bar.style.display = selectedStickerId ? "flex" : "none";
+      }
+    }
+
+    function addStickerToCanvas(stickerDef) {
+      const stId = Date.now() + "_" + Math.floor(Math.random() * 1000);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      if (stickerDef.type === "emoji") {
+        const baseSize = Math.max(60, Math.round(canvas.width * 0.18));
+        const newSt = {
+          id: stId,
+          type: "emoji",
+          char: stickerDef.char,
+          x: cx,
+          y: cy,
+          size: baseSize,
+          rotation: 0
+        };
+        memeStickers.push(newSt);
+        selectedStickerId = stId;
+        updateStickerControlsBar();
+        render();
+        closeStickersModal();
+        showToast("🎭 Наклейка добавлена! Перетаскивай пальцем по мему");
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        const baseW = Math.max(90, Math.round(canvas.width * 0.26));
+        const aspect = (img.naturalHeight || 1) / (img.naturalWidth || 1);
+        const newSt = {
+          id: stId,
+          type: "image",
+          img: img,
+          x: cx,
+          y: cy,
+          width: baseW,
+          height: Math.round(baseW * aspect),
+          rotation: 0
+        };
+        memeStickers.push(newSt);
+        selectedStickerId = stId;
+        updateStickerControlsBar();
+        render();
+        closeStickersModal();
+        showToast("🎭 Наклейка добавлена! Перетаскивай пальцем по мему");
+      };
+      img.src = stickerDef.src;
+    }
+
+    function openStickersModal() {
+      const overlay = document.getElementById("stickersModalOverlay");
+      if (overlay) {
+        renderStickerPack("thug");
+        overlay.classList.add("active");
+      }
+    }
+
+    function closeStickersModal() {
+      const overlay = document.getElementById("stickersModalOverlay");
+      if (overlay) overlay.classList.remove("active");
+    }
+
+    function renderStickerPack(packKey) {
+      const grid = document.getElementById("stickersGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      const pack = STICKER_PACKS[packKey] || [];
+      pack.forEach(st => {
+        const card = document.createElement("div");
+        card.className = "sticker-card";
+        if (st.type === "emoji") {
+          card.innerHTML = `<span class="sticker-card-emoji">${st.char}</span><span class="sticker-card-name">${st.name}</span>`;
+        } else {
+          card.innerHTML = `<img src="${st.src}" alt="${st.name}"><span class="sticker-card-name">${st.name}</span>`;
+        }
+        card.addEventListener("click", () => addStickerToCanvas(st));
+        grid.appendChild(card);
+      });
+
+      // Обновляем вкладки
+      document.querySelectorAll(".sticker-tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.pack === packKey);
+      });
+    }
+
+    // ========================================================
+    // ИНТЕРАКТИВНАЯ ОБРЕЗКА (CROP)
+    // ========================================================
+    function openCropModal() {
+      const overlay = document.getElementById("cropModalOverlay");
+      const cropC = document.getElementById("cropCanvas");
+      const viewport = document.getElementById("cropViewport");
+      if (!overlay || !cropC || !currentImage.complete) return;
+
+      if (!originalRawImage) originalRawImage = currentImage;
+
+      overlay.classList.add("active");
+
+      // Подгоняем холст обрезки под размер вьюпорта
+      const maxW = viewport.clientWidth || 360;
+      const maxH = Math.min(window.innerHeight * 0.5, 420);
+      const imgAspect = (currentImage.naturalWidth || 600) / (currentImage.naturalHeight || 400);
+
+      let dispW = maxW;
+      let dispH = maxW / imgAspect;
+      if (dispH > maxH) {
+        dispH = maxH;
+        dispW = maxH * imgAspect;
+      }
+
+      cropC.width = Math.round(dispW);
+      cropC.height = Math.round(dispH);
+      cropDisplayScale = (currentImage.naturalWidth || 600) / cropC.width;
+
+      // Инициализируем прямоугольник обрезки (85% от картинки)
+      const padX = Math.round(cropC.width * 0.08);
+      const padY = Math.round(cropC.height * 0.08);
+      cropRect = {
+        x: padX,
+        y: padY,
+        width: cropC.width - padX * 2,
+        height: cropC.height - padY * 2
+      };
+
+      drawCropCanvas();
+    }
+
+    function closeCropModal() {
+      const overlay = document.getElementById("cropModalOverlay");
+      if (overlay) overlay.classList.remove("active");
+    }
+
+    function drawCropCanvas() {
+      const cropC = document.getElementById("cropCanvas");
+      if (!cropC) return;
+      const cCtx = cropC.getContext("2d");
+      const w = cropC.width;
+      const h = cropC.height;
+
+      cCtx.clearRect(0, 0, w, h);
+      cCtx.drawImage(currentImage, 0, 0, w, h);
+
+      // Затемнение снаружи области обрезки
+      cCtx.fillStyle = "rgba(0, 0, 0, 0.65)";
+      cCtx.beginPath();
+      cCtx.rect(0, 0, w, h);
+      cCtx.rect(cropRect.x + cropRect.width, cropRect.y, -cropRect.width, cropRect.height);
+      cCtx.fill();
+
+      // Рамка обрезки
+      cCtx.strokeStyle = "#38bdf8";
+      cCtx.lineWidth = 2;
+      cCtx.strokeRect(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
+
+      // Сетка 3x3
+      cCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      cCtx.lineWidth = 1;
+      cCtx.setLineDash([4, 4]);
+      cCtx.beginPath();
+      // Вертикальные
+      cCtx.moveTo(cropRect.x + cropRect.width / 3, cropRect.y);
+      cCtx.lineTo(cropRect.x + cropRect.width / 3, cropRect.y + cropRect.height);
+      cCtx.moveTo(cropRect.x + cropRect.width * 2 / 3, cropRect.y);
+      cCtx.lineTo(cropRect.x + cropRect.width * 2 / 3, cropRect.y + cropRect.height);
+      // Горизонтальные
+      cCtx.moveTo(cropRect.x, cropRect.y + cropRect.height / 3);
+      cCtx.lineTo(cropRect.x + cropRect.width, cropRect.y + cropRect.height / 3);
+      cCtx.moveTo(cropRect.x, cropRect.y + cropRect.height * 2 / 3);
+      cCtx.lineTo(cropRect.x + cropRect.width, cropRect.y + cropRect.height * 2 / 3);
+      cCtx.stroke();
+      cCtx.setLineDash([]);
+
+      // Угловые маркеры
+      const handleSize = 14;
+      cCtx.fillStyle = "#38bdf8";
+      const corners = [
+        { x: cropRect.x, y: cropRect.y },
+        { x: cropRect.x + cropRect.width, y: cropRect.y },
+        { x: cropRect.x, y: cropRect.y + cropRect.height },
+        { x: cropRect.x + cropRect.width, y: cropRect.y + cropRect.height }
+      ];
+      corners.forEach(c => {
+        cCtx.beginPath();
+        cCtx.arc(c.x, c.y, 6, 0, Math.PI * 2);
+        cCtx.fill();
+        cCtx.strokeStyle = "#ffffff";
+        cCtx.lineWidth = 2;
+        cCtx.stroke();
+      });
+    }
+
+    function applyCropAction() {
+      if (!currentImage.complete) return;
+      const cropC = document.getElementById("cropCanvas");
+      if (!cropC) return;
+
+      const scale = (currentImage.naturalWidth || 600) / cropC.width;
+      const sx = Math.max(0, Math.round(cropRect.x * scale));
+      const sy = Math.max(0, Math.round(cropRect.y * scale));
+      const sw = Math.min(currentImage.naturalWidth - sx, Math.round(cropRect.width * scale));
+      const sh = Math.min(currentImage.naturalHeight - sy, Math.round(cropRect.height * scale));
+
+      if (sw < 20 || sh < 20) return;
+
+      const offCanvas = document.createElement("canvas");
+      offCanvas.width = sw;
+      offCanvas.height = sh;
+      const offCtx = offCanvas.getContext("2d");
+      offCtx.drawImage(currentImage, sx, sy, sw, sh, 0, 0, sw, sh);
+
+      const croppedUrl = offCanvas.toDataURL("image/png");
+      const croppedImg = new Image();
+      croppedImg.onload = () => {
+        currentImage = croppedImg;
+        cachedFxCanvas = null;
+        render();
+        closeCropModal();
+        showToast("✅ Картинка успешно обрезана!");
+      };
+      croppedImg.src = croppedUrl;
+    }
+
+    function resetCropAction() {
+      if (!originalRawImage) return;
+      currentImage = originalRawImage;
+      cachedFxCanvas = null;
+      render();
+      closeCropModal();
+      showToast("🔄 Исходная картинка восстановлена!");
+    }
+
     // Живой поиск при вводе
 
     searchBar.addEventListener("input", () => {
@@ -5898,6 +6637,8 @@
 
 
       const onImageReady = (img) => {
+
+        originalRawImage = img;
 
         currentImage = img;
 
@@ -7181,6 +7922,7 @@
 
 
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -7237,6 +7979,7 @@
 
         ctx.drawImage(imgSource, 0, headerH, imgW, imgH);
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -7307,6 +8050,7 @@
 
 
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -7377,6 +8121,7 @@
 
 
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -7847,6 +8592,7 @@
 
 
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -8009,6 +8755,7 @@
 
         ctx.restore();
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -8175,6 +8922,7 @@
 
         ctx.restore();
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -8415,6 +9163,7 @@
 
 
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -8657,6 +9406,7 @@
 
 
 
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -8683,6 +9433,8 @@
 
       if (!textToDraw.trim()) {
 
+        drawStickers(ctx, false);
+        drawMarkerStrokes(ctx);
         updateCanvasBlob();
 
         return;
@@ -8855,6 +9607,8 @@
 
       ctx.restore();
 
+      drawStickers(ctx, false);
+      drawMarkerStrokes(ctx);
       updateCanvasBlob();
 
     }
@@ -9877,9 +10631,46 @@
 
     function onDragStart(e) {
 
-      isDragging = true;
-
       const coords = getCanvasCoords(e);
+
+      // 1. Рисование маркером
+      if (isMarkerMode) {
+        isDrawingStroke = true;
+        activeStroke = {
+          color: markerColor,
+          size: markerSize,
+          opacity: markerOpacity,
+          points: [coords]
+        };
+        markerStrokes.push(activeStroke);
+        render();
+        return;
+      }
+
+      // 2. Перетаскивание наклеек (только в Классика)
+      if (state.layout === "classic" && memeStickers.length > 0) {
+        for (let i = memeStickers.length - 1; i >= 0; i--) {
+          const st = memeStickers[i];
+          const w = st.width || st.size || 80;
+          const h = st.height || st.size || 80;
+          if (Math.abs(coords.x - st.x) <= w / 2 && Math.abs(coords.y - st.y) <= h / 2) {
+            selectedStickerId = st.id;
+            isDraggingSticker = true;
+            stickerDragOffset = { x: coords.x - st.x, y: coords.y - st.y };
+            updateStickerControlsBar();
+            render();
+            return;
+          }
+        }
+        if (selectedStickerId) {
+          selectedStickerId = null;
+          updateStickerControlsBar();
+          render();
+        }
+      }
+
+      // 3. Стандартное перетаскивание надписи
+      isDragging = true;
 
       if (state.layout === "speech") {
 
@@ -9914,6 +10705,28 @@
 
 
     function onDragMove(e) {
+
+      // 1. Рисование маркером
+      if (isMarkerMode && isDrawingStroke && activeStroke) {
+        e.preventDefault();
+        const coords = getCanvasCoords(e);
+        activeStroke.points.push(coords);
+        render();
+        return;
+      }
+
+      // 2. Перетаскивание наклейки
+      if (isDraggingSticker && selectedStickerId) {
+        e.preventDefault();
+        const coords = getCanvasCoords(e);
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          st.x = coords.x - stickerDragOffset.x;
+          st.y = coords.y - stickerDragOffset.y;
+          render();
+          return;
+        }
+      }
 
       if (!isDragging) return;
 
@@ -9956,6 +10769,13 @@
     function onDragEnd() {
 
       isDragging = false;
+
+      if (isMarkerMode) {
+        isDrawingStroke = false;
+        activeStroke = null;
+      }
+
+      isDraggingSticker = false;
 
     }
 
@@ -10999,7 +11819,368 @@
 
     }
 
+  
+    // ========================================================
+    // ИНИЦИАЛИЗАЦИЯ ИНСТРУМЕНТОВ: ОБРЕЗКА, МАРКЕР, СТИКЕРЫ
+    // ========================================================
+    const btnToolCrop = document.getElementById("btnToolCrop");
+    const btnToolMarker = document.getElementById("btnToolMarker");
+    const markerPanel = document.getElementById("markerPanel");
+    const btnMarkerClose = document.getElementById("btnMarkerClose");
+    const btnMarkerUndo = document.getElementById("btnMarkerUndo");
+    const btnMarkerClear = document.getElementById("btnMarkerClear");
+    const markerCustomColor = document.getElementById("markerCustomColor");
+
+    if (btnToolCrop) {
+      btnToolCrop.addEventListener("click", () => {
+        openCropModal();
+      });
+    }
+
+    if (btnToolMarker) {
+      btnToolMarker.addEventListener("click", () => {
+        isMarkerMode = !isMarkerMode;
+        btnToolMarker.classList.toggle("active", isMarkerMode);
+        markerPanel.style.display = isMarkerMode ? "block" : "none";
+        canvas.style.cursor = isMarkerMode ? "crosshair" : "default";
+        if (isMarkerMode) {
+          showToast("✏️ Режим маркера включен! Рисуй пальцем по картинке");
+        }
+      });
+    }
+
+    if (btnMarkerClose) {
+      btnMarkerClose.addEventListener("click", () => {
+        isMarkerMode = false;
+        if (btnToolMarker) btnToolMarker.classList.remove("active");
+        markerPanel.style.display = "none";
+        canvas.style.cursor = "default";
+      });
+    }
+
+    // Выбор цвета маркера
+    document.querySelectorAll(".marker-color-swatch").forEach(swatch => {
+      swatch.addEventListener("click", () => {
+        document.querySelectorAll(".marker-color-swatch").forEach(s => s.classList.remove("active"));
+        swatch.classList.add("active");
+        markerColor = swatch.dataset.color || "#facc15";
+      });
+    });
+
+    if (markerCustomColor) {
+      markerCustomColor.addEventListener("input", (e) => {
+        document.querySelectorAll(".marker-color-swatch").forEach(s => s.classList.remove("active"));
+        markerColor = e.target.value;
+      });
+    }
+
+    // Выбор толщины маркера
+    document.querySelectorAll(".marker-size-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".marker-size-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        markerSize = parseInt(btn.dataset.size || "10", 10);
+        markerOpacity = btn.dataset.opacity ? parseFloat(btn.dataset.opacity) : 1.0;
+      });
+    });
+
+    if (btnMarkerUndo) {
+      btnMarkerUndo.addEventListener("click", () => {
+        if (markerStrokes.length > 0) {
+          markerStrokes.pop();
+          render();
+          showToast("↩️ Последний штрих отменён");
+        }
+      });
+    }
+
+    if (btnMarkerClear) {
+      btnMarkerClear.addEventListener("click", () => {
+        if (markerStrokes.length > 0) {
+          markerStrokes = [];
+          render();
+          showToast("🗑 Рисунок маркером очищен");
+        }
+      });
+    }
+
+    // Кнопки модалки обрезки
+    const btnCropClose = document.getElementById("btnCropClose");
+    const btnCropApply = document.getElementById("btnCropApply");
+    const btnCropReset = document.getElementById("btnCropReset");
+
+    if (btnCropClose) btnCropClose.addEventListener("click", closeCropModal);
+    if (btnCropApply) btnCropApply.addEventListener("click", applyCropAction);
+    if (btnCropReset) btnCropReset.addEventListener("click", resetCropAction);
+
+    // Пресеты соотношения сторон обрезки
+    document.querySelectorAll(".crop-ratio-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".crop-ratio-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        cropRatio = btn.dataset.ratio || "free";
+
+        const cropC = document.getElementById("cropCanvas");
+        if (!cropC) return;
+
+        if (cropRatio === "1:1") {
+          const side = Math.min(cropRect.width, cropRect.height);
+          cropRect.width = side;
+          cropRect.height = side;
+        } else if (cropRatio === "4:3") {
+          cropRect.height = Math.round(cropRect.width * 3 / 4);
+          if (cropRect.y + cropRect.height > cropC.height) {
+            cropRect.width = Math.round((cropC.height - cropRect.y) * 4 / 3);
+            cropRect.height = cropC.height - cropRect.y;
+          }
+        } else if (cropRatio === "16:9") {
+          cropRect.height = Math.round(cropRect.width * 9 / 16);
+        } else if (cropRatio === "9:16") {
+          cropRect.width = Math.round(cropRect.height * 9 / 16);
+        }
+        drawCropCanvas();
+      });
+    });
+
+    // Интерактивное перемещение и масштабирование рамки обрезки
+    const cropCanvasEl = document.getElementById("cropCanvas");
+    if (cropCanvasEl) {
+      const getCropPos = (ev) => {
+        const rect = cropCanvasEl.getBoundingClientRect();
+        const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        return {
+          x: Math.round((clientX - rect.left) * (cropCanvasEl.width / rect.width)),
+          y: Math.round((clientY - rect.top) * (cropCanvasEl.height / rect.height))
+        };
+      };
+
+      const onCropDown = (ev) => {
+        const p = getCropPos(ev);
+        cropDragStart = p;
+        cropRectStart = { ...cropRect };
+
+        // Проверяем углы (в радиусе 18px)
+        const corners = [
+          { mode: "nw", x: cropRect.x, y: cropRect.y },
+          { mode: "ne", x: cropRect.x + cropRect.width, y: cropRect.y },
+          { mode: "sw", x: cropRect.x, y: cropRect.y + cropRect.height },
+          { mode: "se", x: cropRect.x + cropRect.width, y: cropRect.y + cropRect.height }
+        ];
+
+        let foundMode = null;
+        for (const c of corners) {
+          if (Math.hypot(p.x - c.x, p.y - c.y) <= 22) {
+            foundMode = c.mode;
+            break;
+          }
+        }
+
+        if (foundMode) {
+          cropDragMode = foundMode;
+        } else if (p.x >= cropRect.x && p.x <= cropRect.x + cropRect.width &&
+                   p.y >= cropRect.y && p.y <= cropRect.y + cropRect.height) {
+          cropDragMode = "move";
+        } else {
+          cropDragMode = null;
+        }
+      };
+
+      const onCropMove = (ev) => {
+        if (!cropDragMode) return;
+        ev.preventDefault();
+        const p = getCropPos(ev);
+        const dx = p.x - cropDragStart.x;
+        const dy = p.y - cropDragStart.y;
+        const minSize = 40;
+
+        if (cropDragMode === "move") {
+          let nx = cropRectStart.x + dx;
+          let ny = cropRectStart.y + dy;
+          nx = Math.max(0, Math.min(cropCanvasEl.width - cropRect.width, nx));
+          ny = Math.max(0, Math.min(cropCanvasEl.height - cropRect.height, ny));
+          cropRect.x = nx;
+          cropRect.y = ny;
+        } else if (cropDragMode === "se") {
+          let nw = Math.max(minSize, Math.min(cropCanvasEl.width - cropRectStart.x, cropRectStart.width + dx));
+          let nh = Math.max(minSize, Math.min(cropCanvasEl.height - cropRectStart.y, cropRectStart.height + dy));
+          if (cropRatio === "1:1") { nw = nh = Math.min(nw, nh); }
+          cropRect.width = nw;
+          cropRect.height = nh;
+        } else if (cropDragMode === "sw") {
+          let nx = Math.max(0, Math.min(cropRectStart.x + cropRectStart.width - minSize, cropRectStart.x + dx));
+          let nw = cropRectStart.x + cropRectStart.width - nx;
+          let nh = Math.max(minSize, Math.min(cropCanvasEl.height - cropRectStart.y, cropRectStart.height + dy));
+          if (cropRatio === "1:1") { nw = nh = Math.min(nw, nh); nx = cropRectStart.x + cropRectStart.width - nw; }
+          cropRect.x = nx;
+          cropRect.width = nw;
+          cropRect.height = nh;
+        } else if (cropDragMode === "ne") {
+          let ny = Math.max(0, Math.min(cropRectStart.y + cropRectStart.height - minSize, cropRectStart.y + dy));
+          let nh = cropRectStart.y + cropRectStart.height - ny;
+          let nw = Math.max(minSize, Math.min(cropCanvasEl.width - cropRectStart.x, cropRectStart.width + dx));
+          if (cropRatio === "1:1") { nw = nh = Math.min(nw, nh); ny = cropRectStart.y + cropRectStart.height - nh; }
+          cropRect.y = ny;
+          cropRect.width = nw;
+          cropRect.height = nh;
+        } else if (cropDragMode === "nw") {
+          let nx = Math.max(0, Math.min(cropRectStart.x + cropRectStart.width - minSize, cropRectStart.x + dx));
+          let ny = Math.max(0, Math.min(cropRectStart.y + cropRectStart.height - minSize, cropRectStart.y + dy));
+          let nw = cropRectStart.x + cropRectStart.width - nx;
+          let nh = cropRectStart.y + cropRectStart.height - ny;
+          if (cropRatio === "1:1") { nw = nh = Math.min(nw, nh); nx = cropRectStart.x + cropRectStart.width - nw; ny = cropRectStart.y + cropRectStart.height - nh; }
+          cropRect.x = nx;
+          cropRect.y = ny;
+          cropRect.width = nw;
+          cropRect.height = nh;
+        }
+
+        drawCropCanvas();
+      };
+
+      const onCropUp = () => { cropDragMode = null; };
+
+      cropCanvasEl.addEventListener("mousedown", onCropDown);
+      window.addEventListener("mousemove", onCropMove);
+      window.addEventListener("mouseup", onCropUp);
+
+      cropCanvasEl.addEventListener("touchstart", onCropDown, { passive: false });
+      window.addEventListener("touchmove", onCropMove, { passive: false });
+      window.addEventListener("touchend", onCropUp);
+    }
+
+    // Слушатели для стикеров (Наклейки в Классика)
+    const btnOpenStickersModal = document.getElementById("btnOpenStickersModal");
+    const btnStickersClose = document.getElementById("btnStickersClose");
+    const btnClearAllStickers = document.getElementById("btnClearAllStickers");
+
+    if (btnOpenStickersModal) btnOpenStickersModal.addEventListener("click", openStickersModal);
+    if (btnStickersClose) btnStickersClose.addEventListener("click", closeStickersModal);
+    if (btnClearAllStickers) {
+      btnClearAllStickers.addEventListener("click", () => {
+        if (memeStickers.length > 0) {
+          memeStickers = [];
+          selectedStickerId = null;
+          updateStickerControlsBar();
+          render();
+          showToast("🗑 Все наклейки удалены");
+        }
+      });
+    }
+
+    // Переключение вкладок стикеров
+    document.querySelectorAll(".sticker-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        renderStickerPack(btn.dataset.pack || "thug");
+      });
+    });
+
+    // Управление выбранным стикером
+    const btnStickerScaleUp = document.getElementById("btnStickerScaleUp");
+    const btnStickerScaleDown = document.getElementById("btnStickerScaleDown");
+    const btnStickerRotate = document.getElementById("btnStickerRotate");
+    const btnStickerDelete = document.getElementById("btnStickerDelete");
+    const btnStickerDeselect = document.getElementById("btnStickerDeselect");
+
+    if (btnStickerScaleUp) {
+      btnStickerScaleUp.addEventListener("click", () => {
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          if (st.type === "emoji") { st.size = Math.round((st.size || 70) * 1.15); }
+          else { st.width = Math.round((st.width || 120) * 1.15); st.height = Math.round((st.height || 120) * 1.15); }
+          render();
+        }
+      });
+    }
+
+    if (btnStickerScaleDown) {
+      btnStickerScaleDown.addEventListener("click", () => {
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          if (st.type === "emoji") { st.size = Math.max(20, Math.round((st.size || 70) * 0.85)); }
+          else { st.width = Math.max(30, Math.round((st.width || 120) * 0.85)); st.height = Math.max(30, Math.round((st.height || 120) * 0.85)); }
+          render();
+        }
+      });
+    }
+
+    if (btnStickerRotate) {
+      btnStickerRotate.addEventListener("click", () => {
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          st.rotation = ((st.rotation || 0) + 15) % 360;
+          render();
+        }
+      });
+    }
+
+    if (btnStickerDelete) {
+      btnStickerDelete.addEventListener("click", () => {
+        memeStickers = memeStickers.filter(s => s.id !== selectedStickerId);
+        selectedStickerId = null;
+        updateStickerControlsBar();
+        render();
+        showToast("🗑 Наклейка удалена");
+      });
+    }
+
+    if (btnStickerDeselect) {
+      btnStickerDeselect.addEventListener("click", () => {
+        selectedStickerId = null;
+        updateStickerControlsBar();
+        render();
+      });
+    }
+
   </script>
+
+
+    <!-- МОДАЛКА: ОБРЕЗКА ИЗОБРАЖЕНИЯ (CROP) -->
+    <div class="share-modal-overlay" id="cropModalOverlay">
+      <div class="share-modal crop-modal">
+        <div class="crop-modal-header">
+          <span style="font-weight: 700; font-size: 16px;">✂️ Обрезка изображения</span>
+          <button class="share-modal-close" id="btnCropClose" type="button">✕</button>
+        </div>
+
+        <div class="crop-ratios-bar">
+          <button class="crop-ratio-btn active" data-ratio="free" type="button">📐 Свободно</button>
+          <button class="crop-ratio-btn" data-ratio="1:1" type="button">1:1 Квадрат</button>
+          <button class="crop-ratio-btn" data-ratio="4:3" type="button">4:3</button>
+          <button class="crop-ratio-btn" data-ratio="16:9" type="button">16:9</button>
+          <button class="crop-ratio-btn" data-ratio="9:16" type="button">9:16 Сториз</button>
+        </div>
+
+        <div class="crop-viewport" id="cropViewport">
+          <canvas id="cropCanvas"></canvas>
+        </div>
+
+        <div class="crop-actions">
+          <button class="share-action-btn secondary" id="btnCropReset" type="button">🔄 Исходное фото</button>
+          <button class="share-action-btn primary" id="btnCropApply" type="button">✅ Применить обрезку</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- МОДАЛКА: ВЫБОР НАКЛЕЕК И СТИКЕРОВ -->
+    <div class="share-modal-overlay" id="stickersModalOverlay">
+      <div class="share-modal stickers-modal">
+        <div class="crop-modal-header">
+          <span style="font-weight: 700; font-size: 16px;">🎭 Выбери наклейку для мема</span>
+          <button class="share-modal-close" id="btnStickersClose" type="button">✕</button>
+        </div>
+
+        <div class="sticker-tabs-bar" id="stickerTabsBar">
+          <button class="sticker-tab-btn active" data-pack="thug" type="button">🕶 Thug Life</button>
+          <button class="sticker-tab-btn" data-pack="stamps" type="button">💬 Штампы</button>
+          <button class="sticker-tab-btn" data-pack="faces" type="button">🐸 Мем-лица</button>
+          <button class="sticker-tab-btn" data-pack="effects" type="button">🔥 Эффекты</button>
+          <button class="sticker-tab-btn" data-pack="emoji" type="button">⭐ Эмодзи</button>
+        </div>
+
+        <div class="stickers-grid" id="stickersGrid"></div>
+      </div>
+    </div>
 
 </body>
 
