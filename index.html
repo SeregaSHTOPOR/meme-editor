@@ -5887,7 +5887,7 @@
           const cleanBase = baseUrl.replace(/\/+$/, "");
           const apiUrl = `${cleanBase}/api/search?q=${encodeURIComponent(qTrim)}&limit=25&offset=${apiOffset}`;
           const ctrl = new AbortController();
-          const tId = setTimeout(() => ctrl.abort(), 1800);
+          const tId = setTimeout(() => ctrl.abort(), 4500);
           const resp = await fetch(apiUrl, { signal: ctrl.signal });
           clearTimeout(tId);
 
@@ -5954,17 +5954,9 @@
         .then(r => r.ok ? r.json() : [])
         .catch(() => []);
 
-      // 3. Wikipedia RU REST API (нативный CORS: origin=*, высокое качество фото)
-      const wikiUrl = `https://ru.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchTarget)}&gsrlimit=30&prop=pageimages&pithumbsize=600&format=json&origin=*`;
-      const wikiPromise = (pageNum === 1)
-        ? fetch(wikiUrl, { headers: { Accept: "application/json" } }).then(r => r.ok ? r.json() : null).catch(() => null)
-        : Promise.resolve(null);
-
-      // 4. Wikimedia Commons (нативный CORS: origin=*)
-      const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchTarget)}&gsrlimit=30&prop=pageimages&pithumbsize=600&format=json&origin=*`;
-      const commonsPromise = (pageNum === 1)
-        ? fetch(commonsUrl, { headers: { Accept: "application/json" } }).then(r => r.ok ? r.json() : null).catch(() => null)
-        : Promise.resolve(null);
+      // Википедия и Викисклад отключены (никаких унылых портретов)
+      const wikiPromise = Promise.resolve(null);
+      const commonsPromise = Promise.resolve(null);
 
       // 5. Посты по известным слагам
       const slugPromises = [];
@@ -6057,26 +6049,6 @@
           if (rawSrc && rawSrc.includes("memepedia.world") && !rawSrc.includes("avatar") && !rawSrc.includes("icon") && !rawSrc.includes("logo") && !rawSrc.includes("banner")) {
             const mTitle = (m.title?.rendered || (m.slug || "")).replace(/<[^>]+>/g, "").trim();
             addMeme("mp_m_" + (m.id || mIdx), mTitle || (qTrim + " мем #" + (mIdx + 1)), rawSrc, "memepedia медиа");
-          }
-        });
-      }
-
-      // Обработка Wikipedia RU
-      if (wikiData && wikiData.query && wikiData.query.pages) {
-        Object.values(wikiData.query.pages).forEach((p, pIdx) => {
-          const thumb = p.thumbnail?.source;
-          if (thumb) {
-            addMeme("wiki_ru_" + (p.pageid || pIdx), p.title, thumb, "wikipedia");
-          }
-        });
-      }
-
-      // Обработка Wikimedia Commons
-      if (commonsData && commonsData.query && commonsData.query.pages) {
-        Object.values(commonsData.query.pages).forEach((p, pIdx) => {
-          const thumb = p.thumbnail?.source;
-          if (thumb) {
-            addMeme("commons_" + (p.pageid || pIdx), p.title, thumb, "commons");
           }
         });
       }
