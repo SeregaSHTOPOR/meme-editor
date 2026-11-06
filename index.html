@@ -3004,25 +3004,33 @@
        ======================================================== */
     .universal-tools-bar {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       justify-content: center;
+      align-items: center;
       margin: 8px 0 10px;
+      flex-wrap: wrap;
     }
     .utool-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      border-radius: 20px;
+      gap: 5px;
+      padding: 6px 11px;
+      border-radius: 18px;
       border: 1px solid var(--card-border);
       background: var(--card-bg);
       color: var(--text-color);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
       transition: all 0.2s ease;
       user-select: none;
+      white-space: nowrap;
+    }
+    .sticker-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
     }
     .utool-btn:hover {
       border-color: #38bdf8;
@@ -3421,15 +3429,23 @@
 
     <div class="drag-hint">👆 Перетаскивай надпись пальцем или мышкой прямо по картинке!</div>
 
-    <!-- Универсальная панель инструментов: Обрезка + Маркер (доступно во всех шаблонах) -->
+    <!-- Универсальная панель инструментов: Обрезка, Маркер, Сброс обрезки, Отмена действия -->
     <div class="universal-tools-bar" id="universalToolsBar">
-      <button class="utool-btn" id="btnToolCrop" type="button">
+      <button class="utool-btn" id="btnToolCrop" type="button" title="Кадрировать изображение">
         <span class="utool-icon">✂️</span>
         <span>Обрезать</span>
       </button>
-      <button class="utool-btn" id="btnToolMarker" type="button">
+      <button class="utool-btn" id="btnToolMarker" type="button" title="Режим рисования маркером">
         <span class="utool-icon">✏️</span>
         <span>Маркер</span>
+      </button>
+      <button class="utool-btn" id="btnToolResetCrop" type="button" title="Отменить обрезку и вернуть исходное фото">
+        <span class="utool-icon">🔄</span>
+        <span>Сброс обрезки</span>
+      </button>
+      <button class="utool-btn" id="btnToolUndo" type="button" title="Отменить последнее действие в редакторе">
+        <span class="utool-icon">↩️</span>
+        <span>Отменить</span>
       </button>
     </div>
 
@@ -3891,19 +3907,28 @@
           </div>
 
           <div class="sticker-selected-bar" id="stickerSelectedBar" style="display: none;">
+            <!-- Верхняя строка: Заголовок и быстрые кнопки -->
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-              <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">🎭 Наклейка выбрана</span>
+              <span style="font-size: 11px; color: #38bdf8; font-weight: 700;">🎭 Наклейка выбрана</span>
               <div style="display: flex; gap: 5px; align-items: center;">
-                <button class="sticker-btn" id="btnStickerScaleDown" type="button" title="Уменьшить размер">➖</button>
-                <button class="sticker-btn" id="btnStickerScaleUp" type="button" title="Увеличить размер">➕</button>
-                <button class="sticker-btn danger" id="btnStickerDelete" type="button" title="Удалить">🗑</button>
+                <button class="sticker-btn" id="btnStickerFlip" type="button" title="Отзеркалить наклейку по горизонтали">🪞 Зеркало</button>
+                <button class="sticker-btn danger" id="btnStickerDelete" type="button" title="Удалить наклейку">🗑</button>
                 <button class="sticker-btn" id="btnStickerDeselect" type="button" title="Снять выбор">✓</button>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 4px;">
+
+            <!-- Строка размера (слайдер) -->
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 2px;">
+              <span style="font-size: 11px; color: var(--subtext-color); white-space: nowrap;">📏 Размер:</span>
+              <input type="range" id="stickerScaleSlider" min="30" max="300" value="100" step="5" style="flex: 1; accent-color: #38bdf8; height: 6px; cursor: pointer;">
+              <span id="stickerScaleVal" style="font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; color: #38bdf8; cursor: pointer;" title="Нажми для сброса на 100%">100%</span>
+            </div>
+
+            <!-- Строка поворота (слайдер) -->
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
               <span style="font-size: 11px; color: var(--subtext-color); white-space: nowrap;">🔄 Поворот:</span>
               <input type="range" id="stickerRotateSlider" min="-180" max="180" value="0" step="1" style="flex: 1; accent-color: #38bdf8; height: 6px; cursor: pointer;">
-              <span id="stickerRotateVal" style="font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; color: #38bdf8; cursor: pointer;" title="Нажми для сброса на 0°">0°</span>
+              <span id="stickerRotateVal" style="font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; color: #38bdf8; cursor: pointer;" title="Нажми для сброса на 0°">0°</span>
             </div>
           </div>
         </div>
@@ -6181,7 +6206,79 @@
 
     // Состояние обрезки (для ВСЕХ шаблонов)
     let originalRawImage = null;
+    let hasBeenCropped = false;
     let cropRatio = "free";
+
+    // История действий для универсальной кнопки «Отменить» (Undo)
+    const editorHistory = [];
+
+    function pushEditorState(actionName) {
+      try {
+        const snapshot = {
+          action: actionName || "edit",
+          strokes: markerStrokes.map(s => ({
+            color: s.color,
+            size: s.size,
+            opacity: s.opacity,
+            points: s.points ? s.points.map(p => ({ x: p.x, y: p.y })) : []
+          })),
+          stickers: memeStickers.map(s => ({
+            id: s.id,
+            type: s.type,
+            char: s.char,
+            src: s.type === "image" && s.img ? s.img.src : null,
+            img: s.img,
+            x: s.x,
+            y: s.y,
+            width: s.width,
+            height: s.height,
+            baseWidth: s.baseWidth,
+            baseHeight: s.baseHeight,
+            baseSize: s.baseSize,
+            size: s.size,
+            scale: s.scale,
+            rotation: s.rotation,
+            flipped: s.flipped
+          })),
+          selectedStickerId: selectedStickerId,
+          image: currentImage,
+          hasBeenCropped: hasBeenCropped
+        };
+        editorHistory.push(snapshot);
+        if (editorHistory.length > 35) editorHistory.shift();
+      } catch (e) {
+        console.warn("pushEditorState error:", e);
+      }
+    }
+
+    function undoLastAction() {
+      if (!editorHistory || editorHistory.length === 0) {
+        showToast("ℹ️ Нечего отменять");
+        return;
+      }
+      const prev = editorHistory.pop();
+      markerStrokes = prev.strokes || [];
+      hasBeenCropped = !!prev.hasBeenCropped;
+      currentImage = prev.image || originalRawImage;
+      cachedFxCanvas = null;
+
+      selectedStickerId = prev.selectedStickerId;
+      memeStickers = (prev.stickers || []).map(s => {
+        if (s.type === "image") {
+          let img = s.img;
+          if (!img && s.src) {
+            img = new Image();
+            img.src = s.src;
+          }
+          return { ...s, img };
+        }
+        return { ...s };
+      });
+
+      updateStickerControlsBar();
+      render();
+      showToast("↩️ Последнее действие отменено");
+    }
     let cropRect = { x: 0, y: 0, width: 0, height: 0 };
     let cropDragMode = null;
     let cropDragStart = { x: 0, y: 0 };
@@ -6221,8 +6318,14 @@
         targetCtx.translate(st.x, st.y);
         targetCtx.rotate((st.rotation || 0) * Math.PI / 180);
 
+        if (st.flipped) {
+          targetCtx.scale(-1, 1);
+        }
+
+        const sc = st.scale !== undefined ? st.scale : 1.0;
+
         if (st.type === "emoji") {
-          const sz = st.size || 70;
+          const sz = Math.round((st.baseSize || st.size || 70) * sc);
           targetCtx.font = `${sz}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
           targetCtx.textAlign = "center";
           targetCtx.textBaseline = "middle";
@@ -6235,8 +6338,8 @@
             targetCtx.strokeRect(-sz / 2 - 4, -sz / 2 - 4, sz + 8, sz + 8);
           }
         } else if (st.type === "image" && st.img && st.img.complete) {
-          const w = st.width || 120;
-          const h = st.height || 120;
+          const w = Math.round((st.baseWidth || st.width || 120) * sc);
+          const h = Math.round((st.baseHeight || st.height || 120) * sc);
           targetCtx.drawImage(st.img, -w / 2, -h / 2, w, h);
 
           if (!isExporting && selectedStickerId === st.id) {
@@ -6252,16 +6355,29 @@
 
     function updateStickerControlsBar() {
       const bar = document.getElementById("stickerSelectedBar");
-      const slider = document.getElementById("stickerRotateSlider");
-      const valText = document.getElementById("stickerRotateVal");
+      const scaleSlider = document.getElementById("stickerScaleSlider");
+      const scaleVal = document.getElementById("stickerScaleVal");
+      const rotSlider = document.getElementById("stickerRotateSlider");
+      const rotVal = document.getElementById("stickerRotateVal");
+      const btnFlip = document.getElementById("btnStickerFlip");
+
       if (bar) {
         bar.style.display = selectedStickerId ? "flex" : "none";
       }
-      if (selectedStickerId && slider && valText) {
+      if (selectedStickerId) {
         const st = memeStickers.find(s => s.id === selectedStickerId);
         if (st) {
-          slider.value = st.rotation || 0;
-          valText.textContent = (st.rotation || 0) + "°";
+          const sc = Math.round((st.scale !== undefined ? st.scale : 1.0) * 100);
+          if (scaleSlider) scaleSlider.value = sc;
+          if (scaleVal) scaleVal.textContent = sc + "%";
+
+          const rot = st.rotation || 0;
+          if (rotSlider) rotSlider.value = rot;
+          if (rotVal) rotVal.textContent = rot + "°";
+
+          if (btnFlip) {
+            btnFlip.classList.toggle("active", !!st.flipped);
+          }
         }
       }
     }
@@ -6280,8 +6396,12 @@
           x: cx,
           y: cy,
           size: baseSize,
-          rotation: 0
+          baseSize: baseSize,
+          scale: 1.0,
+          rotation: 0,
+          flipped: false
         };
+        pushEditorState("add_sticker");
         memeStickers.push(newSt);
         selectedStickerId = stId;
         updateStickerControlsBar();
@@ -6303,8 +6423,13 @@
           y: cy,
           width: baseW,
           height: Math.round(baseW * aspect),
-          rotation: 0
+          baseWidth: baseW,
+          baseHeight: Math.round(baseW * aspect),
+          scale: 1.0,
+          rotation: 0,
+          flipped: false
         };
+        pushEditorState("add_sticker");
         memeStickers.push(newSt);
         selectedStickerId = stId;
         updateStickerControlsBar();
@@ -6480,7 +6605,9 @@
       const croppedUrl = offCanvas.toDataURL("image/png");
       const croppedImg = new Image();
       croppedImg.onload = () => {
+        pushEditorState("crop_apply");
         currentImage = croppedImg;
+        hasBeenCropped = true;
         cachedFxCanvas = null;
         render();
         closeCropModal();
@@ -6491,11 +6618,18 @@
 
     function resetCropAction() {
       if (!originalRawImage) return;
+      if (!hasBeenCropped && currentImage === originalRawImage) {
+        showToast("ℹ️ Обрезка не применялась");
+        closeCropModal();
+        return;
+      }
+      pushEditorState("crop_reset");
       currentImage = originalRawImage;
+      hasBeenCropped = false;
       cachedFxCanvas = null;
       render();
       closeCropModal();
-      showToast("🔄 Исходная картинка восстановлена!");
+      showToast("🔄 Обрезка отменена, исходное фото возвращено");
     }
 
     // Живой поиск при вводе
@@ -10697,6 +10831,7 @@
 
       // 1. Рисование маркером
       if (isMarkerMode) {
+        pushEditorState("marker_draw");
         isDrawingStroke = true;
         activeStroke = {
           color: markerColor,
@@ -10713,9 +10848,11 @@
       if (state.layout === "classic" && memeStickers.length > 0) {
         for (let i = memeStickers.length - 1; i >= 0; i--) {
           const st = memeStickers[i];
-          const w = st.width || st.size || 80;
-          const h = st.height || st.size || 80;
+          const sc = st.scale !== undefined ? st.scale : 1.0;
+          const w = Math.round((st.baseWidth || st.width || st.size || 80) * sc);
+          const h = Math.round((st.baseHeight || st.height || st.size || 80) * sc);
           if (Math.abs(coords.x - st.x) <= w / 2 && Math.abs(coords.y - st.y) <= h / 2) {
+            pushEditorState("sticker_move");
             selectedStickerId = st.id;
             isDraggingSticker = true;
             stickerDragOffset = { x: coords.x - st.x, y: coords.y - st.y };
@@ -11911,6 +12048,20 @@
       });
     }
 
+    const btnToolResetCrop = document.getElementById("btnToolResetCrop");
+    if (btnToolResetCrop) {
+      btnToolResetCrop.addEventListener("click", () => {
+        resetCropAction();
+      });
+    }
+
+    const btnToolUndo = document.getElementById("btnToolUndo");
+    if (btnToolUndo) {
+      btnToolUndo.addEventListener("click", () => {
+        undoLastAction();
+      });
+    }
+
     if (btnMarkerClose) {
       btnMarkerClose.addEventListener("click", () => {
         isMarkerMode = false;
@@ -12138,39 +12289,65 @@
     });
 
     // Управление выбранным стикером
-    const btnStickerScaleUp = document.getElementById("btnStickerScaleUp");
-    const btnStickerScaleDown = document.getElementById("btnStickerScaleDown");
-    const btnStickerRotate = document.getElementById("btnStickerRotate");
+    // Управление выбранным стикером: Слайдер масштаба, отзеркаливание, удаление, снятие выбора
+    const stickerScaleSlider = document.getElementById("stickerScaleSlider");
+    const stickerScaleVal = document.getElementById("stickerScaleVal");
+    const stickerRotateSlider = document.getElementById("stickerRotateSlider");
+    const stickerRotateVal = document.getElementById("stickerRotateVal");
+    const btnStickerFlip = document.getElementById("btnStickerFlip");
     const btnStickerDelete = document.getElementById("btnStickerDelete");
     const btnStickerDeselect = document.getElementById("btnStickerDeselect");
 
-    if (btnStickerScaleUp) {
-      btnStickerScaleUp.addEventListener("click", () => {
+    if (stickerScaleSlider) {
+      let scaleHistorySaved = false;
+      const onScaleStart = () => {
+        if (!scaleHistorySaved) {
+          pushEditorState("sticker_scale");
+          scaleHistorySaved = true;
+        }
+      };
+      stickerScaleSlider.addEventListener("mousedown", onScaleStart);
+      stickerScaleSlider.addEventListener("touchstart", onScaleStart);
+
+      stickerScaleSlider.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10) || 100;
+        if (stickerScaleVal) stickerScaleVal.textContent = val + "%";
         const st = memeStickers.find(s => s.id === selectedStickerId);
         if (st) {
-          if (st.type === "emoji") { st.size = Math.round((st.size || 70) * 1.15); }
-          else { st.width = Math.round((st.width || 120) * 1.15); st.height = Math.round((st.height || 120) * 1.15); }
+          st.scale = val / 100;
           render();
         }
       });
+      stickerScaleSlider.addEventListener("change", () => {
+        scaleHistorySaved = false;
+      });
     }
 
-    if (btnStickerScaleDown) {
-      btnStickerScaleDown.addEventListener("click", () => {
+    if (stickerScaleVal) {
+      stickerScaleVal.addEventListener("click", () => {
+        pushEditorState("sticker_scale_reset");
+        if (stickerScaleSlider) stickerScaleSlider.value = 100;
+        stickerScaleVal.textContent = "100%";
         const st = memeStickers.find(s => s.id === selectedStickerId);
         if (st) {
-          if (st.type === "emoji") { st.size = Math.max(20, Math.round((st.size || 70) * 0.85)); }
-          else { st.width = Math.max(30, Math.round((st.width || 120) * 0.85)); st.height = Math.max(30, Math.round((st.height || 120) * 0.85)); }
+          st.scale = 1.0;
           render();
         }
       });
     }
 
     // Слайдер плавного поворота наклейки
-    const stickerRotateSlider = document.getElementById("stickerRotateSlider");
-    const stickerRotateVal = document.getElementById("stickerRotateVal");
-
     if (stickerRotateSlider) {
+      let rotHistorySaved = false;
+      const onRotStart = () => {
+        if (!rotHistorySaved) {
+          pushEditorState("sticker_rotate");
+          rotHistorySaved = true;
+        }
+      };
+      stickerRotateSlider.addEventListener("mousedown", onRotStart);
+      stickerRotateSlider.addEventListener("touchstart", onRotStart);
+
       stickerRotateSlider.addEventListener("input", (e) => {
         const angle = parseInt(e.target.value, 10) || 0;
         if (stickerRotateVal) stickerRotateVal.textContent = angle + "°";
@@ -12180,10 +12357,14 @@
           render();
         }
       });
+      stickerRotateSlider.addEventListener("change", () => {
+        rotHistorySaved = false;
+      });
     }
 
     if (stickerRotateVal) {
       stickerRotateVal.addEventListener("click", () => {
+        pushEditorState("sticker_rotate_reset");
         if (stickerRotateSlider) stickerRotateSlider.value = 0;
         stickerRotateVal.textContent = "0°";
         const st = memeStickers.find(s => s.id === selectedStickerId);
@@ -12191,6 +12372,41 @@
           st.rotation = 0;
           render();
         }
+      });
+    }
+
+    // Отзеркаливание наклейки по горизонтали
+    if (btnStickerFlip) {
+      btnStickerFlip.addEventListener("click", () => {
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          pushEditorState("sticker_flip");
+          st.flipped = !st.flipped;
+          btnStickerFlip.classList.toggle("active", !!st.flipped);
+          render();
+          showToast(st.flipped ? "🪞 Наклейка отзеркалена" : "🪞 Исходная ориентация");
+        }
+      });
+    }
+
+    // Удаление выбранной наклейки
+    if (btnStickerDelete) {
+      btnStickerDelete.addEventListener("click", () => {
+        pushEditorState("sticker_delete");
+        memeStickers = memeStickers.filter(s => s.id !== selectedStickerId);
+        selectedStickerId = null;
+        updateStickerControlsBar();
+        render();
+        showToast("🗑 Наклейка удалена");
+      });
+    }
+
+    // Снятие выделения с наклейки
+    if (btnStickerDeselect) {
+      btnStickerDeselect.addEventListener("click", () => {
+        selectedStickerId = null;
+        updateStickerControlsBar();
+        render();
       });
     }
 
@@ -12206,24 +12422,6 @@
     if (stickersModalOverlay) {
       stickersModalOverlay.addEventListener("click", (e) => {
         if (e.target === stickersModalOverlay) closeStickersModal();
-      });
-    }
-
-    if (btnStickerDelete) {
-      btnStickerDelete.addEventListener("click", () => {
-        memeStickers = memeStickers.filter(s => s.id !== selectedStickerId);
-        selectedStickerId = null;
-        updateStickerControlsBar();
-        render();
-        showToast("🗑 Наклейка удалена");
-      });
-    }
-
-    if (btnStickerDeselect) {
-      btnStickerDeselect.addEventListener("click", () => {
-        selectedStickerId = null;
-        updateStickerControlsBar();
-        render();
       });
     }
 
