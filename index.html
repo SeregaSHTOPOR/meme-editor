@@ -3236,8 +3236,8 @@
       border: 1px dashed #38bdf8;
       border-radius: 10px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 6px;
     }
     .sticker-btn {
       padding: 4px 8px;
@@ -3891,13 +3891,19 @@
           </div>
 
           <div class="sticker-selected-bar" id="stickerSelectedBar" style="display: none;">
-            <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">Выбрана наклейка:</span>
-            <div style="display: flex; gap: 5px; align-items: center;">
-              <button class="sticker-btn" id="btnStickerScaleDown" type="button" title="Уменьшить">➖</button>
-              <button class="sticker-btn" id="btnStickerScaleUp" type="button" title="Увеличить">➕</button>
-              <button class="sticker-btn" id="btnStickerRotate" type="button" title="Повернуть">🔄</button>
-              <button class="sticker-btn danger" id="btnStickerDelete" type="button" title="Удалить">🗑</button>
-              <button class="sticker-btn" id="btnStickerDeselect" type="button" title="Снять выбор">✓</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">🎭 Наклейка выбрана</span>
+              <div style="display: flex; gap: 5px; align-items: center;">
+                <button class="sticker-btn" id="btnStickerScaleDown" type="button" title="Уменьшить размер">➖</button>
+                <button class="sticker-btn" id="btnStickerScaleUp" type="button" title="Увеличить размер">➕</button>
+                <button class="sticker-btn danger" id="btnStickerDelete" type="button" title="Удалить">🗑</button>
+                <button class="sticker-btn" id="btnStickerDeselect" type="button" title="Снять выбор">✓</button>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 4px;">
+              <span style="font-size: 11px; color: var(--subtext-color); white-space: nowrap;">🔄 Поворот:</span>
+              <input type="range" id="stickerRotateSlider" min="-180" max="180" value="0" step="1" style="flex: 1; accent-color: #38bdf8; height: 6px; cursor: pointer;">
+              <span id="stickerRotateVal" style="font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; color: #38bdf8; cursor: pointer;" title="Нажми для сброса на 0°">0°</span>
             </div>
           </div>
         </div>
@@ -4752,6 +4758,53 @@
 
   </div>
 
+
+    <!-- МОДАЛКА: ОБРЕЗКА ИЗОБРАЖЕНИЯ (CROP) -->
+    <div class="share-modal-overlay" id="cropModalOverlay">
+      <div class="share-modal crop-modal">
+        <div class="crop-modal-header">
+          <span style="font-weight: 700; font-size: 16px;">✂️ Обрезка изображения</span>
+          <button class="share-modal-close" id="btnCropClose" type="button">✕</button>
+        </div>
+
+        <div class="crop-ratios-bar">
+          <button class="crop-ratio-btn active" data-ratio="free" type="button">📐 Свободно</button>
+          <button class="crop-ratio-btn" data-ratio="1:1" type="button">1:1 Квадрат</button>
+          <button class="crop-ratio-btn" data-ratio="4:3" type="button">4:3</button>
+          <button class="crop-ratio-btn" data-ratio="16:9" type="button">16:9</button>
+          <button class="crop-ratio-btn" data-ratio="9:16" type="button">9:16 Сториз</button>
+        </div>
+
+        <div class="crop-viewport" id="cropViewport">
+          <canvas id="cropCanvas"></canvas>
+        </div>
+
+        <div class="crop-actions">
+          <button class="share-action-btn secondary" id="btnCropReset" type="button">🔄 Исходное фото</button>
+          <button class="share-action-btn primary" id="btnCropApply" type="button">✅ Применить обрезку</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- МОДАЛКА: ВЫБОР НАКЛЕЕК И СТИКЕРОВ -->
+    <div class="share-modal-overlay" id="stickersModalOverlay">
+      <div class="share-modal stickers-modal">
+        <div class="crop-modal-header">
+          <span style="font-weight: 700; font-size: 16px;">🎭 Выбери наклейку для мема</span>
+          <button class="share-modal-close" id="btnStickersClose" type="button">✕</button>
+        </div>
+
+        <div class="sticker-tabs-bar" id="stickerTabsBar">
+          <button class="sticker-tab-btn active" data-pack="thug" type="button">🕶 Thug Life</button>
+          <button class="sticker-tab-btn" data-pack="stamps" type="button">💬 Штампы</button>
+          <button class="sticker-tab-btn" data-pack="faces" type="button">🐸 Мем-лица</button>
+          <button class="sticker-tab-btn" data-pack="effects" type="button">🔥 Эффекты</button>
+          <button class="sticker-tab-btn" data-pack="emoji" type="button">⭐ Эмодзи</button>
+        </div>
+
+        <div class="stickers-grid" id="stickersGrid"></div>
+      </div>
+    </div>
 
 
   <script>
@@ -6199,8 +6252,17 @@
 
     function updateStickerControlsBar() {
       const bar = document.getElementById("stickerSelectedBar");
+      const slider = document.getElementById("stickerRotateSlider");
+      const valText = document.getElementById("stickerRotateVal");
       if (bar) {
         bar.style.display = selectedStickerId ? "flex" : "none";
+      }
+      if (selectedStickerId && slider && valText) {
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          slider.value = st.rotation || 0;
+          valText.textContent = (st.rotation || 0) + "°";
+        }
       }
     }
 
@@ -12104,13 +12166,46 @@
       });
     }
 
-    if (btnStickerRotate) {
-      btnStickerRotate.addEventListener("click", () => {
+    // Слайдер плавного поворота наклейки
+    const stickerRotateSlider = document.getElementById("stickerRotateSlider");
+    const stickerRotateVal = document.getElementById("stickerRotateVal");
+
+    if (stickerRotateSlider) {
+      stickerRotateSlider.addEventListener("input", (e) => {
+        const angle = parseInt(e.target.value, 10) || 0;
+        if (stickerRotateVal) stickerRotateVal.textContent = angle + "°";
         const st = memeStickers.find(s => s.id === selectedStickerId);
         if (st) {
-          st.rotation = ((st.rotation || 0) + 15) % 360;
+          st.rotation = angle;
           render();
         }
+      });
+    }
+
+    if (stickerRotateVal) {
+      stickerRotateVal.addEventListener("click", () => {
+        if (stickerRotateSlider) stickerRotateSlider.value = 0;
+        stickerRotateVal.textContent = "0°";
+        const st = memeStickers.find(s => s.id === selectedStickerId);
+        if (st) {
+          st.rotation = 0;
+          render();
+        }
+      });
+    }
+
+    // Закрытие модалок по клику на затемнённый фон (backdrop)
+    const cropModalOverlay = document.getElementById("cropModalOverlay");
+    if (cropModalOverlay) {
+      cropModalOverlay.addEventListener("click", (e) => {
+        if (e.target === cropModalOverlay) closeCropModal();
+      });
+    }
+
+    const stickersModalOverlay = document.getElementById("stickersModalOverlay");
+    if (stickersModalOverlay) {
+      stickersModalOverlay.addEventListener("click", (e) => {
+        if (e.target === stickersModalOverlay) closeStickersModal();
       });
     }
 
@@ -12134,55 +12229,6 @@
 
   </script>
 
-
-    <!-- МОДАЛКА: ОБРЕЗКА ИЗОБРАЖЕНИЯ (CROP) -->
-    <div class="share-modal-overlay" id="cropModalOverlay">
-      <div class="share-modal crop-modal">
-        <div class="crop-modal-header">
-          <span style="font-weight: 700; font-size: 16px;">✂️ Обрезка изображения</span>
-          <button class="share-modal-close" id="btnCropClose" type="button">✕</button>
-        </div>
-
-        <div class="crop-ratios-bar">
-          <button class="crop-ratio-btn active" data-ratio="free" type="button">📐 Свободно</button>
-          <button class="crop-ratio-btn" data-ratio="1:1" type="button">1:1 Квадрат</button>
-          <button class="crop-ratio-btn" data-ratio="4:3" type="button">4:3</button>
-          <button class="crop-ratio-btn" data-ratio="16:9" type="button">16:9</button>
-          <button class="crop-ratio-btn" data-ratio="9:16" type="button">9:16 Сториз</button>
-        </div>
-
-        <div class="crop-viewport" id="cropViewport">
-          <canvas id="cropCanvas"></canvas>
-        </div>
-
-        <div class="crop-actions">
-          <button class="share-action-btn secondary" id="btnCropReset" type="button">🔄 Исходное фото</button>
-          <button class="share-action-btn primary" id="btnCropApply" type="button">✅ Применить обрезку</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- МОДАЛКА: ВЫБОР НАКЛЕЕК И СТИКЕРОВ -->
-    <div class="share-modal-overlay" id="stickersModalOverlay">
-      <div class="share-modal stickers-modal">
-        <div class="crop-modal-header">
-          <span style="font-weight: 700; font-size: 16px;">🎭 Выбери наклейку для мема</span>
-          <button class="share-modal-close" id="btnStickersClose" type="button">✕</button>
-        </div>
-
-        <div class="sticker-tabs-bar" id="stickerTabsBar">
-          <button class="sticker-tab-btn active" data-pack="thug" type="button">🕶 Thug Life</button>
-          <button class="sticker-tab-btn" data-pack="stamps" type="button">💬 Штампы</button>
-          <button class="sticker-tab-btn" data-pack="faces" type="button">🐸 Мем-лица</button>
-          <button class="sticker-tab-btn" data-pack="effects" type="button">🔥 Эффекты</button>
-          <button class="sticker-tab-btn" data-pack="emoji" type="button">⭐ Эмодзи</button>
-        </div>
-
-        <div class="stickers-grid" id="stickersGrid"></div>
-      </div>
-    </div>
-
 </body>
 
 </html>
-
