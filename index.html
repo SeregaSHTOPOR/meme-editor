@@ -5878,6 +5878,7 @@
       if (passedApi) candidateApiUrls.push(passedApi);
       const savedApi = localStorage.getItem("meme_api_url");
       if (savedApi && !candidateApiUrls.includes(savedApi)) candidateApiUrls.push(savedApi);
+      candidateApiUrls.push("https://89.125.3.229.sslip.io");
       candidateApiUrls.push("http://127.0.0.1:8092");
       candidateApiUrls.push("http://localhost:8092");
 
