@@ -4688,9 +4688,11 @@
 
           }));
 
+          // Найдено в боте - сразу ставим на первое место!
+
           allTemplates = botPicsMemes.concat(allTemplates);
 
-          if (!initialUrl) initialUrl = botPicsMemes[0].url;
+          initialUrl = botPicsMemes[0].url;
 
         }
 
@@ -5294,583 +5296,406 @@
 
 
 
-    function filterMemes() {
+    // Список стоп-слов, которые не должны приводить к показу нерелевантных базовых шаблонов
+    const STOP_SEARCH_WORDS = new Set([
+      "мем", "мемы", "мема", "мемов", "мемам", "картинка", "картинки",
+      "фото", "шаблон", "шаблоны", "пикча", "прикол", "приколы"
+    ]);
 
-      const q = searchBar.value.toLowerCase().trim();
-
-      const activeTag = document.querySelector(".tag.active")?.dataset.tag || "all";
-
-
-
-      if (!q) {
-
-        searchState.activeQuery = "";
-
-        searchState.allResults = [];
-
-        searchState.pageIndex = 0;
-
-
-
-        let filtered = initialBaseTemplates;
-
-        if (activeTag !== "all") {
-
-          filtered = filtered.filter((t) => t.cat === activeTag);
-
-        }
-
-        allTemplates = filtered;
-
-        renderCurrentPage();
-
-        return;
-
-      }
-
-
-
-      if (q.startsWith("http://") || q.startsWith("https://")) {
-
-        loadImage(q);
-
-        return;
-
-      }
-
-
-
-      // Мгновенная локальная фильтрация из встроенной базы мемов
-
-      const words = q.split(" ").filter(Boolean);
-
-      const matched = initialBaseTemplates.filter((t) => {
-
-        const hay = (t.title + " " + (t.tags || "")).toLowerCase();
-
-        return words.some((w) => hay.includes(w));
-
-      });
-
-
-
-      searchState.activeQuery = q;
-
-      searchState.pageIndex = 0;
-
-      searchState.apiPage = 1;
-
-      searchState.hasMoreApi = true;
-
-      searchState.allResults = [...matched];
-
-
-
-      renderCurrentPage();
-
+    function getCleanSearchWords(str) {
+      if (!str) return [];
+      return str.toLowerCase().split(/\s+/).filter(w => w && !STOP_SEARCH_WORDS.has(w));
     }
 
+    function getCleanSearchQuery(str) {
+      const words = getCleanSearchWords(str);
+      return words.length > 0 ? words.join(" ") : (str || "").trim();
+    }
 
+    function filterMemes() {
+      const q = searchBar.value.toLowerCase().trim();
+      const activeTag = document.querySelector(".tag.active")?.dataset.tag || "all";
 
-    // Загрузка страниц мемов из Memepedia (все категории + медиатека + тело статей) + Imgflip + Reddit
+      if (!q) {
+        searchState.activeQuery = "";
+        searchState.allResults = [];
+        searchState.pageIndex = 0;
 
+        let filtered = initialBaseTemplates;
+        if (activeTag !== "all") {
+          filtered = filtered.filter((t) => t.cat === activeTag);
+        }
+        allTemplates = filtered;
+        renderCurrentPage();
+        return;
+      }
+
+      if (q.startsWith("http://") || q.startsWith("https://")) {
+        loadImage(q);
+        return;
+      }
+
+      // При вводе запроса:
+      // СТОКОВЫЕ ШАБЛОНЫ НЕ ДОЛЖНЫ ПОЯВЛЯТЬСЯ, если запрос не о них!
+      const meaningfulWords = getCleanSearchWords(q);
+      let matchedStock = [];
+      if (meaningfulWords.length > 0) {
+        matchedStock = initialBaseTemplates.filter((t) => {
+          const hay = (t.title + " " + (t.tags || "")).toLowerCase();
+          return meaningfulWords.every((w) => hay.includes(w));
+        });
+      }
+
+      // Если бот уже передал найденные картинки по этому запросу, держим их первыми
+      let currentResults = [];
+      if (botPicsMemes && botPicsMemes.length > 0) {
+        currentResults = [...botPicsMemes];
+      } else if (matchedStock.length > 0) {
+        currentResults = [...matchedStock];
+      }
+
+      searchState.activeQuery = q;
+      searchState.pageIndex = 0;
+      searchState.apiPage = 1;
+      searchState.hasMoreApi = true;
+      searchState.allResults = currentResults;
+
+      renderCurrentPage();
+    }
+
+    // Загрузка страниц мемов и картинок:
+    // 1. Python API (Яндекс + Bing) если сервер доступен
+    // 2. Автономный мульти-поиск: Memepedia (посты + статьи + медиа) + Wikipedia RU + Commons (работает ВЕЗДЕ!)
     async function fetchApiPage(query, pageNum) {
-
       const qTrim = (query || "").trim();
-
       if (!qTrim) return [];
 
-
+      const cleanQ = getCleanSearchQuery(qTrim);
+      const cleanWords = getCleanSearchWords(qTrim);
 
       const statusPill = document.getElementById("searchStatusPill");
-
       if (statusPill) {
-
         statusPill.style.display = "block";
-
-        statusPill.textContent = `⏳ Ищу мемы «${qTrim}» (стр. ${pageNum})...`;
-
+        statusPill.textContent = `⏳ Ищу картинки «${cleanQ || qTrim}» (стр. ${pageNum})...`;
       }
-
-
 
       const liveMemes = [];
-
       const seenUrls = new Set(searchState.allResults.map((t) => t.url));
-
       const qLower = qTrim.toLowerCase();
 
-
-
-      // 0. Запрос к Python Search API (Яндекс + Bing + Memepedia - ровно та же база, что и в боте)
-
-      const apiOffset = (pageNum - 1) * 20;
-
+      // 0. Запрос к Python Search API (Яндекс + Bing)
+      const apiOffset = (pageNum - 1) * 25;
       let apiFound = false;
 
-
-
       const candidateApiUrls = [];
-
       const passedApi = new URLSearchParams(window.location.search).get("api");
-
       if (passedApi) candidateApiUrls.push(passedApi);
-
       const savedApi = localStorage.getItem("meme_api_url");
-
       if (savedApi && !candidateApiUrls.includes(savedApi)) candidateApiUrls.push(savedApi);
-
       candidateApiUrls.push("http://127.0.0.1:8092");
-
       candidateApiUrls.push("http://localhost:8092");
 
-
-
       for (const baseUrl of candidateApiUrls) {
-
         if (!baseUrl) continue;
-
         try {
-
           const cleanBase = baseUrl.replace(/\/+$/, "");
-
-          const apiUrl = `${cleanBase}/api/search?q=${encodeURIComponent(qTrim)}&limit=20&offset=${apiOffset}`;
-
+          const apiUrl = `${cleanBase}/api/search?q=${encodeURIComponent(qTrim)}&limit=25&offset=${apiOffset}`;
           const ctrl = new AbortController();
-
-          const tId = setTimeout(() => ctrl.abort(), 3500);
-
+          const tId = setTimeout(() => ctrl.abort(), 1800);
           const resp = await fetch(apiUrl, { signal: ctrl.signal });
-
           clearTimeout(tId);
 
-
-
           if (resp.ok) {
-
             const data = await resp.json();
-
             if (data && Array.isArray(data.results) && data.results.length > 0) {
-
               data.results.forEach((r, idx) => {
-
                 const sUrl = safeMemeUrl(r.image_url);
-
                 if (sUrl && !seenUrls.has(sUrl)) {
-
                   seenUrls.add(sUrl);
-
                   liveMemes.push({
-
                     id: r.id || `api_${apiOffset + idx}`,
-
                     title: r.title || (qTrim + ` (#${apiOffset + idx + 1})`),
-
                     tags: qLower + " " + (r.source || "web") + " мем яндекс bing",
-
                     cat: "all",
-
                     url: sUrl
-
                   });
-
                 }
-
               });
-
               apiFound = true;
-
               localStorage.setItem("meme_api_url", cleanBase);
-
               break;
-
             }
-
           }
-
         } catch (e) {
-
-          // Игнорируем и пробуем следующий или резервный поиск
-
+          // Игнорируем и переходим к автономному онлайн-поиску
         }
-
       }
 
-
-
-      // Если API вернул результаты из Яндекса и Bing — сразу выводим их
-
+      // Если локальный API ответил (Яндекс + Bing)
       if (apiFound && liveMemes.length > 0) {
-
-        searchState.hasMoreApi = true;
-
-        searchState.allResults = searchState.allResults.concat(liveMemes);
-
-        if (statusPill) {
-
-          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} картинок (Яндекс / Bing) по «${qTrim}»`;
-
-          setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
-
-        }
-
-        return liveMemes;
-
-      }
-
-
-
-      // 1. Резервный поиск: известные мемные слоги Memepedia (на 1-й странице)
-
-      const slugPromises = [];
-
-      if (pageNum === 1) {
-
-        const matchedSlugs = new Set();
-
-        for (const [kw, sList] of Object.entries(knownMemeSlugs)) {
-
-          if (qLower.includes(kw) || kw.includes(qLower)) {
-
-            sList.forEach(s => matchedSlugs.add(s));
-
+        if (pageNum === 1) {
+          searchState.allResults = liveMemes;
+          if (searchState.allResults[0]) {
+            state.imgUrl = searchState.allResults[0].url;
+            loadImage(searchState.allResults[0].url);
           }
-
+        } else {
+          searchState.allResults = searchState.allResults.concat(liveMemes);
         }
-
-        matchedSlugs.forEach(slug => {
-
-          slugPromises.push(
-
-            fetch(`https://memepedia.ru/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=1`, {
-
-              headers: { Accept: "application/json" }
-
-            }).then(r => r.ok ? r.json() : []).catch(() => [])
-
-          );
-
-        });
-
+        searchState.hasMoreApi = true;
+        renderCurrentPage();
+        if (statusPill) {
+          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} картинок (Яндекс / Bing) по «${qTrim}»`;
+          setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
+        }
+        return liveMemes;
       }
 
+      // -------------------------------------------------------------
+      // АВТОНОМНЫЙ МУЛЬТИ-ПОИСК (работает везде: на работе, с телефона, без localhost)
+      // -------------------------------------------------------------
+      const searchTarget = cleanQ || qTrim;
 
-
-      // 2. Memepedia Посты (все категории мемов, исключая спам 2608 и рекламу 1533)
-
-      const mpUrlPosts = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent(qTrim)}&categories_exclude=2608,1533&_embed=1&per_page=12&page=${pageNum}`;
-
+      // 1. Memepedia Посты (до 50 постов на страницу + картинки из тела статей!)
+      const mpUrlPosts = `https://memepedia.ru/wp-json/wp/v2/posts?search=${encodeURIComponent(searchTarget)}&categories_exclude=2608,1533&_embed=1&per_page=50&page=${pageNum}`;
       const postsPromise = fetch(mpUrlPosts, { headers: { Accept: "application/json" } })
-
         .then(r => r.ok ? r.json() : [])
-
         .catch(() => []);
 
-
-
-      // 3. Memepedia Медиатека (71 000+ загруженных картинок мемов)
-
-      const mpUrlMedia = `https://memepedia.ru/wp-json/wp/v2/media?search=${encodeURIComponent(qTrim)}&per_page=15&page=${pageNum}`;
-
+      // 2. Memepedia Медиатека (до 50 медиафайлов)
+      const mpUrlMedia = `https://memepedia.ru/wp-json/wp/v2/media?search=${encodeURIComponent(searchTarget)}&per_page=50&page=${pageNum}`;
       const mediaPromise = fetch(mpUrlMedia, { headers: { Accept: "application/json" } })
-
         .then(r => r.ok ? r.json() : [])
-
         .catch(() => []);
 
+      // 3. Wikipedia RU REST API (нативный CORS: origin=*, высокое качество фото)
+      const wikiUrl = `https://ru.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchTarget)}&gsrlimit=30&prop=pageimages&pithumbsize=600&format=json&origin=*`;
+      const wikiPromise = (pageNum === 1)
+        ? fetch(wikiUrl, { headers: { Accept: "application/json" } }).then(r => r.ok ? r.json() : null).catch(() => null)
+        : Promise.resolve(null);
 
+      // 4. Wikimedia Commons (нативный CORS: origin=*)
+      const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchTarget)}&gsrlimit=30&prop=pageimages&pithumbsize=600&format=json&origin=*`;
+      const commonsPromise = (pageNum === 1)
+        ? fetch(commonsUrl, { headers: { Accept: "application/json" } }).then(r => r.ok ? r.json() : null).catch(() => null)
+        : Promise.resolve(null);
 
-      // 4. Imgflip мировые шаблоны (на 1-й странице)
+      // 5. Посты по известным слагам
+      const slugPromises = [];
+      if (pageNum === 1 && typeof knownMemeSlugs !== "undefined") {
+        const matchedSlugs = new Set();
+        for (const [kw, sList] of Object.entries(knownMemeSlugs)) {
+          if (qLower.includes(kw) || kw.includes(qLower) || cleanWords.some(w => kw.includes(w))) {
+            sList.forEach(s => matchedSlugs.add(s));
+          }
+        }
+        matchedSlugs.forEach(slug => {
+          slugPromises.push(
+            fetch(`https://memepedia.ru/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed=1`, {
+              headers: { Accept: "application/json" }
+            }).then(r => r.ok ? r.json() : []).catch(() => [])
+          );
+        });
+      }
 
-      const imgflipPromise = (pageNum === 1) ? loadImgflipTemplates() : Promise.resolve([]);
-
-
-
-      // 5. Reddit Pikabu и мемы
-
+      // 6. Reddit мемы
       const redditSub = (pageNum === 1) ? "Pikabu" : ((pageNum === 2) ? "memes" : "dankmemes");
-
-      const redditPromise = fetch(`https://meme-api.com/gimme/${redditSub}/12`)
-
+      const redditPromise = fetch(`https://meme-api.com/gimme/${redditSub}/15`)
         .then(r => r.ok ? r.json() : null)
-
         .catch(() => null);
 
-
-
-      const [slugResults, postsData, mediaData, ifTemplates, redditData] = await Promise.all([
-
+      const [slugResults, postsData, mediaData, wikiData, commonsData, redditData] = await Promise.all([
         Promise.all(slugPromises),
-
         postsPromise,
-
         mediaPromise,
-
-        imgflipPromise,
-
+        wikiPromise,
+        commonsPromise,
         redditPromise
-
       ]);
 
+      const addMeme = (id, title, rawUrl, sourceTag) => {
+        if (!rawUrl || typeof rawUrl !== "string") return;
+        const sUrl = safeMemeUrl(rawUrl);
+        if (!sUrl || seenUrls.has(sUrl)) return;
+        seenUrls.add(sUrl);
+        liveMemes.push({
+          id: id,
+          title: title || (qTrim + " #" + (liveMemes.length + 1)),
+          tags: qLower + " " + sourceTag,
+          cat: "all",
+          url: sUrl
+        });
+      };
 
-
-      // Обработка постов Memepedia (извлекаем главное фото И ВСЕ картинки из тела статьи!)
-
+      // Обработка постов Memepedia (главная картинка + картинки из тела статьи!)
       const processMpPosts = (posts) => {
         if (!Array.isArray(posts)) return;
         posts.forEach((p, idx) => {
-          const media = p._embedded?.["wp:featuredmedia"]?.[0];
-          const rawFeat = media?.source_url;
           const cleanTitle = (p.title?.rendered || (qTrim + " #" + (idx + 1))).replace(/<[^>]+>/g, "").trim();
 
-          // Проверяем, что заголовок или slug статьи реально содержит поисковые слова
-          const titleLower = (cleanTitle + " " + (p.slug || "")).toLowerCase();
-          const words = qLower.split(" ").filter(Boolean);
-          const isPostMatch = words.some(w => titleLower.includes(w));
+          // 1) Главное фото
+          const media = p._embedded?.["wp:featuredmedia"]?.[0];
+          const rawFeat = media?.source_url;
+          if (rawFeat) {
+            addMeme("mp_f_" + (p.id || idx), cleanTitle, rawFeat, "memepedia");
+          }
 
-          if (rawFeat && isPostMatch) {
-            const featSrc = safeMemeUrl(rawFeat);
-            if (!seenUrls.has(featSrc)) {
-              seenUrls.add(featSrc);
-              liveMemes.push({
-                id: "mp_f_" + (p.id || idx),
-                title: cleanTitle,
-                tags: qLower + " мем memepedia",
-                cat: "all",
-                url: featSrc
+          // 2) Все картинки из текста статьи (шаблоны и примеры)
+          const content = p.content?.rendered || "";
+          if (content) {
+            const matches = content.match(/<img[^>]+src=["'](https:\/\/memepedia\.world\/[^"']+)["']/g);
+            if (matches) {
+              matches.forEach((mTag, mIdx) => {
+                const srcMatch = mTag.match(/src=["'](https:\/\/memepedia\.world\/[^"']+)["']/);
+                if (srcMatch && srcMatch[1]) {
+                  const src = srcMatch[1];
+                  if (!src.includes("avatar") && !src.includes("icon") && !src.includes("logo") && !src.includes("banner")) {
+                    addMeme(`mp_body_${p.id || idx}_${mIdx}`, `${cleanTitle} (вариант ${mIdx + 1})`, src, "memepedia");
+                  }
+                }
               });
             }
           }
         });
       };
 
-      // 1. Посты по известным слагам
       if (Array.isArray(slugResults)) {
         slugResults.forEach(posts => processMpPosts(posts));
       }
-
-      // 2. Посты Memepedia
       processMpPosts(postsData);
 
-      // 3. Медиатека Memepedia (71 000+ оригинальных картинок мемов)
+      // Обработка медиатеки Memepedia
       if (Array.isArray(mediaData)) {
-        const words = qLower.split(" ").filter(Boolean);
         mediaData.forEach((m, mIdx) => {
           const rawSrc = m.source_url;
           if (rawSrc && rawSrc.includes("memepedia.world") && !rawSrc.includes("avatar") && !rawSrc.includes("icon") && !rawSrc.includes("logo") && !rawSrc.includes("banner")) {
             const mTitle = (m.title?.rendered || (m.slug || "")).replace(/<[^>]+>/g, "").trim();
-            const titleLower = (mTitle + " " + (m.slug || "")).toLowerCase();
-            const isMediaMatch = words.some(w => titleLower.includes(w));
-
-            if (isMediaMatch) {
-              const sSrc = safeMemeUrl(rawSrc);
-              if (!seenUrls.has(sSrc)) {
-                seenUrls.add(sSrc);
-                liveMemes.push({
-                  id: "mp_m_" + (m.id || mIdx),
-                  title: mTitle || (qTrim + " мем #" + (mIdx + 1)),
-                  tags: qLower + " мем memepedia медиа",
-                  cat: "all",
-                  url: sSrc
-                });
-              }
-            }
+            addMeme("mp_m_" + (m.id || mIdx), mTitle || (qTrim + " мем #" + (mIdx + 1)), rawSrc, "memepedia медиа");
           }
         });
       }
 
-      // 4. Мировые шаблоны Imgflip
-      if (Array.isArray(ifTemplates) && ifTemplates.length > 0) {
-        const englishKeywords = memeBilingualMap[qLower] || [];
-        const matches = ifTemplates.filter((m) => {
-          const name = (m.name || "").toLowerCase();
-          if (name.includes(qLower)) return true;
-          return englishKeywords.some((kw) => name.includes(kw));
-        });
-
-        matches.forEach((m) => {
-          if (m.url && !seenUrls.has(m.url)) {
-            seenUrls.add(m.url);
-            liveMemes.push({
-              id: "if_" + m.id,
-              title: m.name + " (шаблон)",
-              tags: qLower + " мем imgflip",
-              cat: "all",
-              url: m.url
-            });
+      // Обработка Wikipedia RU
+      if (wikiData && wikiData.query && wikiData.query.pages) {
+        Object.values(wikiData.query.pages).forEach((p, pIdx) => {
+          const thumb = p.thumbnail?.source;
+          if (thumb) {
+            addMeme("wiki_ru_" + (p.pageid || pIdx), p.title, thumb, "wikipedia");
           }
         });
       }
 
-      // 5. Reddit (строго по совпадению с запросом, без случайных картинок!)
+      // Обработка Wikimedia Commons
+      if (commonsData && commonsData.query && commonsData.query.pages) {
+        Object.values(commonsData.query.pages).forEach((p, pIdx) => {
+          const thumb = p.thumbnail?.source;
+          if (thumb) {
+            addMeme("commons_" + (p.pageid || pIdx), p.title, thumb, "commons");
+          }
+        });
+      }
+
+      // Обработка Reddit
       if (redditData && Array.isArray(redditData.memes)) {
         redditData.memes.forEach((rm, rIdx) => {
-          if (rm.url && !seenUrls.has(rm.url) && !rm.url.endsWith(".gif")) {
+          if (rm.url && !rm.url.endsWith(".gif")) {
             const rTitle = rm.title || (qTrim + " #" + (rIdx + 1));
             const rLower = rTitle.toLowerCase();
-            const words = qLower.split(" ").filter(Boolean);
-            const isMatch = words.some(w => rLower.includes(w));
-
-            if (isMatch) {
-              seenUrls.add(rm.url);
-              liveMemes.push({
-                id: "pk_" + (rm.id || rIdx),
-                title: rTitle.replace(/<[^>]+>/g, "").trim(),
-                tags: qLower + " мем reddit",
-                cat: "all",
-                url: rm.url
-              });
+            if (cleanWords.some(w => rLower.includes(w))) {
+              addMeme("pk_" + (rm.id || rIdx), rTitle.replace(/<[^>]+>/g, "").trim(), rm.url, "reddit");
             }
           }
         });
       }
 
-      if (liveMemes.length === 0 && pageNum >= 5) {
-
-        searchState.hasMoreApi = false;
-
-      } else if (liveMemes.length > 0) {
-
-        searchState.hasMoreApi = true;
-
-        searchState.allResults = searchState.allResults.concat(liveMemes);
-
+      // ОБНОВЛЕНИЕ РЕЗУЛЬТАТОВ:
+      if (pageNum === 1) {
+        // На 1-й странице: заменяем любые стоковые шаблоны реальными живыми картинками!
+        if (liveMemes.length > 0) {
+          searchState.allResults = liveMemes;
+          if (searchState.allResults[0]) {
+            state.imgUrl = searchState.allResults[0].url;
+            loadImage(searchState.allResults[0].url);
+          }
+        }
+      } else {
+        // Для следующих страниц пагинации: добавляем
+        liveMemes.forEach(m => {
+          if (!searchState.allResults.some(r => r.url === m.url)) {
+            searchState.allResults.push(m);
+          }
+        });
       }
 
-
+      searchState.hasMoreApi = liveMemes.length > 0;
+      renderCurrentPage();
 
       if (statusPill) {
-
         if (searchState.allResults.length > 0) {
-
-          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} мемов по запросу «${qTrim}» (Стр. ${searchState.pageIndex + 1})`;
-
+          statusPill.textContent = `✅ Найдено ${searchState.allResults.length} картинок по запросу «${qTrim}» (Стр. ${searchState.pageIndex + 1})`;
           setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
-
         } else {
-
-          statusPill.textContent = `🔍 Мемы не найдены. Попробуй другое слово.`;
-
+          statusPill.textContent = `🔍 Картинки не найдены. Попробуй другое слово.`;
           setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 4000);
-
         }
-
       }
 
-
-
       return liveMemes;
-
     }
 
-
-
-        // Главная функция поиска онлайн по запросу
-
+    // Главная функция поиска онлайн по запросу
     let searchDebounceTimer = null;
-
     let isSearchingOnline = false;
 
-
-
     async function searchOnlineMemes(query, force = false) {
-
       window.searchOnlineMemes = searchOnlineMemes;
-
       const qTrim = (query || "").trim();
-
       if (!qTrim || qTrim.length < 2) return;
 
-
-
       if (isSearchingOnline && searchState.activeQuery === qTrim) return;
-
       isSearchingOnline = true;
 
-
-
       searchState.activeQuery = qTrim;
-
       searchState.pageIndex = 0;
-
       searchState.apiPage = 1;
-
       searchState.hasMoreApi = true;
 
-
-
-      // Мгновенно выводим совпадения из локальной базы, если есть
-
-      const words = qTrim.toLowerCase().split(" ").filter(Boolean);
-      // Локальные шаблоны берем ТОЛЬКО если они строго подходят под поисковый запрос
-      const matchedLocal = initialBaseTemplates.filter((t) => {
-        const hay = (t.title + " " + (t.tags || "")).toLowerCase();
-        return words.some((w) => hay.includes(w));
-      });
-
-      // Картинки из Telegram-бота фильтруем строго по ключевым словам запроса
-      const botMatches = (typeof botPicsMemes !== "undefined" && Array.isArray(botPicsMemes))
-        ? botPicsMemes.filter(t => {
-            const hay = (t.title + " " + (t.tags || "")).toLowerCase();
-            return words.some(w => hay.includes(w));
-          })
-        : [];
-
-      // Объединяем без дубликатов по URL (только релевантные результаты!)
-      const initialSeen = new Set();
-      const initialCombined = [];
-      [...botMatches, ...matchedLocal].forEach(item => {
-        if (!initialSeen.has(item.url)) {
-          initialSeen.add(item.url);
-          initialCombined.push(item);
-        }
-      });
-
-      searchState.allResults = initialCombined;
+      // При новом поиске: НЕ показываем стоковые картинки!
+      if (botPicsMemes && botPicsMemes.length > 0 && (passedQuery && qTrim.toLowerCase() === passedQuery.toLowerCase())) {
+        searchState.allResults = [...botPicsMemes];
+      } else {
+        searchState.allResults = [];
+      }
       renderCurrentPage();
 
       try {
         await fetchApiPage(qTrim, 1);
-
         renderCurrentPage();
-
-
-
-        if (force && searchState.allResults[0]) {
-
-          state.imgUrl = searchState.allResults[0].url;
-
-          loadImage(searchState.allResults[0].url);
-
-        }
-
       } catch (err) {
-
         console.warn("Online search note:", err);
-
       } finally {
-
         isSearchingOnline = false;
-
       }
-
     }
 
-
-
-    if (passedQuery) {
-
-      filterMemes();
-
-      searchOnlineMemes(passedQuery, false);
-
-    } else {
-
+    // Инициализация при старте WebApp
+    if (passedPics && botPicsMemes.length > 0) {
+      searchState.activeQuery = passedQuery || "";
+      searchState.allResults = [...botPicsMemes];
       renderCurrentPage();
-
+      loadImage(botPicsMemes[0].url);
+      const statusPill = document.getElementById("searchStatusPill");
+      if (statusPill) {
+        statusPill.style.display = "block";
+        statusPill.textContent = `✅ Загружено ${botPicsMemes.length} картинок из бота по «${passedQuery || "запросу"}»`;
+        setTimeout(() => { if (statusPill) statusPill.style.display = "none"; }, 3500);
+      }
+    } else if (passedQuery) {
+      filterMemes();
+      searchOnlineMemes(passedQuery, true);
+    } else {
+      renderCurrentPage();
     }
-
-
 
     // Живой поиск при вводе
 
